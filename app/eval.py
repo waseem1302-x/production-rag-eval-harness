@@ -11,6 +11,12 @@ Definitions (all string-based proxies in Phase 1 — no LLM judge):
   text or in any cited chunk. This measures whether the evidence
   retrieved actually contains the answer, not whether a generator
   wrote it well. Phase 2 replaces this with an LLM-as-judge.
+- answer-only relevance: fraction where the expected phrase appears
+  in the answer text alone, not just in the citations. This is the
+  metric that separates the naive baseline from the improved
+  pipeline: the baseline returns the first sentences of the top
+  chunk (often nav/header text), so the answer itself rarely
+  contains the answer even when the citations do.
 - abstention accuracy: fraction of out-of-corpus questions answered
   with found=False.
 """
@@ -42,6 +48,7 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
 
     recall3 = recall5 = 0
     relevant = 0
+    answer_only_relevant = 0
     faithful_sents = total_sents = 0
     per_question = []
 
@@ -57,6 +64,9 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
         haystack = (result["answer"] + " " + " ".join(c["text"] for c in result["citations"])).lower()
         is_relevant = expected in haystack
         relevant += is_relevant
+        if expected in result["answer"].lower():
+            answer_only_relevant += 1
+        is_answer_only = expected in result["answer"].lower()
         # Faithfulness is only meaningful for answers that were given.
         # An abstention ("Not found in the corpus.") is not a claim
         # drawn from the chunks, so it is neither faithful nor unfaithful.
@@ -71,6 +81,7 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
             "expected_doc": q["expected_doc"], "found_doc_top5": docs,
             "recall@3": hit3, "recall@5": hit5,
             "found": result["found"], "answer_relevant": is_relevant,
+            "answer_only_relevant": is_answer_only,
         })
 
     abstained = 0
@@ -87,6 +98,7 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
         "recall@3": round(recall3 / n, 3),
         "recall@5": round(recall5 / n, 3),
         "answer_relevance_proxy": round(relevant / n, 3),
+        "answer_only_relevance": round(answer_only_relevant / n, 3),
         "faithfulness": round(faithful_sents / max(1, total_sents), 3),
         "abstention_accuracy": round(abstained / max(1, len(out_corpus)), 3),
         "per_question": per_question,

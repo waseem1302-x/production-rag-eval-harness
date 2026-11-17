@@ -46,13 +46,17 @@ def _query_terms(question: str) -> set[str]:
 class Retriever:
     """Built once from chunks; `search` answers one question."""
 
-    def __init__(self, chunks: list[dict]):
+    def __init__(self, chunks: list[dict], dense: bool = True):
+        """`dense=False` forces BM25-only retrieval even when the
+        embedding model is available. The benchmark uses it for the
+        BM25-only configurations so the dense signal's contribution
+        is measured, not assumed."""
         self.chunks = chunks
         self.corpus = [tokenize(c["text"]) for c in chunks]
         self.bm25 = BM25Okapi(self.corpus) if chunks else None
         self.vectors = None
         self.index = None
-        self.embedder = embeddings.embedder_name()
+        self.embedder = embeddings.embedder_name() if dense else "bm25-only"
         if self.embedder != "bm25-only" and chunks:
             self.vectors = embeddings.embed(chunks_text(chunks))
             try:

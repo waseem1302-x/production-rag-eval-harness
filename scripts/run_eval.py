@@ -11,7 +11,8 @@ if __name__ == "__main__":
     print(f"chunks: {len(chunks)}  embedder: {retriever.embedder}")
     result = run_eval(retriever, load_golden())
     for key in ["n_in_corpus", "n_out_of_corpus", "recall@3", "recall@5",
-                "answer_relevance_proxy", "faithfulness", "abstention_accuracy"]:
+                "answer_relevance_proxy", "answer_only_relevance",
+                "faithfulness", "abstention_accuracy"]:
         print(f"{key}: {result[key]}")
     print()
     for row in result["per_question"]:
