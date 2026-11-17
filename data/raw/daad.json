@@ -1,0 +1,10 @@
+{
+  "slug": "daad",
+  "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+  "title": "DAAD Scholarships (Germany)",
+  "fetched_at": "2026-11-17T17:29:42.936307+00:00",
+  "http_status": null,
+  "fetch_method": "browser-text-fetch",
+  "error": "Direct HTTP fetch failed (proxy connection error). Text fetched with a text fetcher from the same official URL on 2026-11-17 17:30 UTC; saved verbatim.",
+  "chars": 1430
+}
