@@ -1,0 +1,9 @@
+.venv/
+.git/
+.tmp/
+.pytest_cache/
+__pycache__/
+*.pyc
+data/processed/faiss.index
+.env
+.DS_Store
