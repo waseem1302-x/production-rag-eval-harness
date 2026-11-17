@@ -89,7 +89,7 @@ def ask(req: AskRequest):
     result["answer_mode"] = "extractive"
     elig_replaced = False
     if req.profile is not None:
-        # Eligibility first: a not-eligible verdict, or an
+        # Eligibility first: a not-eligible or closed verdict, or an
         # eligibility question, replaces the substantive answer.
         # Otherwise the substantive answer stands and the
         # eligibility verdicts are attached as information.

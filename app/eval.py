@@ -25,7 +25,7 @@ Definitions (all string-based proxies in Phase 1 — no LLM judge):
   with found=False.
 - eligibility accuracy: fraction of questions that carry a profile
   where the verdict for the expected document matches the expected
-  verdict ("eligible" / "not_eligible" / "unknown"). Eligibility
+  verdict ("eligible" / "not_eligible" / "unknown" / "closed"). Eligibility
   questions are also counted in the answer metrics above, because
   their expected answer phrase is part of the eligibility statement.
 """

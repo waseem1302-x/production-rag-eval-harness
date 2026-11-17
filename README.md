@@ -1,4 +1,4 @@
-# Production RAG with Eval Harness — Phase 2, Step 2
+# Production RAG with Eval Harness — Phase 2, Step 4
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
@@ -13,15 +13,21 @@ from a local $0 model (Qwen2.5-0.5B-Instruct, 988.1 MB, CPU) with a
 **deterministic verification step** (every generated sentence checked
 against the cited chunks; unsupported sentences dropped, otherwise
 fall back to the extractive answer) and an **LLM-as-judge** alongside
-the string-proxy metrics. Phase 2, Step 2 (this branch,
-`feat/dense-scoring-verification`) adds **dense sentence scoring**
+the string-proxy metrics. Phase 2, Step 2 adds **dense sentence scoring**
 to the answer picker and an **answer-verification step** that checks
 whether the picked sentences actually answer the question: the
 o04 failure (answering a Vanier ranking question the corpus cannot
 answer) now abstains, so abstention accuracy is 1.0 (5/5). The
 dense scoring itself is measured to buy **nothing** on this corpus
 (see the numbers in [`EVAL_RESULTS.md`](EVAL_RESULTS.md)) — and
-that is reported, not hidden. The extractive default is unchanged,
+that is reported, not hidden. Phase 2, Step 4 (this branch,
+`feat/eligibility-closure`) makes eligibility read the closure
+flag: Vanier is closed, so a profile check for Vanier now returns
+verdict `closed` — with the closure evidence and the replacement
+programme — whatever the profile, even a doctoral applicant who
+meets every other rule. Eligibility accuracy is 1.0 (11/11 golden
+questions; one new Vanier doctoral question, e11, added to measure
+the fix). The extractive default is unchanged,
 and the generator is deliberately the weaker path on this corpus.
 
 **Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
@@ -66,7 +72,7 @@ official pages -> ingest.py (fetch + extract text, save raw + metadata)
   -> embeddings.py (sentence-transformers all-MiniLM-L6-v2, 384-dim)
   -> retrieval.py (FAISS dense + BM25, 0.5/0.5 hybrid, lexical rerank;
      cross-encoder rerank available as an ablation configuration)
-  -> eligibility.py (degree + citizenship checks, corpus-grounded, only if profile given)
+  -> eligibility.py (degree + citizenship checks, corpus-grounded, only if profile given; closed programmes return verdict `closed`)
   -> answer.py (extractive answer + citations + abstention gates)
   -> generative.py (OPT-IN: local LLM answer + verification, falls back to extractive)
   -> api.py (FastAPI, POST /ask)
@@ -202,8 +208,13 @@ chunk text at load time; a rule whose evidence is missing drops to
 A real finding: **Pakistan is not among the SI Scholarship's 34
 eligible countries** (the list is in the corpus, chunk
 `sweden-si-2`), so a Pakistani master's applicant is correctly told
-"not eligible" with the full list cited. Measured: eligibility
-accuracy **1.0 (10/10 golden questions)**.
+"not eligible" with the full list cited. And a closed programme is
+never reported as eligible: Vanier is closed (chunk `vanier-0`),
+so any profile check for it returns verdict `closed`, states the
+programme is closed, names its replacement (the Canada Graduate
+Research Scholarship - Doctoral program), and cites the closure
+sentences. Measured: eligibility
+accuracy **1.0 (11/11 golden questions)**.
 
 ### Auditable retrieval
 
@@ -294,8 +305,8 @@ pretends dense retrieval ran when it did not.
 
 ## Eval harness
 
-`eval/golden.json` holds 38 hand-written questions (23 in-corpus
-factual, 5 out-of-corpus, 10 eligibility). Every question was checked
+`eval/golden.json` holds 39 hand-written questions (23 in-corpus
+factual, 5 out-of-corpus, 11 eligibility). Every question was checked
 against the actual fetched text before it was added — the expected
 answer phrase must appear in the cited document.
 
@@ -380,7 +391,7 @@ Full report with failure tables:
 |---|---|
 | q03, q10, q17 | Paraphrase gap — the expected answer's key terms are not in the question, so lexical picking cannot find the sentence; dense sentence scoring (Step 2, weight 2.0) does not fix them either — q03's correct sentence ranks 4th by dense sim, q10's 8th, q17's 14th. The generative path fixes q03 only. |
 | o04 (Vanier ranked university) | **Fixed in Step 2:** the answer-verification step now abstains with reason `unanswered_ranking` (abstention 1.0, 5/5). Dense similarity alone could not catch it (o04 scored 0.667, above several answerable questions). |
-| Eligibility vs Vanier closure | Verdicts do not yet factor the programme's closure |
+| Eligibility vs Vanier closure | **Fixed in Step 4:** a profile check for Vanier now returns verdict `closed` with the closure evidence and the replacement programme (e02, e05, e11 all pass; eligibility 1.0, 11/11). |
 
 No regressions: no question the baseline got right is lost by the
 improved pipeline (pinned by `tests/test_dense_verification.py::test_no_baseline_correct_answer_lost`).
@@ -393,7 +404,8 @@ python -m scripts.check_data_quality
 
 36 findings (8 resolved, 28 open), each citing sentence + chunk +
 source URL. Headline findings: Vanier is **closed** and replaced by
-a harmonized doctoral programme; Eiffel €1,200 is the Master's
+a harmonized doctoral programme — and eligibility now returns
+verdict `closed` for it (Step 4); Eiffel €1,200 is the Master's
 allowance and €2,000 the Doctorate stipend (not a contradiction);
 HKPFS HK$344,400 ≈ US$44,150 is one 2026/27 stipend in two
 currencies; DAAD is a 147-option database, not one award; only SI
@@ -408,8 +420,8 @@ python -m scripts.ci_gate
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured (Phase 2, Step 2): 1.0, 0.909, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
-(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.909),
+Measured (Phase 2, Step 4): 1.0, 0.912, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
+(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.912),
 proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 (build index → tests → gate on every push/PR).
 

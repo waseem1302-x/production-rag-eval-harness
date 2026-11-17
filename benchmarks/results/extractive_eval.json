@@ -1,11 +1,11 @@
 {
-  "n_in_corpus": 33,
+  "n_in_corpus": 34,
   "n_out_of_corpus": 5,
-  "n_eligibility": 10,
+  "n_eligibility": 11,
   "recall@3": 1.0,
   "recall@5": 1.0,
   "answer_relevance_proxy": 1.0,
-  "answer_only_relevance": 0.909,
+  "answer_only_relevance": 0.912,
   "faithfulness": 1.0,
   "abstention_accuracy": 1.0,
   "eligibility_accuracy": 1.0,
@@ -423,10 +423,10 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Not eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Valued at $50,000 per year for three years during doctoral studies.",
+      "answer": "Closed: the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship is closed: applications are no longer accepted. It has been replaced by the Canada Graduate Research Scholarship - Doctoral program; see that programme's page for current information. Evidence: We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Evidence: Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program.",
       "answer_relevant": true,
       "answer_only_relevant": true,
-      "eligibility_verdict": "not_eligible"
+      "eligibility_verdict": "closed"
     },
     {
       "id": "e03",
@@ -480,10 +480,10 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study, so a phd applicant meets the degree requirement. The Vanier Canada Graduate Scholarship is open irrespective of country of origin, so a Canada citizen meets the citizenship requirement. Evidence: Valued at $50,000 per year for three years during doctoral studies. Evidence: Citizenship: Canadian citizens. Permanent residents of Canada. Foreign citizens.",
+      "answer": "Closed: the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship is closed: applications are no longer accepted. It has been replaced by the Canada Graduate Research Scholarship - Doctoral program; see that programme's page for current information. Evidence: We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Evidence: Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program.",
       "answer_relevant": true,
       "answer_only_relevant": true,
-      "eligibility_verdict": "eligible"
+      "eligibility_verdict": "closed"
     },
     {
       "id": "e06",
@@ -579,6 +579,25 @@
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": "unknown"
+    },
+    {
+      "id": "e11",
+      "question": "I am from Pakistan and starting a PhD. Can I apply for the Vanier Scholarship?",
+      "expected_doc": "vanier",
+      "found_doc_top5": [
+        "vanier",
+        "sweden-si",
+        "sweden-si",
+        "chevening",
+        "erasmus-mundus"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Closed: the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship is closed: applications are no longer accepted. It has been replaced by the Canada Graduate Research Scholarship - Doctoral program; see that programme's page for current information. Evidence: We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Evidence: Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": "closed"
     },
     {
       "id": "q21",

@@ -8,6 +8,10 @@ PROCESSED_DIR = DATA_DIR / "processed"
 SOURCES_FILE = DATA_DIR / "sources.json"
 CHUNKS_FILE = PROCESSED_DIR / "chunks.jsonl"
 INDEX_FILE = PROCESSED_DIR / "faiss.index"
+# Programme closures the eligibility module reads (Phase 2, Step 4):
+# one entry per programme the corpus itself says is closed, with
+# verbatim evidence. See data/closures.json.
+CLOSURES_FILE = DATA_DIR / "closures.json"
 GOLDEN_FILE = ROOT / "eval" / "golden.json"
 
 # Chunking: ~512 tokens, ~1 token = ~4 chars of English text.
