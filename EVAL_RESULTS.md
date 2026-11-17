@@ -1,8 +1,97 @@
-# Eval Results — Phase 1 (final)
+# Eval Results — Phase 2, Step 2 (final)
 
 All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
+
+## Phase 2, Step 2 — dense sentence scoring + answer verification
+
+Commands: `python -m scripts.run_eval` (writes
+`benchmarks/results/extractive_eval.json`) and
+`python -m scripts.run_generative_eval` (regenerates
+`benchmarks/results/generative_eval.json` + `.md`). Same
+38-question golden set as Step 1, both columns in one run.
+Step 2 total run: 661.4 s (model load 7.5 s; extractive 66.8 s;
+generative phase 551.5 s) — slower than Step 1's 288.1 s because
+the shared CPU was under contention from other jobs on the VM;
+same model, same greedy decoding. Mean generation latency 12.53 s
+(Step 1: 4.75 s) and mean judge latency 7.36 s (Step 1: 3.82 s)
+for the same reason; the latency difference is contention, not a
+code change.
+
+| Metric | Step 1 extractive | Step 2 extractive | Step 1 generative | Step 2 generative |
+|---|---|---|---|---|
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 | 1.0 / 1.0 | 1.0 / 1.0 |
+| answer_relevance_proxy | 1.0 | 1.0 | 1.0 | 1.0 |
+| answer_only_relevance | 0.909 (30/33) | 0.909 (30/33) | 0.697 (23/33) | 0.697 (23/33) |
+| faithfulness (verbatim proxy) | 1.0 | 1.0 | 0.754 | 0.754 |
+| judge faithfulness | — | — | 0.957 (n=23, 0 unparsed) | 0.957 (n=23, 0 unparsed) |
+| judge relevance | — | — | 0.957 (n=23, 0 unparsed) | 0.957 (n=23, 0 unparsed) |
+| abstention_accuracy | 0.8 (4/5) | **1.0 (5/5)** | 0.8 (4/5) | **1.0 (5/5)** |
+| eligibility_accuracy | 1.0 (10/10) | 1.0 (10/10) | 1.0 (10/10) | 1.0 (10/10) |
+| Answer modes (n=33) | — | — | 16 generative, 7 fallback, 10 eligibility | 16 generative, 7 fallback, 10 eligibility |
+
+### What Step 2 changed (read honestly)
+
+- **Exactly one thing improved: o04 now abstains, in both paths.**
+  The answer-verification step (`app/answer.py:verify_answer_relevance`)
+  refuses o04 with reason `unanswered_ranking` — the question asks
+  about a ranking and no picked Vanier sentence mentions one. The
+  full-eval diff vs Step 1 shows **zero other changed rows** in
+  either column: same 30 answer-only correct, same 3 misses
+  (q03, q10, q17), same 16/7/10 generative modes.
+- **Dense sentence scoring buys nothing on this corpus.** The
+  picker now adds `2.0 ×` cosine similarity (local MiniLM, $0) to
+  each sentence's lexical score. Weight ablation, full eval per
+  weight (same golden set, rarity-weighted bonus reverted — see below):
+
+  | Dense weight | answer_only | Changed vs Step 1 baseline |
+  |---|---|---|
+  | 0, 1, 2 | 0.909 | none |
+  | 3, 3.5, 4 | 0.909 | q03 fixed, q16 lost |
+
+  At weights 3–4 the fix and the loss cancel exactly, and q16 is a
+  regression the step refuses to ship ("no question the baseline
+  got right may be lost"), so the shipped weight is 2.0 — the
+  largest weight with zero regressions. The mechanism stays in the
+  path so it is measured, not because it earns a gain here.
+- **Why dense cannot fix the paraphrase gap here (measured).**
+  Rank of the correct sentence by dense similarity among the
+  top-3 chunks' sentences: q03 4th (0.630), q10 8th (0.438), q17
+  14th (0.527). q16's correct sentence scores only 0.394 — below
+  the boilerplate that replaces it at weight ≥ 3. Two variants
+  were tried and dropped: embedding the question with the
+  scholarship name stripped made things worse (q03 rank 9, q10
+  rank 17, q12 rank 50), and a rarity-weighted specific-term bonus
+  (2 × (1 − df/N) instead of flat +2, to stop "Global
+  Professionals" rewarding every SI sentence) changed no golden
+  answer on its own and was reverted to keep the change surface
+  minimal.
+- **Dense similarity cannot catch o04 either (measured).** o04's
+  picked sentences score max 0.667 cosine to the question — above
+  several answerable questions (q19: 0.562, q14: 0.591, q12:
+  0.615) — so no dense threshold separates it. That is why the
+  verification is a dense *floor* (0.45, below the lowest
+  answerable max sim 0.562) plus a question-focus check: a ranking
+  question must be answered by a sentence that mentions a ranking.
+  The check is narrow and honest about its limit: it looks for a
+  ranking *term*, not a ranked *entity* — a sentence about
+  "best-ranked students" would pass it.
+- **The generative model as verifier was probed, not adopted.**
+  As judge, the local 0.5B model scored o04's extractive answer
+  0/0 and the q01/q03/q10/q17 answers 1/1 — it does catch o04 on
+  this run. It is still not the guard: it is the same weak,
+  lenient instrument that scored q10's wrong "one academic year"
+  1/1 in Step 1, it would add ~4–12 s per question to the
+  extractive path, and the repo's guard stays deterministic. The
+  new relevance check on the generative path's kept sentences
+  fired **0 times** on the golden set (no `relevance_verification_failed`
+  in `generative_eval.json`); its effect is covered by a synthetic
+  unit test, not by a golden question.
+- **Per-question, Step 2:** q03, q10, q17 still extractive misses
+  (generative fixes q03 only, as in Step 1); o04 abstains in both
+  modes; all other 30 in-corpus answers and all 10 eligibility
+  verdicts unchanged.
 
 ## Golden set
 
@@ -172,16 +261,20 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**112 passed, 0 failed** (18 Nov 2026, 70 s). Phase 1's 87 plus 25
-new generative tests (`tests/test_generative.py`, fake model only —
-the real 0.5B model is never loaded in tests): verification
-(supported / invented-number / low-overlap / novel-stem sentences),
-generative fallback on verification failure, on model abstention
-and on model failure, named-scholarship chunk filtering (the q17
-regression), judge parsing (in range, zeros, unparseable, reversed
-label order), generative + judge eval on a small golden subset, and
-the API `generate=true` opt-in with the extractive default
-unchanged. Coverage by area:
+**128 passed, 0 failed** (18 Nov 2026, 465 s — the shared CPU was
+under contention from other jobs on the VM; the Step 1 suite took
+70 s on a quieter VM). Phase 1's 87 plus 25 new generative tests
+plus 16 new Step 2 tests (`tests/test_dense_verification.py`):
+dense similarity ranking (duration / levels sentences above
+boilerplate), verification unit tests with injected sims (ranking
+with/without rank term, low-sim floor, no-sim degradation), o04
+abstaining with reason `unanswered_ranking` (live + held-out
+Chevening ranking question), other out-of-corpus reasons
+unchanged, generative path abstaining on o04 without running the
+model, generative fallback when kept sentences fail relevance, and
+the full-eval no-regression test (the Step 1 correct set of 30 is
+exactly preserved, abstention 1.0, q03/q10/q17 still misses).
+Coverage by area:
 
 | Test file | Tests | What it covers |
 |---|---|---|
@@ -194,6 +287,7 @@ unchanged. Coverage by area:
 | `test_ablation.py` | retrieval modes | `bm25` / `dense` / `hybrid` modes, invalid mode, config coverage |
 | `test_before_after.py` | report integrity | Generated report matches the measured results files |
 | `test_generative.py` | generative + verification + judge | 25 tests, fake model only (see above) |
+| `test_dense_verification.py` | dense scoring + answer verification | 16 tests, real embedder for scoring, fake model for the generative o04 test (see above) |
 
 ## Data quality
 
@@ -225,10 +319,10 @@ and term coverage, in reranked order):
 
 | Question | What happens | Why | Fix (Phase 2) |
 |---|---|---|---|
-| q03 (SI master's duration) | Generative answer now contains "one- or two-year master's studies" (answer-only True) | Paraphrase gap, fixed by the generative path in Phase 2, Step 1 | q10, q17 remain; dense sentence scoring or a stronger generator |
-| q10 (Erasmus duration) | Generative answer says "one academic year" (expected "1 to 2 academic years"); judge scored it 1/1 | Paraphrase gap + weak 0.5B judge | As above; judge needs a larger model |
-| q17 (Manaaki levels) | Generative draft copied the SI field list into a Manaaki answer; verification dropped it and fell back to extractive | Cross-document contamination, caught by verification | Named-doc filter added (Step 1); answer still misses the expected phrase |
-| o04 (Vanier ranked university) | System answers instead of abstaining, generative path too (falls back to extractive) | Lexical gates + verification check grounding, not whether the sentences answer the question | Answer-verification step that checks relevance, not only grounding |
+| q03 (SI master's duration) | Generative answer now contains "one- or two-year master's studies" (answer-only True) | Paraphrase gap, fixed by the generative path in Phase 2, Step 1 | q10, q17 remain; dense sentence scoring (Step 2) was measured and does not fix them extractively (correct sentence ranks 4th by dense sim, but weights ≥ 3 trade q03 for q16) |
+| q10 (Erasmus duration) | Generative answer says "one academic year" (expected "1 to 2 academic years"); judge scored it 1/1 | Paraphrase gap + weak 0.5B judge | As above; judge needs a larger model. Correct sentence ranks 8th by dense sim (0.438) |
+| q17 (Manaaki levels) | Generative draft copied the SI field list into a Manaaki answer; verification dropped it and fell back to extractive | Cross-document contamination, caught by verification | Named-doc filter added (Step 1); answer still misses the expected phrase. Correct sentence ranks 14th by dense sim (0.527) |
+| o04 (Vanier ranked university) | **Fixed in Step 2:** system now abstains with reason `unanswered_ranking`, in both the extractive and generative paths (abstention 1.0, 5/5) | Lexical gates + grounding verification check overlap/grounding, not whether the sentences answer the question; dense similarity alone cannot separate it (0.667, above several answerable questions) | Answer-verification step (dense floor + ranking-focus check); the check is ranking-only and looks for a ranking term, not a ranked entity |
 | Eligibility vs Vanier closure | Verdict says "doctoral only", not "closed" | Eligibility rules do not read the data-quality closure flag | Eligibility module reads the closure flag |
 
 ## CI gate
@@ -237,10 +331,10 @@ Command: `python -m scripts.ci_gate`
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured: 1.0, 0.909, 1.0, 0.8, 1.0 — **gate passes**.
+Measured (Phase 2, Step 2): 1.0, 0.909, 1.0, 1.0, 1.0 — **gate passes**.
 Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly
-fails on answer-only relevance (0.909) and abstention (0.8),
-proving the gate can fail. Workflow: `.github/workflows/eval.yml`
+fails on answer-only relevance (0.909), proving the gate can fail.
+Workflow: `.github/workflows/eval.yml`
 (build index → tests → gate on every push/PR).
 
 ## How to reproduce
@@ -249,14 +343,14 @@ proving the gate can fail. Workflow: `.github/workflows/eval.yml`
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python -m scripts.build_index        # chunks + embeddings + FAISS index
-python -m scripts.run_eval           # eval harness numbers
-python -m scripts.run_generative_eval # generative + judge, same 38 questions (~5 min)
+python -m scripts.run_eval           # eval harness numbers (writes benchmarks/results/extractive_eval.json)
+python -m scripts.run_generative_eval # generative + judge, same 38 questions (~5-11 min depending on CPU contention)
 python -m benchmarks.run_benchmark   # 7-configuration ablation
 python -m benchmarks.audit_retrieval # per-question retrieval traces
 python -m benchmarks.before_after   # before/after report + failure tables
 python -m scripts.check_data_quality # corpus mess report
 python -m scripts.ci_gate           # quality gate
-python -m pytest tests/ -q          # 112 tests
+python -m pytest tests/ -q          # 128 tests
 ```
 
 Note: the dense model (`all-MiniLM-L6-v2`, ~90 MB) downloads on

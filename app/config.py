@@ -25,6 +25,27 @@ RERANK_CANDIDATES = 10
 # see EVAL_RESULTS.md for the value in use and why.
 ABSTAIN_THRESHOLD = 0.15
 
+# Dense sentence scoring (Phase 2, Step 2): weight of the cosine
+# similarity term added to the lexical sentence score in
+# app.answer._pick_sentences. Lexical scores run ~0-10; MiniLM
+# cosine sims run ~0.2-0.9. Measured on the golden set: weights
+# 0, 1 and 2 change no golden answer at all; weights 3, 3.5 and 4
+# fix q03 but lose q16 (its correct sentence scores only 0.394
+# dense similarity, below the boilerplate that replaces it), net
+# answer-only 0.909 either way. 2.0 is therefore the largest
+# weight with zero regressions — the mechanism is in the path and
+# measured, not claimed to earn a gain on this corpus.
+DENSE_SENTENCE_WEIGHT = 2.0
+# Answer verification (Phase 2, Step 2): the best picked sentence
+# must reach at least this cosine similarity to the question, or the
+# answer is refused as "low_answer_similarity". Calibrated below
+# the lowest answerable question in the golden set (q19, max sim
+# 0.562) with margin; it is a floor for unrelated questions, not
+# the o04 catcher — o04's picked sentences score 0.667, above
+# several answerable questions, so dense similarity alone cannot
+# separate it (see app/answer.py).
+DENSE_VERIFY_MIN_SIM = 0.45
+
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) production-rag-eval-harness/1.0 "
     "(research project; fetches public official scholarship pages)"

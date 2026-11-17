@@ -51,8 +51,8 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 | `app/chunking.py` | Recursive, sentence-aware chunking: ~512 tokens (~2,048 chars), 200-char overlap | One chunk should hold one complete idea. Overlap keeps facts that straddle a boundary. See "Chunking" below. |
 | `app/embeddings.py` | `sentence-transformers` `all-MiniLM-L6-v2`, 384-dim, L2-normalised | The dense signal. Falls back to BM25-only and reports `"embedder": "bm25-only"` if the model cannot load — never silently pretends dense ran. |
 | `app/retrieval.py` | FAISS `IndexFlatIP` (cosine) + BM25, min-max normalised, combined 0.5/0.5, then a lexical reranker (query-term coverage bonus +0.1). `mode` selects `bm25` / `dense` / `hybrid` | Hybrid retrieval + an auditable rerank step. The `mode` parameter exists for the ablation: each signal's contribution is measured, not assumed. |
-| `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. |
-| `app/generative.py` | Generative answers (Phase 2, Step 1): local Qwen2.5-0.5B-Instruct, greedy, + LLM-as-judge | The opt-in generator. Loads the 0.5B model lazily (bf16, CPU, 2 torch threads — measured faster than 4 on this VM), prompts it with the top-3 chunks of the *named* scholarship only, and returns a verified answer or falls back to extractive. `judge_answer` scores one answer with the same model (label-aware parsing: the judge sometimes swaps the two lines). All model text goes through `complete()`, which honours a test override so unit tests never load the model. |
+| `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates + answer verification | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. Phase 2, Step 2: sentence scores add `2.0 ×` dense cosine similarity to the question (local MiniLM, $0), and after the lexical gates `verify_answer_relevance` checks the picked sentences actually answer the question (dense floor 0.45 + ranking-focus check). Measured: dense scoring buys nothing on this corpus (see §4), verification fixes o04. |
+| `app/generative.py` | Generative answers (Phase 2, Step 1): local Qwen2.5-0.5B-Instruct, greedy, + LLM-as-judge | The opt-in generator. Loads the 0.5B model lazily (bf16, CPU, 2 torch threads — measured faster than 4 on this VM), prompts it with the top-3 chunks of the *named* scholarship only, and returns a verified answer or falls back to extractive. `judge_answer` scores one answer with the same model (label-aware parsing: the judge sometimes swaps the two lines). All model text goes through `complete()`, which honours a test override so unit tests never load the model. Phase 2, Step 2: the kept sentences also pass `verify_answer_relevance`; on failure the path falls back to extractive (`relevance_verification_failed`). |
 | `app/verification.py` | Deterministic verification of generated sentences against the cited chunks | The guard, not the judge. A sentence is kept only if its *novel* stems (content stems not already in the question) are covered ≥50% by one chunk, and every number in it appears in the chunks. Two fixes came from measured failures: the named-doc filter (q17 — the model copied SI's field list into a Manaaki answer) and novel-stem coverage (question-word overlap alone passed an ungrounded sentence). Verification stops invented facts; it cannot tell whether a grounded sentence answers the question (o04) or contradicts a corpus fact the model did not read (q21). |
 | `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. |
 | `app/api.py` | FastAPI: `GET /health`, `POST /ask` (optional `profile`) | One endpoint. The response carries the answer, citations with source URLs, the eligibility verdicts, and a full retrieval trace. |
@@ -75,17 +75,26 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
    reasons, and the verbatim evidence sentences. Otherwise the
    substantive answer stands and the verdicts are attached.
 4. `answer.answer` picks up to 5 scored sentences from the top 3
-   chunks (short fragments penalised, duplicates removed) and applies
-   the gates. If any gate fires, the answer is "Not found in the
-   corpus." with the reason (`weak_score`, `doc_name_mismatch`,
-   `no_matching_sentences`, `weak_overlap`, `missing_specific_term`).
+   chunks (lexical score + `2.0 ×` dense cosine similarity to the
+   question; short fragments penalised, duplicates removed) and
+   applies the gates. If any gate fires, the answer is "Not found
+   in the corpus." with the reason (`weak_score`,
+   `doc_name_mismatch`, `no_matching_sentences`, `weak_overlap`,
+   `missing_specific_term`, `low_answer_similarity`,
+   `unanswered_ranking`). The last two are the Phase 2, Step 2
+   answer-verification step, which runs after the lexical gates:
+   the picked sentences must clear a dense-similarity floor and,
+   for ranking questions, mention a ranking.
 5. With `"generate": true` (opt-in only), `generative.generate_answer`
    instead prompts the local model with the top-3 chunks of the
    named scholarship, verifies every generated sentence against
-   those chunks (`verification.verify_answer`), and returns the
-   kept sentences — or the extractive answer when nothing survives
-   verification, the model abstains, or the model cannot load.
-   Eligibility answers and abstentions are never generated.
+   those chunks (`verification.verify_answer`), then checks the
+   kept sentences actually answer the question
+   (`answer.verify_answer_relevance`), and returns the kept
+   sentences — or the extractive answer when nothing survives
+   verification, the model abstains, the relevance check fails, or
+   the model cannot load. Eligibility answers and abstentions are
+   never generated.
 6. The response includes the retrieval trace: every candidate with
    all scores, term coverage, and whether it was injected into the
    answer. A wrong answer can be traced to the exact chunk and score
@@ -320,18 +329,30 @@ change to any of them that regresses quality fails the build.
   find sentences whose key terms are absent from the question. The
   generative path fixed q03 (answer-only True) but not q10 or q17;
   q17 additionally fell back to extractive after verification
-  dropped the model's cross-document field list. Fix: dense
-  sentence scoring, or a stronger generator.
+  dropped the model's cross-document field list. Phase 2, Step 2
+  added dense sentence scoring (weight 2.0) and measured it: weights
+  0–2 change no golden answer, weights 3–4 fix q03 but lose q16
+  (its correct sentence scores 0.394 dense similarity), net 0.909
+  either way — dense similarity is too weak a signal at this corpus
+  size. q03, q10, q17 remain extractive misses. Fix: a stronger
+  generator, or a cross-encoder reranker over sentences.
 - **No answer verification (o04):** the gates check word overlap, not
   whether the picked sentences actually answer the question. A
   deterministic verification step now exists (Phase 2, Step 1) and
   drops ungrounded sentences, but o04 still answers instead of
   abstaining: its Vanier sentences are grounded, so verification
-  cannot catch that they do not answer the question. Fix: a
-  verification step that checks whether the answer *answers* the
-  question, not only whether it is grounded — the LLM-as-judge
-  relevance score is the current proxy for that, and at 0.5B it is
-  too weak (it scored o04's sibling failure q21's correct answer 0/0).
+  cannot catch that they do not answer the question. **Fixed in
+  Phase 2, Step 2:** `verify_answer_relevance` (dense floor 0.45 +
+  ranking-focus check) abstains on o04 with reason
+  `unanswered_ranking`, in both paths; abstention is 1.0 (5/5).
+  Dense similarity alone was measured and cannot separate o04
+  (0.667, above several answerable questions), so the focus check
+  does the work. The check is narrow — it covers ranking questions
+  only — and it checks for a ranking *term*, not a ranked entity,
+  so a sentence about "best-ranked students" passes it. The
+  LLM-as-judge relevance score remains the proxy for other
+  question shapes, and at 0.5B it is too weak (it scored o04's
+  sibling failure q21's correct answer 0/0).
 - **Judge is weak at 0.5B:** same-model grading is lenient (q10
   scored 1/1 for a wrong duration) and noisy (q21 scored 0/0 for a
   correct closure answer). The judge is reported alongside the

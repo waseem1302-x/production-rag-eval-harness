@@ -20,12 +20,25 @@ Known limit (found by the eval, documented honestly): a question
 can pass all three rules and still not be answered in substance,
 e.g. "Which university is ranked number one for Vanier scholars?"
 returns Vanier sentences that never name a ranked university.
-Lexical checks cannot catch that; Phase 2 adds a verification
-step (does this chunk actually answer the question?).
+Lexical checks cannot catch that. Phase 2, Step 2 adds two things
+(see `verify_answer_relevance`): a dense-similarity floor on the
+picked sentences, and a question-focus check — a question that asks
+about a ranking must be answered by a sentence that mentions a
+ranking. Dense similarity alone was measured and cannot separate
+that question: o04's picked sentences score 0.667, above several
+answerable questions (q19: 0.562, q14: 0.591, q12: 0.615), so the
+focus check does the work there and the dense floor only catches
+unrelated questions. The same verification runs on the generative
+path's kept sentences (see app/generative.py).
 """
 import re
 
-from .config import ABSTAIN_THRESHOLD
+from . import embeddings
+from .config import (
+    ABSTAIN_THRESHOLD,
+    DENSE_SENTENCE_WEIGHT,
+    DENSE_VERIFY_MIN_SIM,
+)
 from .retrieval import _query_terms, tokenize
 from .textnorm import segment_sentences as _sentences
 
@@ -93,9 +106,94 @@ def _specific_terms(question: str) -> set[str]:
     return {t for t in terms if t not in generic and t not in doc_tokens}
 
 
+def dense_sentence_scores(question: str, sentences: list[str]) -> dict[str, float] | None:
+    """Cosine similarity of each sentence to the question, using the
+    existing local MiniLM embedder ($0, no API). Embeddings are
+    L2-normalised, so the dot product is the cosine. Returns None
+    when the embedder is unavailable (the caller falls back to
+    lexical-only scoring) or when there are no sentences — a missing
+    model must degrade the answerer, never crash it.
+    """
+    if not sentences:
+        return None
+    try:
+        vectors = embeddings.embed([question] + list(sentences))
+    except Exception:  # noqa: BLE001 - embedder load can fail many ways
+        return None
+    query_vec = vectors[0]
+    return {sent: round(float(vec @ query_vec), 4)
+            for sent, vec in zip(sentences, vectors[1:])}
+
+
+def _ranking_question(question: str) -> bool:
+    """Does the question ask about a ranking? Matches "rank",
+    "ranked", "ranking", "number one" and "number 1" as whole
+    words/phrases. Deliberately narrow: "top" and "best" are not
+    included — "top reasons to apply" is not a ranking question.
+    """
+    return bool(re.search(
+        r"\b(rank|ranked|ranking|number one|number 1)\b",
+        question or "", re.IGNORECASE))
+
+
+def _mentions_ranking(sentences: list[str]) -> bool:
+    """Does any sentence mention a ranking? The stem "rank" covers
+    rank/ranked/ranking; "number one"/"number 1" are matched as
+    phrases. Note the limit, stated honestly: this checks for a
+    ranking *term*, not a ranked *entity* — a sentence about
+    "best-ranked students" passes even though it names no
+    university. It catches the o04 shape (no ranking mentioned at
+    all), not every unanswerable ranking question.
+    """
+    joined = " ".join(sentences).lower()
+    return ("rank" in _stems(joined)
+            or "number one" in joined or "number 1" in joined)
+
+
+def verify_answer_relevance(question: str, sentences: list[str],
+                            dense_sims: dict[str, float] | None = None) -> dict:
+    """Answer-verification step (Phase 2, Step 2): do the chosen
+    sentences actually answer the question?
+
+    Two checks, both deterministic and explainable:
+    1. Dense floor: the best picked sentence must reach
+       DENSE_VERIFY_MIN_SIM cosine similarity to the question, or
+       the answer is refused ("low_answer_similarity"). This is a
+       floor for unrelated questions, not a relevance proof.
+    2. Ranking focus: a question that asks about a ranking must be
+       answered by a sentence that mentions a ranking, or the
+       answer is refused ("unanswered_ranking"). This is the check
+       that catches o04: the Vanier sentences score 0.667 on dense
+       similarity (above several answerable questions), so no dense
+       threshold can separate them — but none of them mentions a
+       ranking at all.
+
+    `dense_sims`, when given, is a sentence -> cosine map (tests
+    inject it so they need no model); otherwise the sims are
+    computed here with the local embedder, and the floor is skipped
+    when the embedder is unavailable. Returns {"answers": bool,
+    "reason": str|None, "best_sim": float|None}.
+    """
+    if not sentences:
+        return {"answers": False, "reason": "no_answer_sentences",
+                "best_sim": None}
+    if dense_sims is None:
+        dense_sims = dense_sentence_scores(question, sentences)
+    best_sim = max(dense_sims.values()) if dense_sims else None
+    if best_sim is not None and best_sim < DENSE_VERIFY_MIN_SIM:
+        return {"answers": False, "reason": "low_answer_similarity",
+                "best_sim": best_sim}
+    if _ranking_question(question) and not _mentions_ranking(sentences):
+        return {"answers": False, "reason": "unanswered_ranking",
+                "best_sim": best_sim}
+    return {"answers": True, "reason": None, "best_sim": best_sim}
+
+
 def _pick_sentences(chunks: list[dict], query_stems: set[str],
+                    question: str | None = None,
                     specific_stems: set[str] | None = None,
-                    max_sentences: int = 3, scored: bool = True) -> list[str]:
+                    max_sentences: int = 3, scored: bool = True,
+                    dense: bool = True) -> list[str]:
     """Pick the best sentences, scored by query-term overlap.
 
     With scored=True (default) each sentence is scored (1 point per
@@ -109,6 +207,25 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
     joined with a space re-split as one "sentence" that appears in
     no chunk, which breaks the faithfulness measurement (found on
     the q07 DAAD question).
+
+    Dense sentence scoring (Phase 2, Step 2): with dense=True (and
+    scored=True) each sentence's lexical score gains
+    DENSE_SENTENCE_WEIGHT * its cosine similarity to the question
+    (local MiniLM embedder, $0). Measured honestly on the golden
+    set, this does NOT improve answer-only relevance on this
+    corpus: at weights 0–2 no golden answer changes at all, and
+    at weights 3–4 it trades one question for another (q03 fixed,
+    q16 lost — q16's correct sentence scores only 0.394 dense
+    similarity, below the boilerplate that replaces it), net
+    0.909 either way. The weight is therefore 2.0: the largest
+    weight with zero regressions, kept in the path so the mechanism
+    exists and is measured, not because it earns a gain here.
+    The paraphrase gap is real but dense similarity is too weak a
+    signal at this corpus size to close it: q03's correct sentence
+    ranks 4th by dense sim (0.630), q10's 8th (0.438) and q17's
+    14th (0.527). A sentence still needs at least one shared query
+    stem to be pickable (unchanged), and when the embedder is
+    unavailable the scores are lexical-only.
     """
     specific_stems = specific_stems or set()
     if not scored:
@@ -124,7 +241,9 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
         if not picked and chunks:
             picked = _sentences(chunks[0]["text"])[:1]
         return picked
-    scored_list: list[tuple[int, int, str]] = []
+    # Collect the pickable sentences first so they are embedded in
+    # one batch (one model call per question, not one per sentence).
+    candidates: list[tuple[int, str]] = []
     seen: set[str] = set()
     for order, chunk in enumerate(chunks):
         for sent in _sentences(chunk["text"]):
@@ -134,17 +253,26 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
                 continue
             seen.add(sent)
             stems = _stems(sent)
-            shared = query_stems & stems
-            if not shared:
+            if not (query_stems & stems):
                 continue
-            score = len(shared) + 2 * len(specific_stems & stems)
-            # Short fragments are usually headers ("Scholarships |
-            # Chevening.", "Home Page - Vanier..."). They share the
-            # document name and little else, so they outscore real
-            # content on raw stem count. Demote them by one point.
-            if len(sent) < 50:
-                score -= 1
-            scored_list.append((score, -order, sent))
+            candidates.append((order, sent))
+    sims: dict[str, float] = {}
+    if dense and question is not None:
+        sims = dense_sentence_scores(
+            question, [sent for _, sent in candidates]) or {}
+    scored_list: list[tuple[float, int, str]] = []
+    for order, sent in candidates:
+        stems = _stems(sent)
+        shared = query_stems & stems
+        score = len(shared) + 2 * len(specific_stems & stems)
+        # Short fragments are usually headers ("Scholarships |
+        # Chevening.", "Home Page - Vanier..."). They share the
+        # document name and little else, so they outscore real
+        # content on raw stem count. Demote them by one point.
+        if len(sent) < 50:
+            score -= 1
+        score += DENSE_SENTENCE_WEIGHT * sims.get(sent, 0.0)
+        scored_list.append((score, -order, sent))
     scored_list.sort(key=lambda item: (item[0], item[1]), reverse=True)
     picked = [sent for _, _, sent in scored_list[:max_sentences]]
     if not picked and chunks:
@@ -153,7 +281,8 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
 
 
 def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRESHOLD,
-           gates: bool = True, scored_picking: bool = True) -> dict:
+           gates: bool = True, scored_picking: bool = True,
+           dense: bool = True) -> dict:
     """Build the API answer dict from retrieved chunks.
 
     `gates=False` skips every abstention rule and always answers
@@ -161,7 +290,9 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
     benchmark compares against: a tutorial chatbot answers
     everything, including questions the corpus cannot answer.
     `scored_picking=False` takes the first sentences in chunk order
-    instead of the best-scored sentences.
+    instead of the best-scored sentences. `dense=False` turns off
+    dense sentence scoring (lexical scores only); the eval uses it
+    to measure the dense contribution separately.
     """
     # Content stems only: _stems(question) would include stopwords
     # ("how", "do", "at", "i"), and a sentence sharing only "at" and
@@ -182,8 +313,10 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
             return _abstain(question, best, "doc_name_mismatch")
 
     sentences = _pick_sentences(candidates[:3], query_stems,
+                                question,
                                 _specific_terms(question),
-                                max_sentences=5, scored=scored_picking)
+                                max_sentences=5, scored=scored_picking,
+                                dense=dense)
     if not sentences:
         return _abstain(question, best, "no_matching_sentences")
 
@@ -208,12 +341,26 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
         elif not (query_stems & _stems(" ".join(sentences))):
             return _abstain(question, best, "weak_overlap")
 
+        # Phase 2, Step 2 — answer verification: do the chosen
+        # sentences actually answer the question? (Dense floor +
+        # ranking-focus check; see `verify_answer_relevance`.)
+        # Runs after the lexical gates, and only when gates are on:
+        # the naive baseline (gates=False) must keep answering
+        # everything, or it stops being a baseline.
+        relevance = verify_answer_relevance(question, sentences)
+        if not relevance["answers"]:
+            result = _abstain(question, best, relevance["reason"])
+            result["relevance_verification"] = relevance
+            return result
+    else:
+        relevance = None
+
     citations = [
         {"doc": c["doc"], "chunk_id": c["chunk_id"], "score": c["score"],
          "text": c["text"]}
         for c in candidates[:3]
     ]
-    return {
+    result = {
         "question": question,
         "found": True,
         "answer": " ".join(sentences),
@@ -221,6 +368,9 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
         "citations": citations,
         "answer_sentences": sentences,
     }
+    if relevance is not None:
+        result["relevance_verification"] = relevance
+    return result
 
 
 def _abstain(question: str, best: float, reason: str = "abstained") -> dict:

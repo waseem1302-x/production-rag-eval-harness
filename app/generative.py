@@ -17,7 +17,12 @@ Pipeline for one question (see `generate_answer`):
 3. Verify every generated sentence against the chunks with
    `app.verification.verify_answer` (deterministic, lexical).
    Unsupported sentences are dropped.
-4. If at least one sentence survives, that is the answer
+4. Verify the kept sentences actually answer the question with
+   `app.answer.verify_answer_relevance` (Phase 2, Step 2: dense
+   floor + ranking-focus check — the same check the extractive
+   answerer runs). If they do not, fall back to the extractive
+   answer, which already passed that check.
+5. If at least one sentence survives, that is the answer
    (mode "generative"). If none survives, fall back to the
    extractive answer (mode "generative_fallback_extractive").
 
@@ -226,6 +231,24 @@ def generate_answer(question: str, retrieved: list[dict],
                                 "dropped": check["dropped"]}
         return result
 
+    # Phase 2, Step 2: the kept sentences are grounded, but
+    # grounding is not relevance (the o04 gap: Vanier sentences
+    # that never name a ranked university are all "supported").
+    # Run the same answer-verification the extractive answerer
+    # runs; on failure fall back to the extractive answer, which
+    # already passed it.
+    from .answer import verify_answer_relevance
+
+    relevance = verify_answer_relevance(question, check["kept"])
+    if not relevance["answers"]:
+        result = dict(extractive)
+        result["answer_mode"] = "generative_fallback_extractive"
+        result["generation"] = {"model": MODEL_ID, "latency_s": round(latency, 2),
+                                "reason": "relevance_verification_failed",
+                                "draft": draft,
+                                "relevance_verification": relevance}
+        return result
+
     return {
         "question": question,
         "found": True,
@@ -238,6 +261,7 @@ def generate_answer(question: str, retrieved: list[dict],
                        "reason": "verified"},
         "verification": {"kept": check["kept"], "dropped": check["dropped"],
                          "n_dropped": len(check["dropped"])},
+        "relevance_verification": relevance,
     }
 
 
