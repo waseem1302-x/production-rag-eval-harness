@@ -2,20 +2,28 @@
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
-cites the exact chunks it used, and says **"Not found in the corpus"**
-when the evidence is weak — instead of hallucinating.
+cites the exact chunks it used, checks eligibility before answering
+when a profile is given, and says **"Not found in the corpus"** when
+the evidence is weak — instead of hallucinating.
 
-Phase 1 is **retrieval + extractive answers + a measured eval harness**.
-There is no generative LLM yet. That is deliberate: if retrieval is wrong,
-a generator only hides it. Phase 2 adds a generator and an LLM-as-judge.
+Phase 1 is **retrieval + extractive answers + eligibility-first
+answering + a measured eval harness**. There is no generative LLM
+yet. That is deliberate: if retrieval is wrong, a generator only
+hides it. Phase 2 adds a generator and an LLM-as-judge.
 
-## Corpus (Phase 1: 10 documents)
+**Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
+why, trade-offs) · [`EVAL_RESULTS.md`](EVAL_RESULTS.md) (every measured
+number) · [`DATA_QUALITY.md`](DATA_QUALITY.md) (the corpus's messy
+data, documented not hidden) · [`benchmarks/results/before_after.md`](benchmarks/results/before_after.md)
+(before/after with failure tables).
+
+## Corpus (Phase 1: 10 documents, 31 chunks)
 
 Public official pages for 10 of the 21 family scholarships from
 The Next Scholar. One page per scholarship, fetched 18 Nov 2026.
-See `data/sources.json` for the exact URL, fetch method, HTTP status
-and fetch date of every document. Raw HTML and extracted text live in
-`data/raw/`.
+See `data/sources.json` and `data/raw/*.json` for the exact URL, fetch
+method, HTTP status and fetch date of every document. Raw text is
+saved verbatim and never edited after fetching.
 
 | # | Scholarship | Source |
 |---|-------------|--------|
@@ -30,21 +38,24 @@ and fetch date of every document. Raw HTML and extracted text live in
 | 9 | Hong Kong PhD Fellowship Scheme (HKPFS) | https://cerg1.ugc.edu.hk/hkpfs/index.html |
 | 10 | MEXT (Japan) | https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/ |
 
-Chevening returned HTTP 403 to a direct `curl`/`requests` fetch, so its
-text was fetched with a text fetcher and saved with
-`fetch_method: "browser-text-fetch"`. The other 9 returned HTTP 200.
-No Reddit data. No tutorial corpus. No scraped private data.
+Chevening returned HTTP 403 to a direct fetch and DAAD's direct fetch
+failed (proxy connection error), so both were saved via a text fetcher
+from the same official URLs — recorded as
+`fetch_method: "browser-text-fetch"` in `data/raw/*.json`, not hidden.
+The other 8 returned HTTP 200. No Reddit data. No tutorial corpus.
+No scraped private data.
 
 ## How it works
 
 ```
 official pages -> ingest.py (fetch + extract text, save raw + metadata)
-  -> chunking.py (recursive, ~512 tokens, 200-char overlap)
+  -> chunking.py (text normalisation + recursive chunking, ~512 tokens, 200-char overlap)
   -> embeddings.py (sentence-transformers all-MiniLM-L6-v2, 384-dim)
   -> retrieval.py (FAISS dense + BM25, 0.5/0.5 hybrid, lexical rerank)
-  -> answer.py (extractive answer + citations + abstention)
+  -> eligibility.py (degree + citizenship checks, corpus-grounded, only if profile given)
+  -> answer.py (extractive answer + citations + abstention gates)
   -> api.py (FastAPI, POST /ask)
-  -> eval.py (golden set, recall@k, faithfulness, answer relevance)
+  -> eval.py (golden set, recall@k, faithfulness, answer relevance, eligibility accuracy)
 ```
 
 ### Chunking choice (why 512 tokens, why overlap)
@@ -60,6 +71,13 @@ sentences, then words only if a single sentence is still too long.
 Implemented from scratch in `app/chunking.py` (no LangChain) so the
 behaviour is fully visible and testable.
 
+Before chunking, `app/textnorm.py` normalises the text: it unwraps
+hard line breaks inside sentences, keeps headers separate from
+content, and adds terminal punctuation to fragments. Official pages
+put line breaks in the middle of sentences; without this, chunks
+contain broken sentences and answers quote fragments. This step
+alone moved answer-only relevance from 0.70 to 0.85.
+
 ### Retrieval choice (why hybrid)
 
 Dense embeddings alone miss exact names and numbers ("Vanier",
@@ -72,20 +90,71 @@ with a transparent lexical reranker (query-term coverage bonus).
 That reranker is **not** a cross-encoder; Phase 2 adds one and
 measures whether it actually helps.
 
+Honest finding from the ablation: on this 31-chunk corpus, dense
+retrieval buys **no measured recall** (recall@5 is 1.0 for every
+signal) and slightly hurts answer-only relevance (dense-only 0.826
+vs BM25-only 0.87) at ~50–80x the latency. The improvement comes
+from the answering discipline, not the retrieval signal. See
+"Benchmarks" below and [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
 ### Answering choice (why extractive, why abstain)
 
 Phase 1 has no generative LLM, so the "answer" is sentences taken
 verbatim from the top cited chunks. That makes faithfulness
-measurable instead of claimed. If the best hybrid score is below
-the abstention threshold, or no retrieved chunk shares a content
-word with the question, the API returns:
+measurable instead of claimed (measured 1.0). If the best score is
+below the abstention threshold, or no retrieved chunk shares a
+content word with the question, the API returns:
 
 ```json
-{"found": false, "answer": "Not found in the corpus.", "citations": []}
+{"found": false, "answer": "Not found in the corpus.", "citations": [],
+ "abstention_reason": "missing_specific_term"}
 ```
 
-Abstaining is a feature, not a failure. A scholarship assistant
-that invents a deadline is worse than one that says it does not know.
+Every refusal names its reason (`weak_score`, `doc_name_mismatch`,
+`no_matching_sentences`, `weak_overlap`, `missing_specific_term`,
+`empty_index`). Abstaining is a feature, not a failure. A scholarship
+assistant that invents a deadline is worse than one that says it
+does not know.
+
+### Eligibility-first answering
+
+`POST /ask` accepts an optional `profile`:
+
+```json
+{"question": "Can I apply for the SI Scholarship for Global Professionals?",
+ "profile": {"nationality": "Pakistan", "degree_level": "masters"}}
+```
+
+Before the substantive answer, the system checks degree level and
+citizenship against rules grounded **only** in corpus sentences.
+Every rule's evidence sentence is validated verbatim against the
+chunk text at load time; a rule whose evidence is missing drops to
+`unknown`. Where the corpus states no rule, the verdict is `unknown`
+— never guessed from general knowledge.
+
+```json
+{"found": true,
+ "answer": "Not eligible for the SI Scholarship for Global Professionals. ... Pakistan is not among the 34 eligible countries ... Evidence: Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, ...",
+ "eligibility": [{"doc": "sweden-si", "verdict": "not_eligible",
+   "reasons": ["..."], "evidence": [{"sentence": "...", "chunk_id": "sweden-si-2"}]}]}
+```
+
+A real finding: **Pakistan is not among the SI Scholarship's 34
+eligible countries** (the list is in the corpus, chunk
+`sweden-si-2`), so a Pakistani master's applicant is correctly told
+"not eligible" with the full list cited. Measured: eligibility
+accuracy **1.0 (10/10 golden questions)**.
+
+### Auditable retrieval
+
+Every `/ask` response carries a `retrieval_trace`: every candidate
+chunk with its dense score, BM25 score, combined score, rerank
+score and term coverage, in reranked order, and whether it was
+injected into the answer. A wrong answer can be traced to the exact
+chunk and score that produced it. `benchmarks/audit_retrieval.py`
+writes the same trace for all 38 golden questions to
+`benchmarks/results/retrieval_audit.json` (38 questions, 52 injected
+chunks).
 
 ## Quickstart (local)
 
@@ -94,7 +163,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 1. Fetch the corpus (9 pages by HTTP, Chevening text is already saved)
+# 1. Fetch the corpus (8 pages by HTTP; Chevening + DAAD text already saved)
 python -m scripts.ingest
 
 # 2. Chunk + embed + build the FAISS index
@@ -110,13 +179,20 @@ uvicorn app.api:app --reload --port 8000
 curl -X POST http://localhost:8000/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "What does the Chevening Scholarship fund?"}'
+
+# 6. Ask with a profile (eligibility-first)
+curl -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Can I apply for the SI Scholarship for Global Professionals?",
+       "profile": {"nationality": "Pakistan", "degree_level": "masters"}}'
 ```
 
 ## API
 
-`GET /health` — `{"status": "ok", "docs": 10, "chunks": N, "embedder": ...}`
+`GET /health` — `{"status": "ok", "docs": 10, "chunks": 31, "embedder": ...}`
 
-`POST /ask` — body `{"question": "...", "top_k": 5}`
+`POST /ask` — body `{"question": "...", "top_k": 5, "profile": {"nationality": "...", "degree_level": "..."}}`
+(`profile` is optional.)
 
 ```json
 {
@@ -128,7 +204,11 @@ curl -X POST http://localhost:8000/ask \
   "citations": [
     {"doc": "chevening", "source_url": "https://www.chevening.org/scholarships/",
      "chunk_id": "chevening-0", "score": 0.62, "text": "..."}
-  ]
+  ],
+  "retrieval_trace": {"embedder": "all-MiniLM-L6-v2", "candidates": [
+    {"chunk_id": "chevening-0", "doc": "chevening", "dense_score": 0.9,
+     "bm25_score": 0.7, "combined_score": 0.8, "rerank_score": 0.85,
+     "term_coverage": 0.6, "injected": true}]}
 }
 ```
 
@@ -139,9 +219,10 @@ pretends dense retrieval ran when it did not.
 
 ## Eval harness
 
-`eval/golden.json` holds hand-written questions. Every question was
-checked against the actual fetched text before it was added — the
-expected answer phrase must appear in the cited document.
+`eval/golden.json` holds 38 hand-written questions (23 in-corpus
+factual, 5 out-of-corpus, 10 eligibility). Every question was checked
+against the actual fetched text before it was added — the expected
+answer phrase must appear in the cited document.
 
 `python -m scripts.run_eval` prints:
 
@@ -152,25 +233,132 @@ expected answer phrase must appear in the cited document.
   is not, something is broken).
 - **answer relevance (proxy)** — fraction of questions where the
   expected answer phrase appears in the answer or cited chunks.
-  This is a string-match proxy, **not** an LLM judge. Phase 2 adds
-  an LLM-as-judge and compares.
+- **answer-only relevance** — fraction where the expected phrase
+  appears in the answer text alone, not just the citations. This is
+  the metric that separates the naive baseline from the improved
+  pipeline.
 - **abstention accuracy** — fraction of out-of-corpus questions
   correctly answered "Not found in the corpus."
+- **eligibility accuracy** — fraction of profile questions where the
+  verdict matches the expected verdict.
 
 All numbers in this README's "Results" section come from a real
-local run — see `EVAL_RESULTS.md`. No number here is invented.
+local run — see [`EVAL_RESULTS.md`](EVAL_RESULTS.md). No number here
+is invented.
+
+## Benchmarks and ablation
+
+```bash
+python -m benchmarks.run_benchmark   # 7 configurations, same golden set
+```
+
+| Configuration | Mode | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Cost / query |
+|---|---|---|---|---|---|---|---|
+| baseline-naive | bm25 | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | $0.00 |
+| hybrid-plain | hybrid | 1.0 | 0.565 | 1.0 | 0.0 | 39.9 ms | $0.00 |
+| improved-bm25 | bm25 | 1.0 | 0.87 | 1.0 | 0.8 | 1.3 ms | $0.00 |
+| dense-only | dense | 1.0 | 0.826 | 1.0 | 0.8 | 108.8 ms | $0.00 |
+| hybrid-no-rerank | hybrid | 1.0 | 0.87 | 1.0 | 0.8 | 99.9 ms | $0.00 |
+| hybrid-no-gates | hybrid | 1.0 | 0.87 | 1.0 | 0.0 | 69.9 ms | $0.00 |
+| improved-hybrid | hybrid | 1.0 | 0.87 | 1.0 | 0.8 | 66.4 ms | $0.00 |
+
+Each configuration changes one thing from its neighbour, so each
+component's contribution is isolated. Full results:
+`benchmarks/results/<config>.json`, summary:
+`benchmarks/results/summary.md`.
+
+## Before / after
+
+```bash
+python -m benchmarks.before_after   # generated from the results files
+```
+
+| Metric | Before (baseline-naive) | After (improved-hybrid) | Change |
+|---|---|---|---|
+| recall@5 | 1.0 | 1.0 | +0.000 |
+| Answer-only relevance | 0.522 | 0.87 | +0.348 |
+| Faithfulness | 1.0 | 1.0 | +0.000 |
+| Abstention accuracy | 0.0 | 0.8 | +0.800 |
+| Retrieval latency (mean) | 0.2 ms | 66.4 ms | +66.2 ms |
+| Cost per query | $0.00 | $0.00 | $0.00 |
+
+Why it changed: the answering discipline (scored picking + gates),
+not the retrieval signal. The baseline returned the first sentences
+of the top chunk — usually headers, navigation or a marketing intro.
+Full report with failure tables:
+[`benchmarks/results/before_after.md`](benchmarks/results/before_after.md).
+
+### Failures (known, not hidden)
+
+| Question | Why it still fails |
+|---|---|
+| q03, q10, q17 | Paraphrase gap — the expected answer's key terms are not in the question, so lexical picking cannot find the sentence |
+| o04 (Vanier ranked university) | Lexical gates check word overlap, not whether the sentences answer the question |
+| Eligibility vs Vanier closure | Verdicts do not yet factor the programme's closure |
+
+No regressions: no question the baseline got right is lost by the
+improved pipeline.
+
+## Data quality (messy real scholarship data)
+
+```bash
+python -m scripts.check_data_quality
+```
+
+36 findings (8 resolved, 28 open), each citing sentence + chunk +
+source URL. Headline findings: Vanier is **closed** and replaced by
+a harmonized doctoral programme; Eiffel €1,200 is the Master's
+allowance and €2,000 the Doctorate stipend (not a contradiction);
+HKPFS HK$344,400 ≈ US$44,150 is one 2026/27 stipend in two
+currencies; DAAD is a 147-option database, not one award; only SI
+states a deadline; only Vanier/Eiffel/HKPFS state a stipend.
+Full documentation: [`DATA_QUALITY.md`](DATA_QUALITY.md).
+
+## CI gate
+
+```bash
+python -m scripts.ci_gate
+```
+
+Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
+faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
+Measured: 1.0, 0.909, 1.0, 0.8, 1.0 — **gate passes**. Strict mode
+(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails, proving
+the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
+(build index → tests → gate on every push/PR).
+
+## Results (Phase 1, real local run, 18 Nov 2026)
+
+| Metric | Value |
+|---|---|
+| Golden questions | 38 (23 factual + 5 out-of-corpus + 10 eligibility) |
+| recall@3 / recall@5 | 1.0 / 1.0 |
+| Answer relevance (proxy) | 1.0 |
+| Answer-only relevance | 0.909 (30/33) |
+| Faithfulness | 1.0 |
+| Abstention accuracy | 0.8 (4/5) |
+| Eligibility accuracy | 1.0 (10/10) |
+| Tests | 87 passed, 0 failed |
+| Data-quality findings | 36 (8 resolved, 28 open) |
+| Cost per query | $0.00 (local CPU, no API calls) |
+
+Full detail: [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 
 ## Tests
 
 ```bash
-python -m pytest tests/ -v
+python -m pytest tests/ -q   # 87 passed
 ```
 
-Tests cover chunking (size, overlap, sentence boundaries),
-retrieval (known question finds the right document, hybrid beats
-either signal alone on the golden set is checked in eval, not in
-unit tests), and abstention (out-of-corpus question returns
-`found: false` with no citations).
+Tests cover chunking (size, overlap, sentence boundaries, text
+normalisation), retrieval (modes, known questions, empty index),
+answering and abstention (edge cases: empty documents, missing
+context, weak retrieval, duplicate chunks, single long sentence),
+auditable retrieval (abstention reasons, retrieval trace),
+eligibility (27 verdict cases, evidence grounding, API profile
+behaviour), data quality (all known findings, no false positives),
+ablation (retrieval modes, configuration coverage), and report
+integrity (generated before/after report matches the results files).
 
 ## Docker
 
@@ -179,16 +367,12 @@ docker build -t production-rag-eval-harness .
 docker run -p 8000:8000 production-rag-eval-harness
 ```
 
-The image builds the index at build time from the committed
-`data/raw/` and `data/processed/chunks.jsonl`, so the container
-starts without re-fetching or re-downloading the embedding model
-at runtime beyond the cached model in the image.
-
-## Results (Phase 1, real local run)
-
-See `EVAL_RESULTS.md` for the exact numbers from the run on
-18 Nov 2026, including the test count. Summary is written there
-after the run, not guessed here.
+The Dockerfile builds the index at image build time from the
+committed `data/` so the container starts without re-fetching the
+corpus. **Note:** Docker is not installed in this development VM,
+so the image has **never been built or run here** — the Docker path
+is untested and no deployment is claimed. Build it on a machine
+with Docker before trusting it.
 
 ## What Phase 1 does NOT do (Phase 2)
 
@@ -196,19 +380,33 @@ after the run, not guessed here.
 - No cross-encoder reranker (lexical rerank only).
 - No LLM-as-judge (string-match proxies only).
 - No query rewriting, no multi-hop retrieval.
+- No dense sentence scoring (the paraphrase-gap fix).
+- No answer-verification step (the o04 fix).
+- No eligibility check for programme closure (the Vanier gap).
 - No deployment (local + Docker only; not deployed anywhere).
-- No auto-refresh of the corpus (re-run `scripts.ingest` manually).
+- No auto-refresh of the corpus (re-run `scripts.ingest` manually,
+  then re-run the eval and the data-quality checker).
 
 ## What to learn from this (interview)
 
 - **Chunking:** why 512 tokens, why overlap, what breaks when chunks
-  are too small (lost context) or too big (diluted embedding).
+  are too small (lost context) or too big (diluted embedding). Why
+  text normalisation mattered more than chunk size here (0.70 → 0.85).
 - **Hybrid retrieval:** when dense wins, when BM25 wins, why you
   combine them, and how you prove it with recall@k instead of vibes.
+  On this corpus: dense buys nothing — be able to say why, with numbers.
+- **Ablation:** how to isolate one component at a time (signal,
+  reranker, gates) and read the table honestly, including the
+  components that add nothing.
 - **Evals:** a golden set with a baseline beats a demo. Be able to
   say "recall@5 is X, and it went up/down when I changed Y".
 - **Abstention:** the most important production behaviour in a
   scholarship assistant is refusing to answer when the evidence
-  is not there.
-- **Observability:** every answer carries its citations and its
-  score, so any wrong answer can be traced back to the chunk.
+  is not there — and naming the reason.
+- **Eligibility-first:** checking whether the asker can apply, from
+  corpus-grounded rules, before answering the fact question.
+- **Messy data:** real pages close, contradict, and omit. Document
+  the mess with evidence; never let the system paper over it.
+- **Observability:** every answer carries its citations, its score,
+  and its retrieval trace, so any wrong answer can be traced back
+  to the chunk.
