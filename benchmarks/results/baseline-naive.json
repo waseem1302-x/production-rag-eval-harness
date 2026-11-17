@@ -1,0 +1,366 @@
+{
+  "config": "baseline-naive",
+  "description": "BM25-only, no rerank, no abstention gates, first-sentence picking, always answers.",
+  "embedder": "bm25-only",
+  "n_chunks": 31,
+  "quality": {
+    "n_in_corpus": 20,
+    "n_out_of_corpus": 5,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "answer_relevance_proxy": 1.0,
+    "answer_only_relevance": 0.45,
+    "faithfulness": 1.0,
+    "abstention_accuracy": 0.0
+  },
+  "latency": {
+    "n_queries": 25,
+    "mean_ms": 0.4,
+    "p50_ms": 0.4,
+    "p95_ms": 0.5,
+    "max_ms": 0.5
+  },
+  "cost_per_query_usd": 0.0,
+  "per_question": [
+    {
+      "id": "q01",
+      "question": "What does the Chevening Scholarship fund?",
+      "expected_doc": "chevening",
+      "found_doc_top5": [
+        "chevening",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q02",
+      "question": "Is the Chevening Scholarship fully funded?",
+      "expected_doc": "chevening",
+      "found_doc_top5": [
+        "chevening",
+        "sweden-si",
+        "sweden-si",
+        "eiffel",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q03",
+      "question": "How long are the master's studies supported by the SI Scholarship for Global Professionals?",
+      "expected_doc": "sweden-si",
+      "found_doc_top5": [
+        "sweden-si",
+        "sweden-si",
+        "chevening",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q04",
+      "question": "How many countries are eligible for the SI Scholarship for Global Professionals?",
+      "expected_doc": "sweden-si",
+      "found_doc_top5": [
+        "sweden-si",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q05",
+      "question": "How many countries does the Fulbright Foreign Student Program operate in?",
+      "expected_doc": "fulbright",
+      "found_doc_top5": [
+        "fulbright",
+        "chevening",
+        "eiffel",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q06",
+      "question": "How many foreign students receive Fulbright scholarships each year?",
+      "expected_doc": "fulbright",
+      "found_doc_top5": [
+        "fulbright",
+        "eiffel",
+        "sweden-si",
+        "eiffel",
+        "vanier"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q07",
+      "question": "How many scholarship options does the DAAD database list for selection?",
+      "expected_doc": "daad",
+      "found_doc_top5": [
+        "daad",
+        "sweden-si",
+        "chevening",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q08",
+      "question": "Who are DAAD Programmes for Graduates aimed at?",
+      "expected_doc": "daad",
+      "found_doc_top5": [
+        "daad",
+        "mext",
+        "mext",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q09",
+      "question": "How many institutions from how many countries are involved in an Erasmus Mundus Joint Master?",
+      "expected_doc": "erasmus-mundus",
+      "found_doc_top5": [
+        "erasmus-mundus",
+        "erasmus-mundus",
+        "sweden-si",
+        "sweden-si",
+        "chevening"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q10",
+      "question": "How long does an Erasmus Mundus Joint Master last?",
+      "expected_doc": "erasmus-mundus",
+      "found_doc_top5": [
+        "erasmus-mundus",
+        "erasmus-mundus",
+        "chevening",
+        "eiffel",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q11",
+      "question": "At which degree levels does the France Excellence Eiffel Scholarship fund study?",
+      "expected_doc": "eiffel",
+      "found_doc_top5": [
+        "eiffel",
+        "eiffel",
+        "eiffel",
+        "chevening",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q12",
+      "question": "Who submits applications for the Eiffel Scholarship?",
+      "expected_doc": "eiffel",
+      "found_doc_top5": [
+        "eiffel",
+        "eiffel",
+        "eiffel",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q13",
+      "question": "How much is the Vanier Canada Graduate Scholarship worth per year and for how long?",
+      "expected_doc": "vanier",
+      "found_doc_top5": [
+        "vanier",
+        "chevening",
+        "mext",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q14",
+      "question": "Who must nominate a candidate for the Vanier Scholarship?",
+      "expected_doc": "vanier",
+      "found_doc_top5": [
+        "vanier",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q15",
+      "question": "What is the annual stipend of the Hong Kong PhD Fellowship Scheme in 2026/27?",
+      "expected_doc": "hkpfs",
+      "found_doc_top5": [
+        "hkpfs",
+        "hkpfs",
+        "eiffel",
+        "eiffel",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q16",
+      "question": "How many universities participate in the Hong Kong PhD Fellowship Scheme?",
+      "expected_doc": "hkpfs",
+      "found_doc_top5": [
+        "hkpfs",
+        "hkpfs",
+        "sweden-si",
+        "chevening",
+        "mext"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q17",
+      "question": "What levels of study do Manaaki New Zealand Scholarships cover?",
+      "expected_doc": "manaaki",
+      "found_doc_top5": [
+        "manaaki",
+        "eiffel",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": false
+    },
+    {
+      "id": "q18",
+      "question": "What does the Manaaki New Zealand Scholarship Programme aim to build in partner countries?",
+      "expected_doc": "manaaki",
+      "found_doc_top5": [
+        "manaaki",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q19",
+      "question": "How many types of MEXT scholarship are there?",
+      "expected_doc": "mext",
+      "found_doc_top5": [
+        "mext",
+        "mext",
+        "mext",
+        "sweden-si",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    },
+    {
+      "id": "q20",
+      "question": "Which MEXT categories include research students and undergraduate students?",
+      "expected_doc": "mext",
+      "found_doc_top5": [
+        "mext",
+        "mext",
+        "mext",
+        "mext",
+        "mext"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer_relevant": true,
+      "answer_only_relevant": true
+    }
+  ]
+}
