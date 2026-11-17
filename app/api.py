@@ -43,6 +43,10 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=3, max_length=1000)
     top_k: int = Field(default=DEFAULT_TOP_K, ge=1, le=10)
     profile: Profile | None = None
+    # Phase 2, Step 1: opt-in generative answer (local model +
+    # verification, falls back to extractive). Default False:
+    # the extractive default is unchanged.
+    generate: bool = False
 
 
 def get_retriever() -> Retriever:
@@ -61,7 +65,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Production RAG Eval Harness (Phase 1)", lifespan=lifespan)
+app = FastAPI(title="Production RAG Eval Harness (Phase 2)", lifespan=lifespan)
 
 
 @app.get("/health")
@@ -82,6 +86,8 @@ def ask(req: AskRequest):
                 "abstention_reason": "empty_index", "retrieval_trace": None}
     retrieved = r.search(req.question, top_k=req.top_k)
     result = build_answer(req.question, retrieved)
+    result["answer_mode"] = "extractive"
+    elig_replaced = False
     if req.profile is not None:
         # Eligibility first: a not-eligible verdict, or an
         # eligibility question, replaces the substantive answer.
@@ -93,6 +99,26 @@ def ask(req: AskRequest):
         result["eligibility"] = eligibility
         if elig_answer is not None:
             result = elig_answer
+            elig_replaced = True
+    if req.generate:
+        if elig_replaced or not result.get("found"):
+            # Generative path (opt-in only). Eligibility answers are
+            # template + verbatim evidence, never generated; an
+            # abstention stays an abstention. `generate_answer`
+            # re-runs the extractive gates first and falls back
+            # to them when verification fails.
+            result["answer_mode"] = result.get("answer_mode", "extractive")
+            result["generation"] = {
+                "model": None,
+                "reason": ("skipped_eligibility_answer" if elig_replaced
+                           else "skipped_abstention")}
+        else:
+            from .generative import generate_answer
+
+            gen = generate_answer(req.question, retrieved)
+            if "eligibility" in result:
+                gen["eligibility"] = result["eligibility"]
+            result = gen
     result["embedder"] = r.embedder
     # Attach source URLs to citations.
     urls = {s["slug"]: s["source_url"] for s in load_sources()}

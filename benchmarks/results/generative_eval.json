@@ -1,0 +1,1521 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "model_params": "0.5B",
+  "model_file_bytes": 988097824,
+  "model_file_mb": 988.1,
+  "cost_per_query_usd": 0.0,
+  "load_s": 3.6,
+  "extractive_eval_s": 1.5,
+  "generative_eval_s": 263.1,
+  "total_s": 288.1,
+  "mean_generation_latency_s": 4.75,
+  "mean_judge_latency_s": 3.82,
+  "extractive": {
+    "n_in_corpus": 33,
+    "n_out_of_corpus": 5,
+    "n_eligibility": 10,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "answer_relevance_proxy": 1.0,
+    "answer_only_relevance": 0.909,
+    "faithfulness": 1.0,
+    "abstention_accuracy": 0.8,
+    "eligibility_accuracy": 1.0,
+    "per_question": [
+      {
+        "id": "q01",
+        "question": "What does the Chevening Scholarship fund?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "sweden-si",
+          "daad",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Study in the UK on a fully-funded scholarship with Chevening. Chevening Scholarships are fully-funded, leaving you free to focus on achieving your professional goals and maximising the experience of a lifetime. Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK. Scholarships | Chevening. Learn more about Chevening's eligibility and work experience requirements.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q02",
+        "question": "Is the Chevening Scholarship fully funded?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "sweden-si",
+          "daad",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Study in the UK on a fully-funded scholarship with Chevening. Chevening Scholarships are fully-funded, leaving you free to focus on achieving your professional goals and maximising the experience of a lifetime. Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK. Scholarships | Chevening. Learn more about Chevening's eligibility and work experience requirements.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q03",
+        "question": "How long are the master's studies supported by the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. The Scholarship for Global Professionals is a competitive full y-funded scholarship that includes: Full tuition fee coverage. The programmes that are eligible for the SI scholarship for Global Professionals are.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q04",
+        "question": "How many countries are eligible for the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia. The programmes that are eligible for the SI scholarship for Global Professionals are. Find the list of eligible ma ster\u2019s programmes for the Scholarship for Global professionals academic year 2027/2028 here. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. .",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q05",
+        "question": "How many countries does the Fulbright Foreign Student Program operate in?",
+        "expected_doc": "fulbright",
+        "found_doc_top5": [
+          "fulbright",
+          "sweden-si",
+          "sweden-si",
+          "erasmus-mundus",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The Fulbright Foreign Student Program operates in more than 160 countries worldwide. Please use the drop-down menu below or on the Apply page to find information about the Foreign Fulbright Program in your home country, including eligibility requirements and application guidelines. Foreign Fulbright Program - Foreign Student Program. The Fulbright Foreign Student Program enables graduate students, young professionals and artists from abroad to study and conduct research in the United States. The Fulbright Foreign Student Program application and selection process is administered by binational Fulbright Commissions/Foundations or U.S.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q06",
+        "question": "How many foreign students receive Fulbright scholarships each year?",
+        "expected_doc": "fulbright",
+        "found_doc_top5": [
+          "fulbright",
+          "eiffel",
+          "eiffel",
+          "erasmus-mundus",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Approximately 4,000 foreign students receive Fulbright scholarships each year. Foreign Fulbright Program - Foreign Student Program. The Fulbright Foreign Student Program enables graduate students, young professionals and artists from abroad to study and conduct research in the United States. The Fulbright Foreign Student Program operates in more than 160 countries worldwide. The Fulbright Foreign Student Program application and selection process is administered by binational Fulbright Commissions/Foundations or U.S.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q07",
+        "question": "How many scholarship options does the DAAD database list for selection?",
+        "expected_doc": "daad",
+        "found_doc_top5": [
+          "daad",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "147 Scholarship options for your selection. Scholarship Database - DAAD - Deutscher Akademischer Austauschdienst. Welcome to our scholarship database! Here you will find information about our DAAD scholarship programmes for international students and researchers as well as offers from other selected funding organisations. Do you have any questions about DAAD scholarships?",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q08",
+        "question": "Who are DAAD Programmes for Graduates aimed at?",
+        "expected_doc": "daad",
+        "found_doc_top5": [
+          "daad",
+          "sweden-si",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Programmes for Graduates are people who already have at least one first academic degree, e.g. Graduates are people who already have at least one first academic degree, e.g. Here you will find information about our DAAD scholarship programmes for international students and researchers as well as offers from other selected funding organisations. Scholarship Database - DAAD - Deutscher Akademischer Austauschdienst. Do you have any questions about DAAD scholarships?",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q09",
+        "question": "How many institutions from how many countries are involved in an Erasmus Mundus Joint Master?",
+        "expected_doc": "erasmus-mundus",
+        "found_doc_top5": [
+          "erasmus-mundus",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "fulbright"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Erasmus Mundus Joint Masters are prestigious international masters, jointly designed and delivered by a group of higher education institutions. They involve at least 3 institutions from at least 3 different countries, and multiple associated partners from the academic and non-academic world. You will gain either a joint degree (i.e. one single degree certificate issued on behalf of at least two higher education institutions) or multiple degrees (i.e. at least two degree certificates issued by two higher education institutions of the consortium). You\u2019ll be able to define these in detail when you sign a study agreement with the relevant Erasmus Mundus Joint Master at the beginning of your studies. Erasmus Mundus Joint Masters (students).",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q10",
+        "question": "How long does an Erasmus Mundus Joint Master last?",
+        "expected_doc": "erasmus-mundus",
+        "found_doc_top5": [
+          "erasmus-mundus",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Erasmus Mundus Joint Masters are prestigious international masters, jointly designed and delivered by a group of higher education institutions. You\u2019ll be able to define these in detail when you sign a study agreement with the relevant Erasmus Mundus Joint Master at the beginning of your studies. Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. You must have a bachelor\u2019s degree (first degree), or be in your last year of bachelor studies graduate before the master\u2019s programme starts.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q11",
+        "question": "At which degree levels does the France Excellence Eiffel Scholarship fund study?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "vanier"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Developed by the Ministry of Foreign Affairs, the France Excellence Eiffel Scholarship Program provides annual training for future foreign decision-makers in the public and private sectors in degree programs at the Master's and Doctoral levels. The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. The two main disciplinary fields for the France Excellence Eiffel scholarships cover the following seven areas of study for the Master's and Doctorate elements: For Science and Technology. Presentation of the France Excellence Eiffel Scholarship. French higher education institutions who submit candidates to the France Excellence Eiffel program agree to enroll them: in courses leading to a master's degree in an engineering program in a joint doctoral program (joint supervision of dissertation and/or dual degree), in partnership with a partner institution abroad.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q12",
+        "question": "Who submits applications for the Eiffel Scholarship?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "To learn about the procedures and deadlines for submitting an application, contact the international relations department of a French institution via its website, by e-mail or by telephone. All French higher education institutions can submit applications. The institution submits your application online via the dedicated Campus France website. Applications are submitted exclusively by French higher education institutions. French higher education institutions who submit candidates to the France Excellence Eiffel program agree to enroll them: in courses leading to a master's degree in an engineering program in a joint doctoral program (joint supervision of dissertation and/or dual degree), in partnership with a partner institution abroad.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q13",
+        "question": "How much is the Vanier Canada Graduate Scholarship worth per year and for how long?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "eiffel",
+          "sweden-si",
+          "sweden-si",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Vanier, the first francophone Governor General of Canada, the Vanier Canada Graduate Scholarships (Vanier CGS) program helps. Home Page - Vanier Canada Graduate Scholarships. Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program. Valued at $50,000 per year for three years during doctoral studies.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q14",
+        "question": "Who must nominate a candidate for the Vanier Scholarship?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "eiffel"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Candidates must be nominated by a Canadian institution with a quota. Candidates should only seek a nomination from the institution at which they want to study. We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Vanier, the first francophone Governor General of Canada, the Vanier Canada Graduate Scholarships (Vanier CGS) program helps. How to be nominated.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q15",
+        "question": "What is the annual stipend of the Hong Kong PhD Fellowship Scheme in 2026/27?",
+        "expected_doc": "hkpfs",
+        "found_doc_top5": [
+          "hkpfs",
+          "hkpfs",
+          "sweden-si",
+          "eiffel",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years. Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities. Pursue your dream with the Hong Kong PhD Fellowship Scheme (30.08.2021). 400 PhD Fellowships will be awarded in the 2027/28 academic year*. Candidates who are seeking admission as new full time PhD students in the following eight universities, irrespective of their country of origin, prior work experience and ethnic background, should be eligible to apply.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q16",
+        "question": "How many universities participate in the Hong Kong PhD Fellowship Scheme?",
+        "expected_doc": "hkpfs",
+        "found_doc_top5": [
+          "hkpfs",
+          "hkpfs",
+          "mext",
+          "sweden-si",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities. Pursue your dream with the Hong Kong PhD Fellowship Scheme (30.08.2021). 400 PhD Fellowships will be awarded in the 2027/28 academic year*. Candidates who are seeking admission as new full time PhD students in the following eight universities, irrespective of their country of origin, prior work experience and ethnic background, should be eligible to apply. For awardees who need more than three years to complete the PhD degree, additional support may be provided by the chosen universities.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q17",
+        "question": "What levels of study do Manaaki New Zealand Scholarships cover?",
+        "expected_doc": "manaaki",
+        "found_doc_top5": [
+          "manaaki",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "mext"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Welcome to the home of Manaaki New Zealand scholarships. Manaaki New Zealand Scholarships help build prosperity, security, and sustainable growth in partner countries and fosters a lifetime connection to Aotearoa New Zealand and the leaders of tomorrow. Recipients of a Manaaki New Zealand Scholarship build life-long connections to each other and to Aotearoa New Zealand while gaining a globally recognised education, an authentically New Zealand experience, and the tools to help their countries achieve the futures they deserve. The Manaaki New Zealand Scholarship Programme aims to enhance the mana of partner countries and Aotearoa New Zealand through manaakitanga - the act of hosting, supporting and honouring manaaki scholars. A Manaaki New Zealand scholarship will change and enrich your life.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q18",
+        "question": "What does the Manaaki New Zealand Scholarship Programme aim to build in partner countries?",
+        "expected_doc": "manaaki",
+        "found_doc_top5": [
+          "manaaki",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The Manaaki New Zealand Scholarship Programme aims to enhance the mana of partner countries and Aotearoa New Zealand through manaakitanga - the act of hosting, supporting and honouring manaaki scholars. Manaaki New Zealand Scholarships help build prosperity, security, and sustainable growth in partner countries and fosters a lifetime connection to Aotearoa New Zealand and the leaders of tomorrow. Recipients of a Manaaki New Zealand Scholarship build life-long connections to each other and to Aotearoa New Zealand while gaining a globally recognised education, an authentically New Zealand experience, and the tools to help their countries achieve the futures they deserve. Welcome to the home of Manaaki New Zealand scholarships. A Manaaki New Zealand scholarship will change and enrich your life.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q19",
+        "question": "How many types of MEXT scholarship are there?",
+        "expected_doc": "mext",
+        "found_doc_top5": [
+          "mext",
+          "mext",
+          "mext",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "As seen in the chart below, there are seven types of the Japanese Government (Monbukagakusho) Scholarship program. Please check with the Japanese embassy or other Japanese diplomatic mission in your country to see if there are any openings in the type and field you wish to apply for. There are two ways to apply for a Japanese Government Scholarship: by applying to the Ministry of Education, Culture, Sports, Science and Technology (MEXT) with a recommendation from a Japanese embassy or other Japanese diplomatic mission in your country, or by applying to the MEXT with a recommendation from a Japanese university. In this type of scholarship, scholarship recipients are recruited and initially screened by a Japanese embassy (or consulate general, depending on the country). In addition, the scholarship period and eligibility may vary depending on the type of recommendation framework a university has, so please check with the university you wish to enroll in for details.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q20",
+        "question": "Which MEXT categories include research students and undergraduate students?",
+        "expected_doc": "mext",
+        "found_doc_top5": [
+          "mext",
+          "mext",
+          "mext",
+          "erasmus-mundus",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "They are Research students, Teacher training students, Undergraduate students, Japanese studies students, college of technology students, Specialized training college students, and Young Leaders Program (YLP) students. Programs offered within this scheme are Research students, Undergraduate students, Japanese and Japanese culture students, as well as College of Technology. Research students. Undergraduate students. Undergraduate level.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "e01",
+        "question": "I want to do a PhD in the UK. Can I apply for the Chevening Scholarship?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "erasmus-mundus",
+          "sweden-si",
+          "hkpfs",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Chevening Scholarship. The Chevening Scholarship covers masters level study only, so a phd applicant is not eligible on degree level. The corpus does not state a citizenship rule for the Chevening Scholarship, so the citizenship check cannot be decided from the corpus. Evidence: Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e02",
+        "question": "Can I apply for the Vanier Scholarship for a master's degree?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Valued at $50,000 per year for three years during doctoral studies.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e03",
+        "question": "I am from Pakistan. Can I apply for the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the SI Scholarship for Global Professionals. The SI Scholarship for Global Professionals covers masters level study, so a masters applicant meets the degree requirement. Pakistan is not among the 34 eligible countries for the SI Scholarship for Global Professionals, so the citizenship requirement is not met. Evidence: The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance. Evidence: Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e04",
+        "question": "I am from Bangladesh. Can I apply for the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the SI Scholarship for Global Professionals. The SI Scholarship for Global Professionals covers masters level study, so a masters applicant meets the degree requirement. Bangladesh is among the 34 eligible countries for the SI Scholarship for Global Professionals, so the citizenship requirement is met. Evidence: The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance. Evidence: Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e05",
+        "question": "I am a Canadian citizen starting a PhD. Can I apply for the Vanier Scholarship?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "eiffel"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study, so a phd applicant meets the degree requirement. The Vanier Canada Graduate Scholarship is open irrespective of country of origin, so a Canada citizen meets the citizenship requirement. Evidence: Valued at $50,000 per year for three years during doctoral studies. Evidence: Citizenship: Canadian citizens. Permanent residents of Canada. Foreign citizens.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e06",
+        "question": "Can I apply for the Hong Kong PhD Fellowship for a master's degree?",
+        "expected_doc": "hkpfs",
+        "found_doc_top5": [
+          "hkpfs",
+          "hkpfs",
+          "erasmus-mundus",
+          "sweden-si",
+          "erasmus-mundus"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Hong Kong PhD Fellowship Scheme. The Hong Kong PhD Fellowship Scheme covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e07",
+        "question": "Can I apply for a Manaaki Scholarship for undergraduate study?",
+        "expected_doc": "manaaki",
+        "found_doc_top5": [
+          "manaaki",
+          "mext",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for a Manaaki New Zealand Scholarship. A Manaaki New Zealand Scholarship covers masters, phd, undergraduate level study, so an undergraduate applicant meets the degree requirement. Evidence: Scholarships for undergraduate and postgraduate study.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e08",
+        "question": "I want to do a one-year master's in the UK. Can I apply for the Chevening Scholarship?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Chevening Scholarship. The Chevening Scholarship covers masters level study, so a masters applicant meets the degree requirement. Evidence: Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e09",
+        "question": "Can I apply for the Eiffel Scholarship for a PhD in France?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "erasmus-mundus"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the France Excellence Eiffel Scholarship. The France Excellence Eiffel Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. The France Excellence Eiffel Scholarship is for international students, so a Pakistan citizen meets the citizenship requirement. Evidence: The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. Evidence: The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e10",
+        "question": "Can I apply for the Fulbright Foreign Student Program for a master's degree?",
+        "expected_doc": "fulbright",
+        "found_doc_top5": [
+          "fulbright",
+          "erasmus-mundus",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligibility for the Fulbright Foreign Student Program cannot be decided from the corpus. The corpus does not state which degree levels the Fulbright Foreign Student Program covers, so the degree check cannot be decided from the corpus.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "unknown"
+      },
+      {
+        "id": "q21",
+        "question": "Is the Vanier Canada Graduate Scholarship still accepting applications?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "sweden-si",
+          "fulbright",
+          "sweden-si",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Vanier, the first francophone Governor General of Canada, the Vanier Canada Graduate Scholarships (Vanier CGS) program helps. Home Page - Vanier Canada Graduate Scholarships. Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program. Permanent residents of Canada.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q22",
+        "question": "How much is the monthly allowance for a master's student on the Eiffel Scholarship?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "France Excellence Eiffel scholarship holders receive a monthly allowance of \u20ac1,200 (from January 2026), to which is added several services: International transportation, national transportation, insurance, housing searches, cultural activities, etc. France Excellence Eiffel scholarship holders receive a monthly stipend of \u20ac2,000 (from January 2026) to which is added several services:: international transportation, national transportation, insurance, housing searches, cultural activities, etc. The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. Developed by the Ministry of Foreign Affairs, the France Excellence Eiffel Scholarship Program provides annual training for future foreign decision-makers in the public and private sectors in degree programs at the Master's and Doctoral levels. The two main disciplinary fields for the France Excellence Eiffel scholarships cover the following seven areas of study for the Master's and Doctorate elements: For Science and Technology.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      },
+      {
+        "id": "q23",
+        "question": "How much is the monthly stipend for a doctoral student on the Eiffel Scholarship?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "vanier",
+          "hkpfs"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "France Excellence Eiffel scholarship holders receive a monthly stipend of \u20ac2,000 (from January 2026) to which is added several services:: international transportation, national transportation, insurance, housing searches, cultural activities, etc. The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. France Excellence Eiffel scholarship holders receive a monthly allowance of \u20ac1,200 (from January 2026), to which is added several services: International transportation, national transportation, insurance, housing searches, cultural activities, etc. Developed by the Ministry of Foreign Affairs, the France Excellence Eiffel Scholarship Program provides annual training for future foreign decision-makers in the public and private sectors in degree programs at the Master's and Doctoral levels. French higher education institutions who submit candidates to the France Excellence Eiffel program agree to enroll them: in courses leading to a master's degree in an engineering program in a joint doctoral program (joint supervision of dissertation and/or dual degree), in partnership with a partner institution abroad.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null
+      }
+    ]
+  },
+  "generative": {
+    "n_in_corpus": 33,
+    "n_out_of_corpus": 5,
+    "n_eligibility": 10,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "answer_relevance_proxy": 1.0,
+    "answer_only_relevance": 0.697,
+    "faithfulness": 0.754,
+    "abstention_accuracy": 0.8,
+    "eligibility_accuracy": 1.0,
+    "per_question": [
+      {
+        "id": "q01",
+        "question": "What does the Chevening Scholarship fund?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "sweden-si",
+          "daad",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The Chevening Scholarship funds outstanding emerging leaders from all over the world who have the passion and influence to solve pressing local, national, or global challenges.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 9.39,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.898
+        }
+      },
+      {
+        "id": "q02",
+        "question": "Is the Chevening Scholarship fully funded?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "sweden-si",
+          "daad",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Study in the UK on a fully-funded scholarship with Chevening. Chevening Scholarships are fully-funded, leaving you free to focus on achieving your professional goals and maximising the experience of a lifetime. Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK. Scholarships | Chevening. Learn more about Chevening's eligibility and work experience requirements.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 2.58,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.881
+        }
+      },
+      {
+        "id": "q03",
+        "question": "How long are the master's studies supported by the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The SI Scholarship for Global Professionals supports full-time, one- or two-year master's studies at Swedish universities within the following study fields: Governance, Public Health, Entrepreneurship and Innovation, and STEM (Science, Technology, Engineering and Mathematics).",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 8.77,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 4.83
+        }
+      },
+      {
+        "id": "q04",
+        "question": "How many countries are eligible for the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia. The programmes that are eligible for the SI scholarship for Global Professionals are. Find the list of eligible ma ster\u2019s programmes for the Scholarship for Global professionals academic year 2027/2028 here. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. .",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 4.88,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 5.86
+        }
+      },
+      {
+        "id": "q05",
+        "question": "How many countries does the Fulbright Foreign Student Program operate in?",
+        "expected_doc": "fulbright",
+        "found_doc_top5": [
+          "fulbright",
+          "sweden-si",
+          "sweden-si",
+          "erasmus-mundus",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The Fulbright Foreign Student Program operates in over 160 countries worldwide.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 2.8,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.647
+        }
+      },
+      {
+        "id": "q06",
+        "question": "How many foreign students receive Fulbright scholarships each year?",
+        "expected_doc": "fulbright",
+        "found_doc_top5": [
+          "fulbright",
+          "eiffel",
+          "eiffel",
+          "erasmus-mundus",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Approximately 4,000 foreign students receive Fulbright scholarships each year.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 2.46,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.185
+        }
+      },
+      {
+        "id": "q07",
+        "question": "How many scholarship options does the DAAD database list for selection?",
+        "expected_doc": "daad",
+        "found_doc_top5": [
+          "daad",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The DAAD database lists two scholarship options for selection: \"Country is the country in which you are living and from which you are applying.\" and \"Programmes for Graduates are people who already have at least one first academic degree, e.g. Bachelor.\"",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 6.29,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.592
+        }
+      },
+      {
+        "id": "q08",
+        "question": "Who are DAAD Programmes for Graduates aimed at?",
+        "expected_doc": "daad",
+        "found_doc_top5": [
+          "daad",
+          "sweden-si",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "DAAD Funding Programs are aimed at graduates who already have at least one first academic degree, such as a Bachelor's degree.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 3.91,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.67
+        }
+      },
+      {
+        "id": "q09",
+        "question": "How many institutions from how many countries are involved in an Erasmus Mundus Joint Master?",
+        "expected_doc": "erasmus-mundus",
+        "found_doc_top5": [
+          "erasmus-mundus",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "fulbright"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "An Erasmus Mundus Joint Master involves at least 3 institutions from at least 3 different countries.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 4.27,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 3.725
+        }
+      },
+      {
+        "id": "q10",
+        "question": "How long does an Erasmus Mundus Joint Master last?",
+        "expected_doc": "erasmus-mundus",
+        "found_doc_top5": [
+          "erasmus-mundus",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "An Erasmus Mundus Joint Master lasts for one academic year.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 3.34,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.875
+        }
+      },
+      {
+        "id": "q11",
+        "question": "At which degree levels does the France Excellence Eiffel Scholarship fund study?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "vanier"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The France Excellence Eiffel Scholarship funds studies at both the Master's and Doctoral/PhD levels.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 6.33,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 5.641
+        }
+      },
+      {
+        "id": "q12",
+        "question": "Who submits applications for the Eiffel Scholarship?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The France Excellence Eiffel scholarship program is primarily submitted by French higher education institutions.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 7.78,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 6.716
+        }
+      },
+      {
+        "id": "q13",
+        "question": "How much is the Vanier Canada Graduate Scholarship worth per year and for how long?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "eiffel",
+          "sweden-si",
+          "sweden-si",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The Vanier Canada Graduate Scholarship is valued at $50,000 per year and lasts for three years.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 5.46,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 3.821
+        }
+      },
+      {
+        "id": "q14",
+        "question": "Who must nominate a candidate for the Vanier Scholarship?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "eiffel"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The nomination process for the Vanier Scholarship must be conducted by a Canadian institution.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 3.59,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.338
+        }
+      },
+      {
+        "id": "q15",
+        "question": "What is the annual stipend of the Hong Kong PhD Fellowship Scheme in 2026/27?",
+        "expected_doc": "hkpfs",
+        "found_doc_top5": [
+          "hkpfs",
+          "hkpfs",
+          "sweden-si",
+          "eiffel",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years. Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities. Pursue your dream with the Hong Kong PhD Fellowship Scheme (30.08.2021). 400 PhD Fellowships will be awarded in the 2027/28 academic year*. Candidates who are seeking admission as new full time PhD students in the following eight universities, irrespective of their country of origin, prior work experience and ethnic background, should be eligible to apply.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 4.74,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 4.392
+        }
+      },
+      {
+        "id": "q16",
+        "question": "How many universities participate in the Hong Kong PhD Fellowship Scheme?",
+        "expected_doc": "hkpfs",
+        "found_doc_top5": [
+          "hkpfs",
+          "hkpfs",
+          "mext",
+          "sweden-si",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities. Pursue your dream with the Hong Kong PhD Fellowship Scheme (30.08.2021). 400 PhD Fellowships will be awarded in the 2027/28 academic year*. Candidates who are seeking admission as new full time PhD students in the following eight universities, irrespective of their country of origin, prior work experience and ethnic background, should be eligible to apply. For awardees who need more than three years to complete the PhD degree, additional support may be provided by the chosen universities.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 2.85,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 4.395
+        }
+      },
+      {
+        "id": "q17",
+        "question": "What levels of study do Manaaki New Zealand Scholarships cover?",
+        "expected_doc": "manaaki",
+        "found_doc_top5": [
+          "manaaki",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "mext"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Welcome to the home of Manaaki New Zealand scholarships. Manaaki New Zealand Scholarships help build prosperity, security, and sustainable growth in partner countries and fosters a lifetime connection to Aotearoa New Zealand and the leaders of tomorrow. Recipients of a Manaaki New Zealand Scholarship build life-long connections to each other and to Aotearoa New Zealand while gaining a globally recognised education, an authentically New Zealand experience, and the tools to help their countries achieve the futures they deserve. The Manaaki New Zealand Scholarship Programme aims to enhance the mana of partner countries and Aotearoa New Zealand through manaakitanga - the act of hosting, supporting and honouring manaaki scholars. A Manaaki New Zealand scholarship will change and enrich your life.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 2.44,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 2.907
+        }
+      },
+      {
+        "id": "q18",
+        "question": "What does the Manaaki New Zealand Scholarship Programme aim to build in partner countries?",
+        "expected_doc": "manaaki",
+        "found_doc_top5": [
+          "manaaki",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The Manaaki New Zealand Scholarship Programme aims to enhance the mana of partner countries and Aotearoa New Zealand through manaakitanga - the act of hosting, supporting, and honouring manaaki scholars.",
+        "answer_relevant": true,
+        "answer_only_relevant": false,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 5.09,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1\n\nThe Manaaki New",
+          "parsed": true,
+          "latency_s": 3.397
+        }
+      },
+      {
+        "id": "q19",
+        "question": "How many types of MEXT scholarship are there?",
+        "expected_doc": "mext",
+        "found_doc_top5": [
+          "mext",
+          "mext",
+          "mext",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "There are seven types of MEXT scholarship programs.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 4.88,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 4.897
+        }
+      },
+      {
+        "id": "q20",
+        "question": "Which MEXT categories include research students and undergraduate students?",
+        "expected_doc": "mext",
+        "found_doc_top5": [
+          "mext",
+          "mext",
+          "mext",
+          "erasmus-mundus",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "They are Research students, Teacher training students, Undergraduate students, Japanese studies students, college of technology students, Specialized training college students, and Young Leaders Program (YLP) students. Programs offered within this scheme are Research students, Undergraduate students, Japanese and Japanese culture students, as well as College of Technology. Research students. Undergraduate students. Undergraduate level.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 4.67,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 4.717
+        }
+      },
+      {
+        "id": "e01",
+        "question": "I want to do a PhD in the UK. Can I apply for the Chevening Scholarship?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "erasmus-mundus",
+          "sweden-si",
+          "hkpfs",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Chevening Scholarship. The Chevening Scholarship covers masters level study only, so a phd applicant is not eligible on degree level. The corpus does not state a citizenship rule for the Chevening Scholarship, so the citizenship check cannot be decided from the corpus. Evidence: Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e02",
+        "question": "Can I apply for the Vanier Scholarship for a master's degree?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Valued at $50,000 per year for three years during doctoral studies.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e03",
+        "question": "I am from Pakistan. Can I apply for the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the SI Scholarship for Global Professionals. The SI Scholarship for Global Professionals covers masters level study, so a masters applicant meets the degree requirement. Pakistan is not among the 34 eligible countries for the SI Scholarship for Global Professionals, so the citizenship requirement is not met. Evidence: The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance. Evidence: Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e04",
+        "question": "I am from Bangladesh. Can I apply for the SI Scholarship for Global Professionals?",
+        "expected_doc": "sweden-si",
+        "found_doc_top5": [
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the SI Scholarship for Global Professionals. The SI Scholarship for Global Professionals covers masters level study, so a masters applicant meets the degree requirement. Bangladesh is among the 34 eligible countries for the SI Scholarship for Global Professionals, so the citizenship requirement is met. Evidence: The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance. Evidence: Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e05",
+        "question": "I am a Canadian citizen starting a PhD. Can I apply for the Vanier Scholarship?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si",
+          "eiffel"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study, so a phd applicant meets the degree requirement. The Vanier Canada Graduate Scholarship is open irrespective of country of origin, so a Canada citizen meets the citizenship requirement. Evidence: Valued at $50,000 per year for three years during doctoral studies. Evidence: Citizenship: Canadian citizens. Permanent residents of Canada. Foreign citizens.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e06",
+        "question": "Can I apply for the Hong Kong PhD Fellowship for a master's degree?",
+        "expected_doc": "hkpfs",
+        "found_doc_top5": [
+          "hkpfs",
+          "hkpfs",
+          "erasmus-mundus",
+          "sweden-si",
+          "erasmus-mundus"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Hong Kong PhD Fellowship Scheme. The Hong Kong PhD Fellowship Scheme covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e07",
+        "question": "Can I apply for a Manaaki Scholarship for undergraduate study?",
+        "expected_doc": "manaaki",
+        "found_doc_top5": [
+          "manaaki",
+          "mext",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for a Manaaki New Zealand Scholarship. A Manaaki New Zealand Scholarship covers masters, phd, undergraduate level study, so an undergraduate applicant meets the degree requirement. Evidence: Scholarships for undergraduate and postgraduate study.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e08",
+        "question": "I want to do a one-year master's in the UK. Can I apply for the Chevening Scholarship?",
+        "expected_doc": "chevening",
+        "found_doc_top5": [
+          "chevening",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Chevening Scholarship. The Chevening Scholarship covers masters level study, so a masters applicant meets the degree requirement. Evidence: Chevening Scholarships enable outstanding emerging leaders from all over the world to pursue one-year master's degrees in the UK.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e09",
+        "question": "Can I apply for the Eiffel Scholarship for a PhD in France?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "erasmus-mundus"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the France Excellence Eiffel Scholarship. The France Excellence Eiffel Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. The France Excellence Eiffel Scholarship is for international students, so a Pakistan citizen meets the citizenship requirement. Evidence: The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. Evidence: The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e10",
+        "question": "Can I apply for the Fulbright Foreign Student Program for a master's degree?",
+        "expected_doc": "fulbright",
+        "found_doc_top5": [
+          "fulbright",
+          "erasmus-mundus",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligibility for the Fulbright Foreign Student Program cannot be decided from the corpus. The corpus does not state which degree levels the Fulbright Foreign Student Program covers, so the degree check cannot be decided from the corpus.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "unknown",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "q21",
+        "question": "Is the Vanier Canada Graduate Scholarship still accepting applications?",
+        "expected_doc": "vanier",
+        "found_doc_top5": [
+          "vanier",
+          "sweden-si",
+          "fulbright",
+          "sweden-si",
+          "daad"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Vanier, the first francophone Governor General of Canada, the Vanier Canada Graduate Scholarships (Vanier CGS) program helps. Home Page - Vanier Canada Graduate Scholarships. Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program. Permanent residents of Canada.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative_fallback_extractive",
+        "generation_latency_s": 3.58,
+        "judge": {
+          "faithfulness": 0,
+          "relevance": 0,
+          "raw": "faithfulness: 0\nrelevance: 0",
+          "parsed": true,
+          "latency_s": 2.838
+        }
+      },
+      {
+        "id": "q22",
+        "question": "How much is the monthly allowance for a master's student on the Eiffel Scholarship?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "The monthly allowance for a master's student on the Eiffel Scholarship is \u20ac1,200.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 4.55,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 3.455
+        }
+      },
+      {
+        "id": "q23",
+        "question": "How much is the monthly stipend for a doctoral student on the Eiffel Scholarship?",
+        "expected_doc": "eiffel",
+        "found_doc_top5": [
+          "eiffel",
+          "eiffel",
+          "sweden-si",
+          "vanier",
+          "hkpfs"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "A doctoral student on the Eiffel Scholarship receives a monthly stipend of \u20ac2,000.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": null,
+        "answer_mode": "generative",
+        "generation_latency_s": 4.67,
+        "judge": {
+          "faithfulness": 1,
+          "relevance": 1,
+          "raw": "faithfulness: 1\nrelevance: 1",
+          "parsed": true,
+          "latency_s": 5.122
+        }
+      }
+    ],
+    "generative_modes": {
+      "generative": 16,
+      "generative_fallback_extractive": 7,
+      "eligibility": 10
+    },
+    "judge_faithfulness": 0.957,
+    "judge_relevance": 0.957,
+    "judge_n": 23,
+    "judge_unparsed": 0
+  }
+}

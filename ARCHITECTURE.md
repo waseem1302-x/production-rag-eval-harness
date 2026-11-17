@@ -10,8 +10,13 @@ corpus"** when the evidence is weak — instead of hallucinating.
 
 Phase 1 is **retrieval + extractive answers + a measured eval
 harness**. There is no generative LLM. That is deliberate: if
-retrieval is wrong, a generator only hides it. Phase 2 adds a
-generator and an LLM-as-judge.
+retrieval is wrong, a generator only hides it. Phase 2, Step 1
+adds a generator and an LLM-as-judge — as an **opt-in** path
+(`POST /ask` with `"generate": true`), with a deterministic
+verification step and fallback to the extractive answer, measured
+on the same golden set. The generator is worse than quoting the
+source on this corpus (answer-only 0.697 vs 0.909); that is a
+measured result, not a failure of the step — see `EVAL_RESULTS.md`.
 
 ## System overview
 
@@ -47,9 +52,11 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 | `app/embeddings.py` | `sentence-transformers` `all-MiniLM-L6-v2`, 384-dim, L2-normalised | The dense signal. Falls back to BM25-only and reports `"embedder": "bm25-only"` if the model cannot load — never silently pretends dense ran. |
 | `app/retrieval.py` | FAISS `IndexFlatIP` (cosine) + BM25, min-max normalised, combined 0.5/0.5, then a lexical reranker (query-term coverage bonus +0.1). `mode` selects `bm25` / `dense` / `hybrid` | Hybrid retrieval + an auditable rerank step. The `mode` parameter exists for the ablation: each signal's contribution is measured, not assumed. |
 | `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. |
+| `app/generative.py` | Generative answers (Phase 2, Step 1): local Qwen2.5-0.5B-Instruct, greedy, + LLM-as-judge | The opt-in generator. Loads the 0.5B model lazily (bf16, CPU, 2 torch threads — measured faster than 4 on this VM), prompts it with the top-3 chunks of the *named* scholarship only, and returns a verified answer or falls back to extractive. `judge_answer` scores one answer with the same model (label-aware parsing: the judge sometimes swaps the two lines). All model text goes through `complete()`, which honours a test override so unit tests never load the model. |
+| `app/verification.py` | Deterministic verification of generated sentences against the cited chunks | The guard, not the judge. A sentence is kept only if its *novel* stems (content stems not already in the question) are covered ≥50% by one chunk, and every number in it appears in the chunks. Two fixes came from measured failures: the named-doc filter (q17 — the model copied SI's field list into a Manaaki answer) and novel-stem coverage (question-word overlap alone passed an ungrounded sentence). Verification stops invented facts; it cannot tell whether a grounded sentence answers the question (o04) or contradicts a corpus fact the model did not read (q21). |
 | `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. |
 | `app/api.py` | FastAPI: `GET /health`, `POST /ask` (optional `profile`) | One endpoint. The response carries the answer, citations with source URLs, the eligibility verdicts, and a full retrieval trace. |
-| `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy | The measurement instrument. Every claim in the README is a number this file produces. |
+| `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy, LLM-as-judge | The measurement instrument. Every claim in the README is a number this file produces. `run_eval(generative=True, judge=True)` runs the same golden set through the generative path and scores each substantive answer with the local model as judge; the string proxies are always computed too, so generative and extractive stay comparable. Eligibility statements are tagged `answer_mode: "eligibility"` and are not judge-scored (template + verbatim evidence, not a generated answer). |
 | `benchmarks/` | 7-configuration ablation (`run_benchmark.py`), per-question retrieval audit (`audit_retrieval.py`), generated before/after report (`before_after.py`) | The proof that each component earns its place — or does not. See `benchmarks/results/summary.md` and `before_after.md`. |
 | `scripts/check_data_quality.py` | Finds the corpus's messy data (closures, two amounts, database pages, approximate/year-specific figures, missing fields, stale markers) | Real pages are messy. A system that hides the mess will invent answers for it. |
 | `scripts/ci_gate.py` | Fails the build if any metric drops below its threshold | The eval harness is a gate, not a report. Thresholds are set below the measured numbers so jitter does not fail the build; lowering a threshold requires a reason in the commit message. |
@@ -72,7 +79,14 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
    the gates. If any gate fires, the answer is "Not found in the
    corpus." with the reason (`weak_score`, `doc_name_mismatch`,
    `no_matching_sentences`, `weak_overlap`, `missing_specific_term`).
-5. The response includes the retrieval trace: every candidate with
+5. With `"generate": true` (opt-in only), `generative.generate_answer`
+   instead prompts the local model with the top-3 chunks of the
+   named scholarship, verifies every generated sentence against
+   those chunks (`verification.verify_answer`), and returns the
+   kept sentences — or the extractive answer when nothing survives
+   verification, the model abstains, or the model cannot load.
+   Eligibility answers and abstentions are never generated.
+6. The response includes the retrieval trace: every candidate with
    all scores, term coverage, and whether it was injected into the
    answer. A wrong answer can be traced to the exact chunk and score
    that produced it.
@@ -154,8 +168,10 @@ larger corpus).
 
 ### 4. Extractive vs generative answers
 
-**Chosen: extractive only in Phase 1.** The answer is verbatim
-sentences from cited chunks. No LLM writes any word of the answer.
+**Chosen: extractive by default in Phase 1; generative opt-in in
+Phase 2, Step 1, with verification and fallback.** The answer is
+verbatim sentences from cited chunks. No LLM writes any word of
+the default answer.
 
 **Why:** faithfulness becomes measurable instead of claimed
 (measured 1.0: every answer sentence appears verbatim in a cited
@@ -175,6 +191,23 @@ them is a verbatim evidence sentence appended to the answer.
 Phase 2 step, and it will be added *with* a verification step
 (the generated answer must be checked against the cited chunks)
 and an LLM-as-judge — not as an unmeasured replacement.
+
+**Phase 2, Step 1 outcome (measured, same 38 questions):** the
+local 0.5B generator (Qwen2.5-0.5B-Instruct, 988.1 MB bf16, CPU,
+greedy, $0) is *worse* than extractive at answer-only relevance
+(0.697 vs 0.909) — it paraphrases past the expected phrase, drops
+the key sentence (q01 in the final run), and sometimes declines
+when the evidence is in context (q15). Verification + fallback
+(7 of 33 fell back to extractive) kept it safe, and it fixed one
+paraphrase-gap failure (q03). The LLM-as-judge scored 0.957 /
+0.957 (n=23, 0 unparsed) but overstates quality: it gave q10's
+"one academic year" (expected "1 to 2 academic years") 1/1, and
+the correct Vanier-closure answer (q21) 0/0. A 0.5B judge grading
+its own family is a weak instrument; the proxy metrics and the
+failure tables are the numbers to trust. The extractive default
+is therefore unchanged — the generator is an opt-in, not a
+replacement, until a stronger model or a better verification step
+earns the default on the same golden set.
 
 ### 5. Lexical reranker vs cross-encoder
 
@@ -284,11 +317,26 @@ change to any of them that regresses quality fails the build.
 ## Known limitations (Phase 2)
 
 - **Paraphrase gap (q03, q10, q17):** lexical sentence picking cannot
-  find sentences whose key terms are absent from the question. Fix:
-  dense sentence scoring, or a generative answer with verification.
+  find sentences whose key terms are absent from the question. The
+  generative path fixed q03 (answer-only True) but not q10 or q17;
+  q17 additionally fell back to extractive after verification
+  dropped the model's cross-document field list. Fix: dense
+  sentence scoring, or a stronger generator.
 - **No answer verification (o04):** the gates check word overlap, not
-  whether the picked sentences actually answer the question. Fix: a
-  verification step on the picked sentences.
+  whether the picked sentences actually answer the question. A
+  deterministic verification step now exists (Phase 2, Step 1) and
+  drops ungrounded sentences, but o04 still answers instead of
+  abstaining: its Vanier sentences are grounded, so verification
+  cannot catch that they do not answer the question. Fix: a
+  verification step that checks whether the answer *answers* the
+  question, not only whether it is grounded — the LLM-as-judge
+  relevance score is the current proxy for that, and at 0.5B it is
+  too weak (it scored o04's sibling failure q21's correct answer 0/0).
+- **Judge is weak at 0.5B:** same-model grading is lenient (q10
+  scored 1/1 for a wrong duration) and noisy (q21 scored 0/0 for a
+  correct closure answer). The judge is reported alongside the
+  proxies, never instead of them. Fix: a larger judge model, or
+  human-graded spot checks on the failure table.
 - **Eligibility ignores closure:** the Vanier rules say "doctoral
   only" but the programme is closed; the verdict does not factor
   that in. Fix: the eligibility module should read the checker's
