@@ -1,4 +1,4 @@
-# Production RAG with Eval Harness — Phase 2, Step 4
+# Production RAG with Eval Harness — Phase 2, Step 5
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
@@ -27,7 +27,14 @@ verdict `closed` — with the closure evidence and the replacement
 programme — whatever the profile, even a doctoral applicant who
 meets every other rule. Eligibility accuracy is 1.0 (11/11 golden
 questions; one new Vanier doctoral question, e11, added to measure
-the fix). The extractive default is unchanged,
+the fix). Phase 2, Step 5 (this branch,
+`feat/chunk-size-ablation`) ablates the chunk size — 256 / 512 /
+1,024 tokens, measured on the same 39-question golden set — and
+**keeps 512**: answer-only 0.912 (31/34) and eligibility 1.0
+(11/11) at 512, vs 0.853 / 0.818 at 256 and 0.853 / 0.909 at 1,024.
+256 fixes q03 but tells a Pakistani SI applicant they are
+`eligible` when they are not (its citizenship rule drops when the
+evidence sentence moves chunk). The extractive default is unchanged,
 and the generator is deliberately the weaker path on this corpus.
 
 **Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
@@ -92,6 +99,28 @@ Chunking is recursive and sentence-aware: split on paragraphs, then
 sentences, then words only if a single sentence is still too long.
 Implemented from scratch in `app/chunking.py` (no LangChain) so the
 behaviour is fully visible and testable.
+
+**512 is now a measured choice, not a reasoned one** (Phase 2,
+Step 5: `python -m scripts.run_chunk_ablation`, same .txt corpus,
+overlap held constant at 200 chars, same 39-question golden set):
+
+| Chunk size | Chunks | recall@5 | Answer-only relevance | Eligibility | Retrieval mean | Total mean |
+|---|---|---|---|---|---|---|
+| 256 tokens | 60 | 1.0 | 0.853 (29/34) | 0.818 (9/11) | 93.0 ms | 1,011.5 ms |
+| **512 tokens** | **31** | **1.0** | **0.912 (31/34)** | **1.0 (11/11)** | **97.6 ms** | **1,264.0 ms** |
+| 1,024 tokens | 19 | 1.0 | 0.853 (29/34) | 0.909 (10/11) | 256.3 ms | 2,463.6 ms |
+
+256 fixes q03 (SI master's duration) but drops 7 eligibility rules
+— its evidence sentences move to other chunk ids, so a Pakistani SI
+applicant is wrongly told `eligible`. 1,024 drops 2 rules and loses
+e03 the same way. Recall, faithfulness and abstention are 1.0 at
+every size and do not separate them; total-latency medians are
+nearly flat (879 / 1,121 / 1,190 ms), so latency does not decide
+it either. One honest confound: the eligibility rules were authored
+against the 512-token chunking, so 512 has home-field advantage on
+eligibility — changing size would mean re-authoring every pinned
+chunk id first. Full analysis in [`EVAL_RESULTS.md`](EVAL_RESULTS.md);
+per-size indexes in `benchmarks/results/chunk_ablation/chunk-<size>/`.
 
 Before chunking, `app/textnorm.py` normalises the text: it unwraps
 hard line breaks inside sentences, keeps headers separate from
@@ -442,6 +471,26 @@ proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 
 Full detail: [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 
+### Results (Phase 2, Step 5 — chunk-size ablation, same 39 questions, 18 Nov 2026)
+
+Command: `python -m scripts.run_chunk_ablation` (437.9 s;
+per-size results in `benchmarks/results/chunk_ablation/`).
+
+| Chunk size | Chunks | recall@5 | Answer-only relevance | Eligibility | Retrieval / total mean |
+|---|---|---|---|---|---|
+| 256 tokens | 60 | 1.0 | 0.853 (29/34) | 0.818 (9/11) | 93.0 ms / 1,011.5 ms |
+| **512 tokens** | **31** | **1.0** | **0.912 (31/34)** | **1.0 (11/11)** | **97.6 ms / 1,264.0 ms** |
+| 1,024 tokens | 19 | 1.0 | 0.853 (29/34) | 0.909 (10/11) | 256.3 ms / 2,463.6 ms |
+
+Read honestly: **512 stays the default, by the numbers.** 256 fixes
+q03 (factual answer-only 21/23 vs 20/23) but drops 7 eligibility
+rules and tells a Pakistani SI applicant they are `eligible` when
+they are not; 1,024 drops 2 rules and fails e03 the same way.
+Recall, faithfulness and abstention are 1.0 at every size. The
+512-column is a re-run of the Step 4 baseline (rebuilt 512 chunks
+byte-identical to `data/processed/chunks.jsonl`). Full analysis in
+[`EVAL_RESULTS.md`](EVAL_RESULTS.md).
+
 ### Results (Phase 2, Step 2 — dense scoring + answer verification, same 38 questions, 18 Nov 2026)
 
 Commands: `python -m scripts.run_eval` (writes
@@ -504,7 +553,7 @@ trust. Full analysis in [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 128 passed
+python -m pytest tests/ -q   # 158 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text
@@ -532,7 +581,12 @@ other out-of-corpus reasons unchanged, generative path abstaining
 on o04 without running the model, generative fallback when kept
 sentences fail relevance, and the full-eval no-regression test
 (the Step 1 correct set of 30 is exactly preserved, abstention
-1.0, q03/q10/q17 still misses).
+1.0, q03/q10/q17 still misses). Phase 2, Step 5 adds 13 tests
+(`tests/test_chunk_ablation.py`): chunks within budget and overlap
+preserved at 256/512/1,024 tokens, the index builder accepting a
+chunk-size parameter (256 → 60 chunks / 60 vectors, invalid size
+rejected), and the eval running against a non-default chunk size
+without crashing.
 
 ## Docker
 

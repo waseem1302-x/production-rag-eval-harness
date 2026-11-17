@@ -103,7 +103,14 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
     golden = golden if golden is not None else load_golden()
     search_kwargs = search_kwargs or {}
     answer_kwargs = answer_kwargs or {}
-    chunks = [json.loads(line) for line in CHUNKS_FILE.read_text().splitlines() if line.strip()]
+    # Eligibility is resolved against the chunks the retriever
+    # actually searched, not the default chunks file on disk:
+    # an eval against a non-default chunk size (Phase 2, Step 5
+    # ablation) must use that size's chunks, whose ids and text
+    # differ from the 512-token file. Fall back to the file only
+    # when the retriever carries no chunks (e.g. an empty index).
+    chunks = (list(retriever.chunks) if getattr(retriever, "chunks", None)
+              else [json.loads(line) for line in CHUNKS_FILE.read_text().splitlines() if line.strip()])
     in_corpus = [q for q in golden if not q.get("out_of_corpus")]
     out_corpus = [q for q in golden if q.get("out_of_corpus")]
 

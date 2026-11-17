@@ -48,7 +48,7 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 |---|---|---|
 | `scripts/ingest.py` | Fetch the 10 official pages, extract text, save raw text + metadata (URL, fetch method, HTTP status, date) | Provenance. Every answer can be traced to a fetched page and a fetch date. Raw text is never edited after fetching. |
 | `app/textnorm.py` | Normalise document text before chunking: unwrap hard line breaks inside sentences, keep headers separate, add terminal punctuation to fragments | Official pages put line breaks in the middle of sentences and mix headers with content. Without this, chunks contain broken sentences and answers quote fragments. Normalisation happens at chunking time, so `data/raw/` stays verbatim. |
-| `app/chunking.py` | Recursive, sentence-aware chunking: ~512 tokens (~2,048 chars), 200-char overlap | One chunk should hold one complete idea. Overlap keeps facts that straddle a boundary. See "Chunking" below. |
+| `app/chunking.py` | Recursive, sentence-aware chunking: ~512 tokens (~2,048 chars), 200-char overlap | One chunk should hold one complete idea. Overlap keeps facts that straddle a boundary. See "Chunking" below. Phase 2, Step 5: `chunk_document()` takes `chunk_chars` / `overlap_chars` parameters, and the size was ablated (256/512/1,024 tokens, measured — 512 kept); `app/config.py:chunk_chars_for_tokens` maps tokens to chars (1 token ~ 4 chars). |
 | `app/embeddings.py` | `sentence-transformers` `all-MiniLM-L6-v2`, 384-dim, L2-normalised | The dense signal. Falls back to BM25-only and reports `"embedder": "bm25-only"` if the model cannot load — never silently pretends dense ran. |
 | `app/retrieval.py` | FAISS `IndexFlatIP` (cosine) + BM25, min-max normalised, combined 0.5/0.5, then a reranker. `mode` selects `bm25` / `dense` / `hybrid`; `reranker` selects `lexical` (query-term coverage bonus +0.1, the default) or `cross-encoder` (ms-marco MiniLM-L6, joint pair scoring, sigmoid-mapped to 0-1; falls back to lexical if the model cannot load, and the trace says which ran) | Hybrid retrieval + an auditable rerank step. The `mode` parameter exists for the ablation: each signal's contribution is measured, not assumed. |
 | `app/cross_encoder.py` | Cross-encoder reranker (Phase 2, Step 3): `sentence-transformers` `CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")`, 22.7M params, ~91 MB, CPU-only, $0. Lazy-loaded like the embedder; `score_pairs` returns raw logits or `None` when the model is unavailable | The reranker the lexical bonus is measured against. Same lazy-load / honest-fallback pattern as `app/embeddings.py`: a missing model degrades the reranker, never crashes a search. |
@@ -57,7 +57,7 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 | `app/verification.py` | Deterministic verification of generated sentences against the cited chunks | The guard, not the judge. A sentence is kept only if its *novel* stems (content stems not already in the question) are covered ≥50% by one chunk, and every number in it appears in the chunks. Two fixes came from measured failures: the named-doc filter (q17 — the model copied SI's field list into a Manaaki answer) and novel-stem coverage (question-word overlap alone passed an ungrounded sentence). Verification stops invented facts; it cannot tell whether a grounded sentence answers the question (o04) or contradicts a corpus fact the model did not read (q21). |
 | `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. Phase 2, Step 4: the checker also reads `data/closures.json` — one entry per programme the corpus says is closed, with verbatim evidence validated the same way — and a closed programme gets the distinct verdict `closed` (checked before degree/citizenship, whatever the profile), with the replacement programme named. An entry whose evidence is not found is dropped with a warning and the programme is treated as open. |
 | `app/api.py` | FastAPI: `GET /health`, `POST /ask` (optional `profile`) | One endpoint. The response carries the answer, citations with source URLs, the eligibility verdicts, and a full retrieval trace. |
-| `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy, LLM-as-judge | The measurement instrument. Every claim in the README is a number this file produces. `run_eval(generative=True, judge=True)` runs the same golden set through the generative path and scores each substantive answer with the local model as judge; the string proxies are always computed too, so generative and extractive stay comparable. Eligibility statements are tagged `answer_mode: "eligibility"` and are not judge-scored (template + verbatim evidence, not a generated answer). |
+| `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy, LLM-as-judge | The measurement instrument. Every claim in the README is a number this file produces. `run_eval(generative=True, judge=True)` runs the same golden set through the generative path and scores each substantive answer with the local model as judge; the string proxies are always computed too, so generative and extractive stay comparable. Eligibility statements are tagged `answer_mode: "eligibility"` and are not judge-scored (template + verbatim evidence, not a generated answer). Phase 2, Step 5: `run_eval` resolves eligibility against the retriever's own chunks, not the default chunks file — otherwise an eval at a non-default chunk size would silently measure 512-token eligibility. |
 | `benchmarks/` | 8-configuration ablation (`run_benchmark.py`), per-question retrieval audit (`audit_retrieval.py`), generated before/after report (`before_after.py`) | The proof that each component earns its place — or does not. See `benchmarks/results/summary.md` and `before_after.md`. |
 | `scripts/check_data_quality.py` | Finds the corpus's messy data (closures, two amounts, database pages, approximate/year-specific figures, missing fields, stale markers) | Real pages are messy. A system that hides the mess will invent answers for it. |
 | `scripts/ci_gate.py` | Fails the build if any metric drops below its threshold | The eval harness is a gate, not a report. Thresholds are set below the measured numbers so jitter does not fail the build; lowering a threshold requires a reason in the commit message. |
@@ -292,8 +292,26 @@ quotation.
 **Measured effect:** the text normaliser (which unwraps hard line
 breaks before chunking) moved answer-only relevance from 0.70 to
 0.85; the 5-sentence cap and short-fragment penalty moved it to
-0.87. Chunk size itself was not ablated in Phase 1 — that is a
-documented gap (see "Known limitations").
+0.87.
+
+**Measured in Phase 2, Step 5 — chunk size ablated, 512 kept:**
+`python -m scripts.run_chunk_ablation`, same .txt corpus, overlap
+held constant at 200 chars, same 39-question golden set, full
+extractive pipeline. Answer-only relevance 0.853 / **0.912** / 0.853
+and eligibility 0.818 / **1.0** / 0.909 for 256 / 512 / 1,024 tokens;
+recall, faithfulness and abstention 1.0 at every size. 256 fixes q03
+but drops 7 eligibility rules (evidence sentences move chunk ids),
+so a Pakistani SI applicant is wrongly told `eligible`; 1,024 drops
+2 rules and fails e03 the same way. Total-latency medians are nearly
+flat (879 / 1,121 / 1,190 ms), so latency does not decide it. The
+512-token chunking is what the eligibility rules were authored
+against — that home-field advantage is stated, not hidden — and a
+future size change must re-pin the rules first and re-run the
+ablation. Per-size indexes live in
+`benchmarks/results/chunk_ablation/chunk-<size>/`; the builder takes
+`--chunk-tokens` and `--out-dir` (`scripts/build_index.py`), and
+`app/eval.py:run_eval` resolves eligibility against the retriever's
+own chunks so a non-default size is really measured.
 
 ### 8. Abstention threshold 0.15, top_k 5, 10 rerank candidates
 
@@ -392,7 +410,12 @@ change to any of them that regresses quality fails the build.
   no other golden row changed. Adding a future closure is one
   JSON entry plus the matching checker resolution — no code change.
 - **Chunk size not ablated:** 512 tokens was chosen by reasoning,
-  not by measurement. Fix: ablate 256 / 512 / 1,024 tokens.
+  not by measurement. **Measured in Phase 2, Step 5:** 256 / 512 /
+  1,024 tokens ablated on the same 39-question golden set — 512
+  wins (answer-only 0.912 vs 0.853, eligibility 1.0 vs 0.818/0.909)
+  and stays the default; see §7. The 256-token size fixes q03 but
+  drops 7 eligibility rules, including the one that makes a
+  Pakistani SI applicant not eligible.
 - **Reranker unproven:** adds nothing on this corpus. **Measured in
   Phase 2, Step 3:** the cross-encoder configuration
   (`hybrid-cross-encoder`) changes no metric either (0.87 answer-only,
