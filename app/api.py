@@ -12,10 +12,37 @@ from pydantic import BaseModel, Field
 from . import embeddings
 from .answer import answer as build_answer
 from .config import CHUNKS_FILE, DEFAULT_TOP_K
+from .eligibility import resolve as resolve_eligibility
 from .ingest import load_sources
 from .retrieval import Retriever
 
 _retriever: Retriever | None = None
+_chunks: list[dict] | None = None
+
+
+def get_chunks() -> list[dict]:
+    global _chunks
+    if _chunks is None:
+        _chunks = []
+        if CHUNKS_FILE.exists():
+            _chunks = [json.loads(line) for line in CHUNKS_FILE.read_text().splitlines() if line.strip()]
+    return _chunks
+
+
+class Profile(BaseModel):
+    """Optional asker profile for eligibility-first answering.
+    Both fields are free text: nationality is a country name
+    ("Pakistan"), degree_level is a level ("masters", "PhD",
+    "bachelor's"). Unknown or missing fields are treated as
+    "cannot be decided", never guessed."""
+    nationality: str | None = None
+    degree_level: str | None = None
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=1000)
+    top_k: int = Field(default=DEFAULT_TOP_K, ge=1, le=10)
+    profile: Profile | None = None
 
 
 def get_retriever() -> Retriever:
@@ -37,11 +64,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Production RAG Eval Harness (Phase 1)", lifespan=lifespan)
 
 
-class AskRequest(BaseModel):
-    question: str = Field(min_length=3, max_length=1000)
-    top_k: int = Field(default=DEFAULT_TOP_K, ge=1, le=10)
-
-
 @app.get("/health")
 def health():
     r = get_retriever()
@@ -60,6 +82,17 @@ def ask(req: AskRequest):
                 "abstention_reason": "empty_index", "retrieval_trace": None}
     retrieved = r.search(req.question, top_k=req.top_k)
     result = build_answer(req.question, retrieved)
+    if req.profile is not None:
+        # Eligibility first: a not-eligible verdict, or an
+        # eligibility question, replaces the substantive answer.
+        # Otherwise the substantive answer stands and the
+        # eligibility verdicts are attached as information.
+        profile = req.profile.model_dump()
+        elig_answer, eligibility = resolve_eligibility(
+            req.question, profile, retrieved, get_chunks(), result)
+        result["eligibility"] = eligibility
+        if elig_answer is not None:
+            result = elig_answer
     result["embedder"] = r.embedder
     # Attach source URLs to citations.
     urls = {s["slug"]: s["source_url"] for s in load_sources()}

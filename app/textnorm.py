@@ -70,6 +70,14 @@ def _continues(buffer: str, line: str) -> bool:
     return first.islower() or first.isdigit() or first in "\"'([{"
 
 
+def norm_text(text: str) -> str:
+    """Collapse all whitespace (including newlines) and normalise
+    curly apostrophes, for verbatim comparisons. Official pages put
+    line breaks inside sentences, so a raw substring check would
+    miss a sentence that is split across lines in the chunk."""
+    return " ".join(text.replace("’", "'").split())
+
+
 def normalize_document(text: str) -> str:
     """Unwrap hard line breaks into one sentence per line."""
     lines = [line.strip() for line in text.splitlines()]

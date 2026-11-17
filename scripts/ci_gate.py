@@ -29,6 +29,7 @@ THRESHOLDS = {
     "answer_only_relevance": 0.60,
     "faithfulness": 0.95,
     "abstention_accuracy": 0.60,
+    "eligibility_accuracy": 0.80,
 }
 
 
@@ -41,6 +42,9 @@ def main() -> int:
     failed = []
     for metric, minimum in thresholds.items():
         value = result[metric]
+        if value is None:
+            print(f"SKIP: {metric} not measured (no eligibility questions in set)")
+            continue
         status = "PASS" if value >= minimum else "FAIL"
         print(f"{status}: {metric} = {value} (threshold {minimum})")
         if value < minimum:

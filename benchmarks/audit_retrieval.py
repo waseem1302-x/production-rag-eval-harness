@@ -20,9 +20,8 @@ but the wrong sentences picked).
 import json
 from pathlib import Path
 
-from app.answer import answer as build_answer
 from app.config import CHUNKS_FILE
-from app.eval import load_golden
+from app.eval import _answer_question, load_golden
 from app.retrieval import Retriever
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -35,7 +34,8 @@ def audit() -> list[dict]:
     rows = []
     for q in golden:
         retrieved = retriever.search(q["question"], top_k=5)
-        result = build_answer(q["question"], retrieved)
+        result, eligibility = _answer_question(
+            q["question"], q.get("profile"), retrieved, chunks, {})
         injected = {c["chunk_id"] for c in result["citations"]}
         rows.append({
             "id": q["id"],
