@@ -1,9 +1,17 @@
-"""Run the eval harness and print real numbers. Usage: python -m scripts.run_eval"""
+"""Run the eval harness and print real numbers. Usage: python -m scripts.run_eval
+
+Also writes benchmarks/results/extractive_eval.json (full result,
+per-question rows included) so the numbers are recorded by the
+script, not hand-typed into EVAL_RESULTS.md.
+"""
 import json
+from pathlib import Path
 
 from app.config import CHUNKS_FILE
 from app.eval import load_golden, run_eval
 from app.retrieval import Retriever
+
+RESULTS_DIR = Path(__file__).resolve().parent.parent / "benchmarks" / "results"
 
 if __name__ == "__main__":
     chunks = [json.loads(line) for line in CHUNKS_FILE.read_text().splitlines() if line.strip()]
@@ -21,3 +29,6 @@ if __name__ == "__main__":
               f"top5={row['found_doc_top5']}")
     print()
     print(json.dumps({k: v for k, v in result.items() if k != "per_question"}, indent=2))
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    (RESULTS_DIR / "extractive_eval.json").write_text(json.dumps(result, indent=2))
+    print("wrote benchmarks/results/extractive_eval.json")

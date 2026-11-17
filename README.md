@@ -1,4 +1,4 @@
-# Production RAG with Eval Harness — Phase 2, Step 1
+# Production RAG with Eval Harness — Phase 2, Step 2
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
@@ -13,11 +13,16 @@ from a local $0 model (Qwen2.5-0.5B-Instruct, 988.1 MB, CPU) with a
 **deterministic verification step** (every generated sentence checked
 against the cited chunks; unsupported sentences dropped, otherwise
 fall back to the extractive answer) and an **LLM-as-judge** alongside
-the string-proxy metrics. The extractive default is unchanged, and
-the generator is deliberately the weaker path on this corpus — see
-the numbers in [`EVAL_RESULTS.md`](EVAL_RESULTS.md). That is the
-point of measuring: a generator does not automatically beat quoting
-the source.
+the string-proxy metrics. Phase 2, Step 2 (this branch,
+`feat/dense-scoring-verification`) adds **dense sentence scoring**
+to the answer picker and an **answer-verification step** that checks
+whether the picked sentences actually answer the question: the
+o04 failure (answering a Vanier ranking question the corpus cannot
+answer) now abstains, so abstention accuracy is 1.0 (5/5). The
+dense scoring itself is measured to buy **nothing** on this corpus
+(see the numbers in [`EVAL_RESULTS.md`](EVAL_RESULTS.md)) — and
+that is reported, not hidden. The extractive default is unchanged,
+and the generator is deliberately the weaker path on this corpus.
 
 **Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
 why, trade-offs) · [`EVAL_RESULTS.md`](EVAL_RESULTS.md) (every measured
@@ -122,9 +127,46 @@ content word with the question, the API returns:
 
 Every refusal names its reason (`weak_score`, `doc_name_mismatch`,
 `no_matching_sentences`, `weak_overlap`, `missing_specific_term`,
-`empty_index`). Abstaining is a feature, not a failure. A scholarship
+`low_answer_similarity`, `unanswered_ranking`, `empty_index`).
+Abstaining is a feature, not a failure. A scholarship
 assistant that invents a deadline is worse than one that says it
 does not know.
+
+Phase 2, Step 2 adds an **answer-verification step** after the
+lexical gates (`app/answer.py:verify_answer_relevance`): the picked
+sentences must clear a dense-similarity floor (best picked sentence
+≥ 0.45 cosine to the question) and, when the question asks about a
+ranking, must mention a ranking — otherwise the answer is refused
+as `low_answer_similarity` or `unanswered_ranking`. The check was
+added because dense similarity alone was measured and **cannot**
+separate the o04 failure: o04's picked sentences score 0.667,
+above several answerable questions (q19: 0.562, q14: 0.591,
+q12: 0.615). The same check runs on the generative path's kept
+sentences, falling back to the extractive answer when they fail.
+The local 0.5B model was also probed as a verifier: as judge it
+scored o04's answer 0/0 and the answerable probes 1/1, but it is
+not used as a guard — it is the same weak, lenient instrument
+that scored q10's wrong duration 1/1 in Step 1, and the guard
+stays deterministic.
+
+### Dense sentence scoring (Phase 2, Step 2)
+
+Sentence picking is lexical + dense: each candidate sentence scores
+1 point per shared query stem, +2 per shared specific stem, plus
+`2.0 ×` its cosine similarity to the question (same local MiniLM
+embedder as retrieval, $0, one batch embed per question). The
+weight is 2.0 because the eval says so: weights 0, 1 and 2 change
+no golden answer at all, and weights 3, 3.5 and 4 fix q03 but lose
+q16 (its correct sentence scores only 0.394 dense similarity,
+below the boilerplate that replaces it) — net answer-only 0.909
+either way. So dense sentence scoring, like dense retrieval before
+it, buys nothing measurable on this 31-chunk corpus: q03's correct
+sentence ranks 4th by dense similarity (0.630), q10's 8th (0.438)
+and q17's 14th (0.527). The mechanism stays in the path at the
+largest non-regressing weight so it is measured, not assumed — and
+the failure table below still lists q03, q10 and q17 as extractive
+misses. (A rarity-weighted specific-term bonus was tried first and
+reverted: it changed no golden answer on its own.)
 
 ### Eligibility-first answering
 
@@ -317,12 +359,12 @@ Full report with failure tables:
 
 | Question | Why it still fails |
 |---|---|
-| q03, q10, q17 | Paraphrase gap — the expected answer's key terms are not in the question, so lexical picking cannot find the sentence |
-| o04 (Vanier ranked university) | Lexical gates check word overlap, not whether the sentences answer the question |
+| q03, q10, q17 | Paraphrase gap — the expected answer's key terms are not in the question, so lexical picking cannot find the sentence; dense sentence scoring (Step 2, weight 2.0) does not fix them either — q03's correct sentence ranks 4th by dense sim, q10's 8th, q17's 14th. The generative path fixes q03 only. |
+| o04 (Vanier ranked university) | **Fixed in Step 2:** the answer-verification step now abstains with reason `unanswered_ranking` (abstention 1.0, 5/5). Dense similarity alone could not catch it (o04 scored 0.667, above several answerable questions). |
 | Eligibility vs Vanier closure | Verdicts do not yet factor the programme's closure |
 
 No regressions: no question the baseline got right is lost by the
-improved pipeline.
+improved pipeline (pinned by `tests/test_dense_verification.py::test_no_baseline_correct_answer_lost`).
 
 ## Data quality (messy real scholarship data)
 
@@ -347,9 +389,9 @@ python -m scripts.ci_gate
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured: 1.0, 0.909, 1.0, 0.8, 1.0 — **gate passes**. Strict mode
-(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails, proving
-the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
+Measured (Phase 2, Step 2): 1.0, 0.909, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
+(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.909),
+proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 (build index → tests → gate on every push/PR).
 
 ## Results (Phase 1, real local run, 18 Nov 2026)
@@ -368,6 +410,36 @@ the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 | Cost per query | $0.00 (local CPU, no API calls) |
 
 Full detail: [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
+
+### Results (Phase 2, Step 2 — dense scoring + answer verification, same 38 questions, 18 Nov 2026)
+
+Commands: `python -m scripts.run_eval` (writes
+`benchmarks/results/extractive_eval.json`) and
+`python -m scripts.run_generative_eval` (writes
+`benchmarks/results/generative_eval.json`).
+
+| Metric | Step 1 extractive | Step 2 extractive | Step 2 generative |
+|---|---|---|---|
+| Answer-only relevance | 0.909 (30/33) | 0.909 (30/33) | 0.697 (23/33) |
+| Abstention accuracy | 0.8 (4/5) | **1.0 (5/5)** | **1.0 (5/5)** |
+| Faithfulness (verbatim proxy) | 1.0 | 1.0 | 0.754 |
+| Judge faithfulness / relevance | — | — | 0.957 / 0.957 (n=23, 0 unparsed) |
+| Eligibility accuracy | 1.0 (10/10) | 1.0 (10/10) | 1.0 (10/10) |
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 | 1.0 / 1.0 |
+| Answer modes (n=33) | — | — | 16 generative, 7 fallback to extractive, 10 eligibility |
+| Mean generation / judge latency | — | — | 12.53 s / 7.36 s (shared CPU under contention; Step 1 measured 4.75 s / 3.82 s on a quieter VM) |
+
+Read honestly: Step 2 fixes exactly one thing — o04 now abstains
+(`unanswered_ranking`) in both paths, taking abstention from 0.8
+to 1.0 with no other per-question change (verified by the full-eval
+diff: zero changed rows in either column). Dense sentence scoring
+changes no golden answer at the shipped weight 2.0; at weights 3–4
+it fixes q03 but loses q16, net zero — so q03, q10 and q17 remain
+extractive misses, and the generative column is unchanged from
+Step 1 (0.697, same 16/7/10 modes; the new relevance check fired
+0 times on the golden set — its generative-side effect is covered
+by a synthetic unit test, not by a golden question). Full analysis
+in [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 
 ### Results (Phase 2, Step 1 — generative, same 38 questions, 18 Nov 2026)
 
@@ -401,7 +473,7 @@ trust. Full analysis in [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 112 passed
+python -m pytest tests/ -q   # 128 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text
@@ -419,7 +491,17 @@ verification (supported / invented-number / low-overlap /
 novel-stem sentences), generative fallback on verification failure
 and on model failure, judge parsing (including reversed label
 order), and the API `generate=true` opt-in with the extractive
-default unchanged.
+default unchanged. Phase 2, Step 2 adds 16 tests
+(`tests/test_dense_verification.py`): dense similarity ranking
+(duration / levels sentences above boilerplate), verification unit
+tests with injected sims (ranking with/without rank term, low-sim
+floor, no-sim degradation), o04 abstaining with reason
+`unanswered_ranking` (live + held-out Chevening ranking question),
+other out-of-corpus reasons unchanged, generative path abstaining
+on o04 without running the model, generative fallback when kept
+sentences fail relevance, and the full-eval no-regression test
+(the Step 1 correct set of 30 is exactly preserved, abstention
+1.0, q03/q10/q17 still misses).
 
 ## Docker
 
@@ -452,13 +534,20 @@ only container execution is blocked.)
   Step 1: same local model judges faithfulness and relevance
   alongside the proxies (`scripts/run_generative_eval.py`).
 - No query rewriting, no multi-hop retrieval.
-- No dense sentence scoring (the paraphrase-gap fix).
+- ~~No dense sentence scoring (the paraphrase-gap fix).~~ Done in
+  Phase 2, Step 2 — and measured to buy nothing on this corpus
+  (answer-only 0.909 before and after; weights 3–4 trade q03 for
+  q16, net zero). The mechanism stays in the path at weight 2.0.
 - ~~No answer-verification step (the o04 fix).~~ Done in Phase 2,
   Step 1: deterministic verification in `app/verification.py` —
   every generated sentence grounded in the cited chunks or dropped,
   with fallback to the extractive answer. (o04 itself still answers
   instead of abstaining: its Vanier sentences are grounded, so
   verification cannot catch that they do not answer the question.)
+  Done properly in Phase 2, Step 2: `app/answer.py:verify_answer_relevance`
+  (dense floor + ranking-focus check) now abstains on o04 with
+  reason `unanswered_ranking`, in both the extractive and the
+  generative paths; abstention accuracy is 1.0 (5/5).
 - No eligibility check for programme closure (the Vanier gap).
 - No deployment (local + Docker only; not deployed anywhere).
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually,
