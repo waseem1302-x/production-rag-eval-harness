@@ -44,19 +44,30 @@ def _query_terms(question: str) -> set[str]:
 
 
 class Retriever:
-    """Built once from chunks; `search` answers one question."""
+    """Built once from chunks; `search` answers one question.
 
-    def __init__(self, chunks: list[dict], dense: bool = True):
-        """`dense=False` forces BM25-only retrieval even when the
-        embedding model is available. The benchmark uses it for the
-        BM25-only configurations so the dense signal's contribution
-        is measured, not assumed."""
+    `mode` selects the retrieval signal, and exists so the ablation
+    can measure each signal's contribution instead of assuming it:
+    - "bm25": keyword scores only. The embedding model is never
+      loaded, so BM25 latency is honest and the configuration runs
+      without the model.
+    - "dense": embedding cosine only (FAISS IndexFlatIP).
+    - "hybrid": 0.5 * dense + 0.5 * BM25 after min-max normalisation
+      (the Phase 1 default).
+    In "bm25" mode dense_score is 0.0 and in "dense" mode bm25_score
+    is 0.0 — "not used in this mode", not "scored zero"."""
+
+    def __init__(self, chunks: list[dict], mode: str = "hybrid"):
+        if mode not in ("bm25", "dense", "hybrid"):
+            raise ValueError(f"unknown retrieval mode: {mode!r} "
+                             "(expected 'bm25', 'dense' or 'hybrid')")
+        self.mode = mode
         self.chunks = chunks
         self.corpus = [tokenize(c["text"]) for c in chunks]
         self.bm25 = BM25Okapi(self.corpus) if chunks else None
         self.vectors = None
         self.index = None
-        self.embedder = embeddings.embedder_name() if dense else "bm25-only"
+        self.embedder = embeddings.embedder_name() if mode != "bm25" else "bm25-only"
         if self.embedder != "bm25-only" and chunks:
             self.vectors = embeddings.embed(chunks_text(chunks))
             try:
@@ -94,9 +105,14 @@ class Retriever:
         if not self.chunks:
             return []
         n_cand = min(RERANK_CANDIDATES, len(self.chunks))
-        dense = self._dense_scores(question, n_cand)
-        bm25_scores = self.bm25.get_scores(tokenize(question)) if self.bm25 else np.zeros(len(self.chunks))
-        top_bm25 = np.argsort(-bm25_scores)[:n_cand]
+        # Only the signals this mode uses are computed: in "bm25"
+        # mode the query is never embedded, in "dense" mode BM25
+        # scores are never computed. Computing an unused signal
+        # would hide the mode's true latency.
+        dense = self._dense_scores(question, n_cand) if self.mode != "bm25" else {}
+        bm25_scores = (self.bm25.get_scores(tokenize(question)) if self.bm25 is not None and self.mode != "dense"
+                       else np.zeros(len(self.chunks)))
+        top_bm25 = np.argsort(-bm25_scores)[:n_cand] if self.mode != "dense" else []
         cand_ids = sorted(set(dense) | {int(i) for i in top_bm25})
 
         dense_vals = [dense.get(i, 0.0) for i in cand_ids]
@@ -106,11 +122,13 @@ class Retriever:
 
         candidates = []
         for pos, cid in enumerate(cand_ids):
-            score = (HYBRID_DENSE_WEIGHT * dense_norm[pos]
-                     + HYBRID_BM25_WEIGHT * bm25_norm[pos])
-            # With BM25-only, dense_norm is all zeros; use BM25 alone.
-            if self.embedder == "bm25-only":
+            if self.mode == "bm25":
                 score = bm25_norm[pos]
+            elif self.mode == "dense":
+                score = dense_norm[pos]
+            else:
+                score = (HYBRID_DENSE_WEIGHT * dense_norm[pos]
+                         + HYBRID_BM25_WEIGHT * bm25_norm[pos])
             candidates.append({
                 "chunk_id": self.chunks[cid]["chunk_id"],
                 "doc": self.chunks[cid]["doc"],
