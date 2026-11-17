@@ -1,10 +1,14 @@
-"""Hybrid retrieval: FAISS dense + BM25, then a lexical rerank.
+"""Hybrid retrieval: FAISS dense + BM25, then a rerank.
 
 Scores are each normalised to 0-1 (min-max over the candidate set)
-and combined 0.5 dense + 0.5 BM25. The reranker is transparent:
-it re-sorts the top candidates by combined score plus a bonus for
-query-term coverage in the chunk. It is NOT a cross-encoder;
-Phase 2 adds one and measures whether it helps.
+and combined 0.5 dense + 0.5 BM25. The default reranker is
+lexical: it re-sorts the top candidates by combined score plus a
+bonus for query-term coverage in the chunk. Phase 2, Step 3 adds a
+cross-encoder reranker (`reranker="cross-encoder"`): it scores each
+(question, chunk) pair jointly with ms-marco-MiniLM-L-6-v2 and
+re-sorts by sigmoid(logit). When the cross-encoder model cannot be
+loaded, a search falls back to the lexical reranker and the trace
+says so (`reranker: "lexical-fallback"`).
 
 When dense embeddings are unavailable, retrieval is BM25-only and
 `embedder` in the result says so.
@@ -14,7 +18,7 @@ import re
 import numpy as np
 from rank_bm25 import BM25Okapi
 
-from . import embeddings
+from . import cross_encoder, embeddings
 from .config import (
     DEFAULT_TOP_K,
     HYBRID_BM25_WEIGHT,
@@ -55,13 +59,27 @@ class Retriever:
     - "hybrid": 0.5 * dense + 0.5 * BM25 after min-max normalisation
       (the Phase 1 default).
     In "bm25" mode dense_score is 0.0 and in "dense" mode bm25_score
-    is 0.0 — "not used in this mode", not "scored zero"."""
+    is 0.0 — "not used in this mode", not "scored zero".
 
-    def __init__(self, chunks: list[dict], mode: str = "hybrid"):
+    `reranker` selects the rerank step: "lexical" (the default,
+    query-term coverage bonus) or "cross-encoder" (ms-marco
+    MiniLM-L6, joint pair scoring). The reranker only re-sorts the
+    top candidates; it never changes which chunks are candidates.
+    `last_reranker_used` records which reranker actually ran on the
+    most recent search — "lexical-fallback" when the cross-encoder
+    was requested but unavailable."""
+
+    def __init__(self, chunks: list[dict], mode: str = "hybrid",
+                 reranker: str = "lexical"):
         if mode not in ("bm25", "dense", "hybrid"):
             raise ValueError(f"unknown retrieval mode: {mode!r} "
                              "(expected 'bm25', 'dense' or 'hybrid')")
+        if reranker not in ("lexical", "cross-encoder"):
+            raise ValueError(f"unknown reranker: {reranker!r} "
+                             "(expected 'lexical' or 'cross-encoder')")
         self.mode = mode
+        self.reranker = reranker
+        self.last_reranker_used: str | None = None
         self.chunks = chunks
         self.corpus = [tokenize(c["text"]) for c in chunks]
         self.bm25 = BM25Okapi(self.corpus) if chunks else None
@@ -94,6 +112,37 @@ class Retriever:
             coverage = len(query_terms & chunk_terms) / max(1, len(query_terms))
             cand["rerank_score"] = cand["score"] + 0.1 * coverage
             cand["term_coverage"] = round(coverage, 3)
+            cand["reranker"] = "lexical"
+        return sorted(candidates, key=lambda c: c["rerank_score"], reverse=True)
+
+    def _rerank_cross_encoder(self, candidates: list[dict], question: str,
+                              query_terms: set[str]) -> list[dict]:
+        """Re-sort by cross-encoder logit, sigmoid-mapped to 0-1.
+
+        The raw logit is kept as `cross_encoder_score` (typically
+        +5 to +7 for a relevant pair, -7 to -11 for an unrelated
+        one) and `rerank_score` is sigmoid(logit), so the abstention
+        threshold in app/answer.py keeps its 0-1 meaning. Term
+        coverage is still recorded for the trace, but plays no part
+        in the order — that is the point of the ablation: does joint
+        pair scoring beat the coverage bonus? Returns the lexical
+        rerank when the model is unavailable, and says so.
+        """
+        logits = cross_encoder.score_pairs(question, [c["text"] for c in candidates])
+        if logits is None:
+            self.last_reranker_used = "lexical-fallback"
+            ranked = self._rerank(candidates, query_terms)
+            for cand in ranked:
+                cand["reranker"] = "lexical-fallback"
+            return ranked
+        self.last_reranker_used = "cross-encoder"
+        for cand, logit in zip(candidates, logits):
+            chunk_terms = set(tokenize(cand["text"]))
+            coverage = len(query_terms & chunk_terms) / max(1, len(query_terms))
+            cand["cross_encoder_score"] = logit
+            cand["rerank_score"] = round(cross_encoder.sigmoid(logit), 4)
+            cand["term_coverage"] = round(coverage, 3)
+            cand["reranker"] = "cross-encoder"
         return sorted(candidates, key=lambda c: c["rerank_score"], reverse=True)
 
     def search(self, question: str, top_k: int = DEFAULT_TOP_K,
@@ -140,8 +189,13 @@ class Retriever:
         candidates.sort(key=lambda c: c["score"], reverse=True)
         for cand in candidates:
             cand["rerank_score"] = cand["score"]
+            cand["reranker"] = "none"
         if not rerank:
             return candidates[:top_k]
+        if self.reranker == "cross-encoder":
+            return self._rerank_cross_encoder(
+                candidates[:n_cand], question, _query_terms(question))[:top_k]
+        self.last_reranker_used = "lexical"
         return self._rerank(candidates[:n_cand], _query_terms(question))[:top_k]
 
 

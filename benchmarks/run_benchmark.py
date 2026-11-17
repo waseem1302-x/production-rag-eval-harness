@@ -19,6 +19,8 @@ nearest neighbour, so each component's contribution is isolated:
 - hybrid-no-rerank vs improved-hybrid: the lexical reranker only.
 - hybrid-no-gates vs improved-hybrid: the abstention gates only
   (scored picking and rerank held constant).
+- improved-hybrid vs hybrid-cross-encoder: the reranker only
+  (lexical coverage bonus vs cross-encoder pair scoring).
 - baseline-naive vs improved-bm25: the full answering discipline
   (rerank + scored picking + gates) at fixed BM25 retrieval.
 
@@ -32,10 +34,17 @@ Configurations:
 - hybrid-no-gates: hybrid + rerank + scored picking, no gates.
 - improved-hybrid: hybrid + rerank + scored picking + gates.
   The full Phase 1 pipeline.
+- hybrid-cross-encoder: hybrid + cross-encoder rerank + scored
+  picking + gates. The Phase 2, Step 3 ablation: everything
+  identical to improved-hybrid except the reranker, so any delta
+  is the cross-encoder's.
 
 Results are written to benchmarks/results/<config>.json and a
 human-readable ablation summary to benchmarks/results/summary.md.
-Nothing here is invented: every number comes from this run.
+The summary is generated from the written result files
+(`build_summary`), not from the in-memory run, so the table cannot
+drift from the files. Nothing here is invented: every number comes
+from this run.
 """
 import json
 import statistics
@@ -96,6 +105,15 @@ CONFIGS = [
         "name": "improved-hybrid",
         "description": "Hybrid + rerank + scored picking + abstention gates (full Phase 1).",
         "mode": "hybrid",
+        "reranker": "lexical",
+        "search_kwargs": {"rerank": True},
+        "answer_kwargs": {"gates": True, "scored_picking": True},
+    },
+    {
+        "name": "hybrid-cross-encoder",
+        "description": "Hybrid + cross-encoder rerank + scored picking + abstention gates (Phase 2, Step 3).",
+        "mode": "hybrid",
+        "reranker": "cross-encoder",
         "search_kwargs": {"rerank": True},
         "answer_kwargs": {"gates": True, "scored_picking": True},
     },
@@ -138,7 +156,8 @@ def measure_latency(retriever: Retriever, golden: list[dict],
 
 
 def run_config(chunks: list[dict], golden: list[dict], config: dict) -> dict:
-    retriever = Retriever(chunks, mode=config["mode"])
+    retriever = Retriever(chunks, mode=config["mode"],
+                          reranker=config.get("reranker", "lexical"))
     quality = run_eval(retriever, golden,
                        search_kwargs=config["search_kwargs"],
                        answer_kwargs=config["answer_kwargs"])
@@ -148,6 +167,7 @@ def run_config(chunks: list[dict], golden: list[dict], config: dict) -> dict:
         "config": config["name"],
         "description": config["description"],
         "retrieval_mode": config["mode"],
+        "reranker": retriever.reranker,
         "embedder": retriever.embedder,
         "n_chunks": len(chunks),
         "quality": {k: v for k, v in quality.items() if k != "per_question"},
@@ -161,7 +181,10 @@ def run_config(chunks: list[dict], golden: list[dict], config: dict) -> dict:
 def _ablation_lines(results: list[dict]) -> list[str]:
     """Computed comparisons between neighbouring configurations.
     Every delta is derived from the measured numbers above, so the
-    text cannot drift from the table."""
+    text cannot drift from the table. A comparison is only written
+    when both configurations have result files — a partial results
+    directory still produces a usable summary instead of crashing.
+    """
     by_name = {r["config"]: r for r in results}
 
     def q(name, metric):
@@ -170,45 +193,117 @@ def _ablation_lines(results: list[dict]) -> list[str]:
     def lat(name):
         return by_name[name]["latency"]["retrieval"]["mean_ms"]
 
+    def have(*names):
+        return all(n in by_name for n in names)
+
     lines = ["\n## What the ablation shows\n"]
-    lines.append(
-        f"- Retrieval signal, naive answering: hybrid-plain vs baseline-naive. "
-        f"Recall@5 {q('baseline-naive', 'recall@5')} → {q('hybrid-plain', 'recall@5')}, "
-        f"answer-only relevance {q('baseline-naive', 'answer_only_relevance')} → "
-        f"{q('hybrid-plain', 'answer_only_relevance')}. If these are equal, the "
-        f"dense signal buys nothing on this corpus at naive answering.")
-    lines.append(
-        f"- Retrieval signal, full discipline: BM25 {q('improved-bm25', 'recall@5')} / "
-        f"dense {q('dense-only', 'recall@5')} / hybrid {q('improved-hybrid', 'recall@5')} "
-        f"recall@5; answer-only {q('improved-bm25', 'answer_only_relevance')} / "
-        f"{q('dense-only', 'answer_only_relevance')} / "
-        f"{q('improved-hybrid', 'answer_only_relevance')}. The signal that wins "
-        f"here is the one worth paying the latency for.")
-    lines.append(
-        f"- Reranker: hybrid-no-rerank vs improved-hybrid. Answer-only relevance "
-        f"{q('hybrid-no-rerank', 'answer_only_relevance')} → "
-        f"{q('improved-hybrid', 'answer_only_relevance')}, recall@5 "
-        f"{q('hybrid-no-rerank', 'recall@5')} → {q('improved-hybrid', 'recall@5')}.")
-    lines.append(
-        f"- Abstention gates: hybrid-no-gates vs improved-hybrid. Abstention accuracy "
-        f"{q('hybrid-no-gates', 'abstention_accuracy')} → "
-        f"{q('improved-hybrid', 'abstention_accuracy')}, answer-only relevance "
-        f"{q('hybrid-no-gates', 'answer_only_relevance')} → "
-        f"{q('improved-hybrid', 'answer_only_relevance')}. The gates are what stop "
-        f"the system answering questions the corpus cannot answer.")
-    lines.append(
-        f"- Latency (retrieval mean): BM25 {lat('improved-bm25')} ms, dense "
-        f"{lat('dense-only')} ms, hybrid {lat('improved-hybrid')} ms. Dense "
-        f"embedding is the cost; BM25 is near-free. Any recall gain from dense "
-        f"must be weighed against this.")
-    lines.append(
-        f"- Full pipeline vs naive baseline: answer-only relevance "
-        f"{q('baseline-naive', 'answer_only_relevance')} → "
-        f"{q('improved-hybrid', 'answer_only_relevance')}, abstention "
-        f"{q('baseline-naive', 'abstention_accuracy')} → "
-        f"{q('improved-hybrid', 'abstention_accuracy')}, faithfulness "
-        f"{q('baseline-naive', 'faithfulness')} → {q('improved-hybrid', 'faithfulness')}.")
+    if have("baseline-naive", "hybrid-plain"):
+        lines.append(
+            f"- Retrieval signal, naive answering: hybrid-plain vs baseline-naive. "
+            f"Recall@5 {q('baseline-naive', 'recall@5')} → {q('hybrid-plain', 'recall@5')}, "
+            f"answer-only relevance {q('baseline-naive', 'answer_only_relevance')} → "
+            f"{q('hybrid-plain', 'answer_only_relevance')}. If these are equal, the "
+            f"dense signal buys nothing on this corpus at naive answering.")
+    if have("improved-bm25", "dense-only", "improved-hybrid"):
+        lines.append(
+            f"- Retrieval signal, full discipline: BM25 {q('improved-bm25', 'recall@5')} / "
+            f"dense {q('dense-only', 'recall@5')} / hybrid {q('improved-hybrid', 'recall@5')} "
+            f"recall@5; answer-only {q('improved-bm25', 'answer_only_relevance')} / "
+            f"{q('dense-only', 'answer_only_relevance')} / "
+            f"{q('improved-hybrid', 'answer_only_relevance')}. The signal that wins "
+            f"here is the one worth paying the latency for.")
+    if have("hybrid-no-rerank", "improved-hybrid"):
+        lines.append(
+            f"- Reranker: hybrid-no-rerank vs improved-hybrid. Answer-only relevance "
+            f"{q('hybrid-no-rerank', 'answer_only_relevance')} → "
+            f"{q('improved-hybrid', 'answer_only_relevance')}, recall@5 "
+            f"{q('hybrid-no-rerank', 'recall@5')} → {q('improved-hybrid', 'recall@5')}.")
+    if have("improved-hybrid", "hybrid-cross-encoder"):
+        lines.append(
+            f"- Cross-encoder reranker: improved-hybrid (lexical) vs "
+            f"hybrid-cross-encoder. Answer-only relevance "
+            f"{q('improved-hybrid', 'answer_only_relevance')} → "
+            f"{q('hybrid-cross-encoder', 'answer_only_relevance')}, recall@5 "
+            f"{q('improved-hybrid', 'recall@5')} → "
+            f"{q('hybrid-cross-encoder', 'recall@5')}, abstention "
+            f"{q('improved-hybrid', 'abstention_accuracy')} → "
+            f"{q('hybrid-cross-encoder', 'abstention_accuracy')}, retrieval mean "
+            f"{lat('improved-hybrid')} ms → {lat('hybrid-cross-encoder')} ms. "
+            f"Same retrieval, same answering — any delta here is the "
+            f"cross-encoder's, and the latency is what it costs.")
+    if have("hybrid-no-gates", "improved-hybrid"):
+        lines.append(
+            f"- Abstention gates: hybrid-no-gates vs improved-hybrid. Abstention accuracy "
+            f"{q('hybrid-no-gates', 'abstention_accuracy')} → "
+            f"{q('improved-hybrid', 'abstention_accuracy')}, answer-only relevance "
+            f"{q('hybrid-no-gates', 'answer_only_relevance')} → "
+            f"{q('improved-hybrid', 'answer_only_relevance')}. The gates are what stop "
+            f"the system answering questions the corpus cannot answer.")
+    if have("improved-bm25", "dense-only", "improved-hybrid"):
+        lines.append(
+            f"- Latency (retrieval mean): BM25 {lat('improved-bm25')} ms, dense "
+            f"{lat('dense-only')} ms, hybrid {lat('improved-hybrid')} ms. Dense "
+            f"embedding is the cost; BM25 is near-free. Any recall gain from dense "
+            f"must be weighed against this.")
+    if have("baseline-naive", "improved-hybrid"):
+        lines.append(
+            f"- Full pipeline vs naive baseline: answer-only relevance "
+            f"{q('baseline-naive', 'answer_only_relevance')} → "
+            f"{q('improved-hybrid', 'answer_only_relevance')}, abstention "
+            f"{q('baseline-naive', 'abstention_accuracy')} → "
+            f"{q('improved-hybrid', 'abstention_accuracy')}, faithfulness "
+            f"{q('baseline-naive', 'faithfulness')} → {q('improved-hybrid', 'faithfulness')}.")
     return lines
+
+
+def build_summary(results_dir: Path = RESULTS_DIR) -> Path:
+    """Write summary.md from the per-configuration result files.
+
+    The summary is generated from the files on disk, not from the
+    in-memory run: re-running it on the same directory reproduces
+    the same table, and a stale or edited file shows up in the
+    summary instead of being silently overwritten by memory.
+    Configurations are listed in CONFIGS order; a result file for
+    a configuration not in CONFIGS is ignored.
+    """
+    results = []
+    for config in CONFIGS:
+        path = results_dir / f"{config['name']}.json"
+        if not path.exists():
+            continue
+        results.append(json.loads(path.read_text()))
+    if not results:
+        raise FileNotFoundError(f"no benchmark result files in {results_dir}")
+    n_in = results[0]["quality"]["n_in_corpus"]
+    n_out = results[0]["quality"]["n_out_of_corpus"]
+    lines = ["# Benchmark results (Phase 2, Step 3 — re-run with current code)\n",
+             f"Same golden set for every configuration: {n_in} in-corpus + "
+             f"{n_out} out-of-corpus questions. Latency is measured after "
+             "warm-up with the embedding model already loaded. Cost is $0.00: "
+             "everything runs locally on CPU, no API calls. The Step 1 "
+             "numbers in the docs were stale after Step 2 changed the "
+             "answer() defaults, so this table is a fresh re-run of all "
+             "configurations with the current code.\n",
+             "Latency varies run to run by tens of milliseconds on this VM "
+             "(shared CPU, 1.5 cores). The order of magnitude — BM25 ~1 ms, "
+             "dense ~50–150 ms, cross-encoder rerank ~seconds per query — "
+             "is stable across runs; the exact figures are one measured "
+             "run, not a guarantee.\n",
+             "| Configuration | Mode | Reranker | recall@3 | recall@5 | Evidence relevance | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for r in results:
+        q = r["quality"]
+        ret, tot = r["latency"]["retrieval"], r["latency"]["search_plus_answer"]
+        lines.append(f"| {r['config']} | {r['retrieval_mode']} | {r.get('reranker', 'lexical')} | "
+                     f"{q['recall@3']} | {q['recall@5']} | "
+                     f"{q['answer_relevance_proxy']} | {q['answer_only_relevance']} | "
+                     f"{q['faithfulness']} | {q['abstention_accuracy']} | "
+                     f"{ret['mean_ms']} ms | {tot['mean_ms']} ms | "
+                     f"${r['cost_per_query_usd']:.2f} |")
+    lines.extend(_ablation_lines(results))
+    out = results_dir / "summary.md"
+    out.write_text("\n".join(lines) + "\n")
+    return out
 
 
 def main() -> None:
@@ -219,13 +314,9 @@ def main() -> None:
     # accuracy) and the CI gate — mixing them in would compare the
     # baseline's substantive answers against eligibility verdicts.
     golden = [q for q in load_golden(GOLDEN_FILE) if not q.get("profile")]
-    n_in = sum(1 for q in golden if not q.get("out_of_corpus"))
-    n_out = len(golden) - n_in
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    results = []
     for config in CONFIGS:
         result = run_config(chunks, golden, config)
-        results.append(result)
         (RESULTS_DIR / f"{config['name']}.json").write_text(json.dumps(result, indent=2))
         q = result["quality"]
         print(f"{config['name']}: recall@3={q['recall@3']} recall@5={q['recall@5']} "
@@ -237,27 +328,7 @@ def main() -> None:
               f"total_mean={result['latency']['search_plus_answer']['mean_ms']}ms "
               f"cost=${result['cost_per_query_usd']:.2f}/query")
 
-    lines = ["# Benchmark results (Phase 1)\n",
-             f"Same golden set for every configuration: {n_in} in-corpus + "
-             f"{n_out} out-of-corpus questions. Latency is measured after "
-             "warm-up with the embedding model already loaded. Cost is $0.00: "
-             "everything runs locally on CPU, no API calls.\n",
-             "Latency varies run to run by tens of milliseconds on this VM "
-             "(shared CPU, 1.5 cores). The order of magnitude — BM25 ~1 ms, "
-             "dense ~50–70 ms — is stable across runs; the exact figures are "
-             "one measured run, not a guarantee.\n",
-             "| Configuration | Mode | recall@3 | recall@5 | Evidence relevance | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |",
-             "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for r in results:
-        q = r["quality"]
-        ret, tot = r["latency"]["retrieval"], r["latency"]["search_plus_answer"]
-        lines.append(f"| {r['config']} | {r['retrieval_mode']} | {q['recall@3']} | {q['recall@5']} | "
-                     f"{q['answer_relevance_proxy']} | {q['answer_only_relevance']} | "
-                     f"{q['faithfulness']} | {q['abstention_accuracy']} | "
-                     f"{ret['mean_ms']} ms | {tot['mean_ms']} ms | "
-                     f"${r['cost_per_query_usd']:.2f} |")
-    lines.extend(_ablation_lines(results))
-    (RESULTS_DIR / "summary.md").write_text("\n".join(lines) + "\n")
+    build_summary(RESULTS_DIR)
     print(f"\nResults written to {RESULTS_DIR}/")
 
 

@@ -25,6 +25,9 @@ RERANK_CANDIDATES = 10
 # see EVAL_RESULTS.md for the value in use and why.
 ABSTAIN_THRESHOLD = 0.15
 
+# Cross-encoder reranker (Phase 2, Step 3): ms-marco MiniLM-L6,
+# 22.7M params, ~91 MB on disk, CPU-only, $0. See app/cross_encoder.py.
+CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 # Dense sentence scoring (Phase 2, Step 2): weight of the cosine
 # similarity term added to the lexical sentence score in
 # app.answer._pick_sentences. Lexical scores run ~0-10; MiniLM
