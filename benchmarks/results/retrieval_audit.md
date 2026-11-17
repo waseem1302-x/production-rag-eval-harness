@@ -361,3 +361,34 @@ Answer: Eligibility for the Fulbright Foreign Student Program cannot be decided 
 - #3 erasmus-mundus-1 [—] dense=0.756 bm25=0.3007 combined=0.5283 rerank=0.5658 coverage=0.375 :: of selected Erasmus Mundus Masters is added to the list each year. In most cases, you should submit your application bet
 - #4 sweden-si-6 [—] dense=0.7333 bm25=0.2832 combined=0.5082 rerank=0.5457 coverage=0.375 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
 - #5 sweden-si-0 [—] dense=0.7482 bm25=0.2586 combined=0.5034 rerank=0.5284 coverage=0.25 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+
+## q21: Is the Vanier Canada Graduate Scholarship still accepting applications?
+Expected doc: vanier | found: True | abstention: —
+Answer: We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Vanier, the first francophone Governor General of Canada, the Vanier Canada Graduate Scholarships (Vanier CGS) prog
+- #1 vanier-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.0857142857142856 coverage=0.857 :: Home Page - Vanier Canada Graduate Scholarships.
+We are no longer accepting applications for the Vanier Canada Graduate 
+- #2 sweden-si-10 [—] dense=0.6239 bm25=0.1464 combined=0.3851 rerank=0.42795714285714287 coverage=0.429 :: I’m conditionally admitted, what now? If you have been conditionally admitted, you will have received information from U
+- #3 fulbright-1 [—] dense=0.6394 bm25=0.0723 combined=0.3559 rerank=0.3844714285714286 coverage=0.286 :: made. The Placement Team is the first point of contact to U.S. institutions during this process and candidates are only 
+- #4 sweden-si-6 [—] dense=0.6523 bm25=0.0037 combined=0.328 rerank=0.3565714285714286 coverage=0.286 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #5 daad-0 [—] dense=0.6646 bm25=0.0 combined=0.3323 rerank=0.3465857142857143 coverage=0.143 :: Scholarship Database - DAAD - Deutscher Akademischer Austauschdienst.
+Finding Scholarships.
+Welcome to our scholarship d
+
+## q22: How much is the monthly allowance for a master's student on the Eiffel Scholarship?
+Expected doc: eiffel | found: True | abstention: —
+Answer: France Excellence Eiffel scholarship holders receive a monthly allowance of €1,200 (from January 2026), to which is added several services: International transportation, national transportation, insur
+- #1 eiffel-1 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.0714285714285714 coverage=0.714 :: of an engineering degree. Doctorate level. The France Excellence Eiffel scholarship is awarded for a period of maximum 1
+- #2 eiffel-0 [INJECTED] dense=0.7243 bm25=0.6198 combined=0.6721 rerank=0.7149571428571428 coverage=0.429 :: Facebook. Twitter. LinkedIn. Email. The France Excellence Eiffel scholarship program. Flag this item. Students. Grants a
+- #3 sweden-si-1 [—] dense=0.7128 bm25=0.5869 combined=0.6499 rerank=0.7070428571428572 coverage=0.571 :: master’s programmes through University Admissions. 13 November 2026. : SI Scholarship application docum ent s and eligib
+- #4 sweden-si-0 [—] dense=0.5966 bm25=0.3937 combined=0.4952 rerank=0.5237714285714286 coverage=0.286 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+- #5 sweden-si-2 [—] dense=0.6376 bm25=0.2698 combined=0.4537 rerank=0.4822714285714286 coverage=0.286 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
+
+## q23: How much is the monthly stipend for a doctoral student on the Eiffel Scholarship?
+Expected doc: eiffel | found: True | abstention: —
+Answer: France Excellence Eiffel scholarship holders receive a monthly stipend of €2,000 (from January 2026) to which is added several services:: international transportation, national transportation, insuran
+- #1 eiffel-1 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.0571428571428572 coverage=0.571 :: of an engineering degree. Doctorate level. The France Excellence Eiffel scholarship is awarded for a period of maximum 1
+- #2 eiffel-0 [INJECTED] dense=0.7368 bm25=0.7191 combined=0.728 rerank=0.7708571428571428 coverage=0.429 :: Facebook. Twitter. LinkedIn. Email. The France Excellence Eiffel scholarship program. Flag this item. Students. Grants a
+- #3 sweden-si-1 [—] dense=0.626 bm25=0.359 combined=0.4925 rerank=0.5210714285714285 coverage=0.286 :: master’s programmes through University Admissions. 13 November 2026. : SI Scholarship application docum ent s and eligib
+- #4 vanier-0 [—] dense=0.6196 bm25=0.3262 combined=0.4729 rerank=0.5014714285714286 coverage=0.286 :: Home Page - Vanier Canada Graduate Scholarships.
+We are no longer accepting applications for the Vanier Canada Graduate 
+- #5 hkpfs-0 [—] dense=0.792 bm25=0.0608 combined=0.4264 rerank=0.4406857142857143 coverage=0.143 :: Background. Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (

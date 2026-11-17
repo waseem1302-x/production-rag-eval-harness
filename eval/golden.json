@@ -258,5 +258,23 @@
       "degree_level": "masters"
     },
     "expected_verdict": "unknown"
+  },
+  {
+    "id": "q21",
+    "question": "Is the Vanier Canada Graduate Scholarship still accepting applications?",
+    "expected_doc": "vanier",
+    "expected_answer": "no longer accepting applications"
+  },
+  {
+    "id": "q22",
+    "question": "How much is the monthly allowance for a master's student on the Eiffel Scholarship?",
+    "expected_doc": "eiffel",
+    "expected_answer": "€1,200"
+  },
+  {
+    "id": "q23",
+    "question": "How much is the monthly stipend for a doctoral student on the Eiffel Scholarship?",
+    "expected_doc": "eiffel",
+    "expected_answer": "€2,000"
   }
 ]
