@@ -6,3 +6,4 @@ data/processed/faiss.index
 .env
 .DS_Store
 .tmp/
+data/raw/*.html
