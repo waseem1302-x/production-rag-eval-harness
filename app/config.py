@@ -15,8 +15,20 @@ CLOSURES_FILE = DATA_DIR / "closures.json"
 GOLDEN_FILE = ROOT / "eval" / "golden.json"
 
 # Chunking: ~512 tokens, ~1 token = ~4 chars of English text.
-CHUNK_CHARS = 2048
+# Phase 2, Step 5 (chunk-size ablation): the token size is the
+# parameter; chars are derived from it so 256 / 512 / 1,024 tokens
+# map to 1,024 / 2,048 / 4,096 chars. Overlap is held CONSTANT at
+# 200 chars for every size, so chunk size is the only variable in
+# the ablation (a proportional overlap would vary two things at once).
+CHARS_PER_TOKEN = 4
+CHUNK_TOKENS = 512
+CHUNK_CHARS = CHUNK_TOKENS * CHARS_PER_TOKEN
 CHUNK_OVERLAP_CHARS = 200
+
+
+def chunk_chars_for_tokens(tokens: int) -> int:
+    """Chars budget for a chunk-size in tokens (1 token ~ 4 chars)."""
+    return tokens * CHARS_PER_TOKEN
 
 # Retrieval
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"

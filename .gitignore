@@ -7,3 +7,7 @@ data/processed/faiss.index
 .DS_Store
 .tmp/
 data/raw/*.html
+
+# Chunk-size ablation indexes (Phase 2, Step 5): binary FAISS artefacts,
+# rebuildable with: python -m scripts.build_index --chunk-tokens <size> --out-dir benchmarks/results/chunk_ablation/chunk-<size>
+benchmarks/results/chunk_ablation/*/faiss.index

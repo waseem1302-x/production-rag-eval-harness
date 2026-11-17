@@ -98,9 +98,20 @@ def chunk_text(text: str, chunk_chars: int = CHUNK_CHARS,
     return overlapped
 
 
-def chunk_document(doc_id: str, text: str) -> list[dict]:
-    """Chunk one document, returning chunk dicts with stable ids."""
+def chunk_document(doc_id: str, text: str, chunk_chars: int = CHUNK_CHARS,
+                   overlap_chars: int = CHUNK_OVERLAP_CHARS) -> list[dict]:
+    """Chunk one document, returning chunk dicts with stable ids.
+
+    `chunk_chars` / `overlap_chars` are parameters (not globals) so
+    the chunk-size ablation can build indexes at 256 / 512 / 1,024
+    tokens from the same corpus; the defaults are the shipped 512-token
+    configuration. Chunk ids are stable within one chunking: the
+    i-th chunk of a document is always `<doc>-<i>` — but the id of
+    the chunk holding a given sentence moves when the size changes,
+    which is why eligibility rules pin chunk ids (see EVAL_RESULTS.md,
+    Phase 2 Step 5) and can drop at non-default sizes.
+    """
     return [
         {"chunk_id": f"{doc_id}-{i}", "doc": doc_id, "text": chunk}
-        for i, chunk in enumerate(chunk_text(text))
+        for i, chunk in enumerate(chunk_text(text, chunk_chars, overlap_chars))
     ]

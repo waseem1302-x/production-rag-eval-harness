@@ -1,8 +1,96 @@
-# Eval Results — Phase 2, Step 4
+# Eval Results — Phase 2, Step 5
 
 All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
+
+## Phase 2, Step 5 — chunk-size ablation: 256 / 512 / 1,024 tokens
+
+Command: `python -m scripts.run_chunk_ablation` (437.9 s; writes
+`benchmarks/results/chunk_ablation/chunk_ablation_<size>.json` per
+size plus `benchmarks/results/chunk_ablation/chunk_ablation.md`,
+generated from the written files). Same .txt corpus for every size,
+same overlap policy — 200 chars, held constant, so chunk size is
+the only variable — same 39-question golden set, full extractive
+pipeline (hybrid retrieval, lexical rerank, scored picking,
+abstention gates, eligibility-first). Each size's index and chunks
+are stored under `benchmarks/results/chunk_ablation/chunk-<size>/`
+(`chunks.jsonl` + `faiss.index`); the working
+`data/processed/` 512-token index was never touched, and the
+rebuilt 512-token chunks file is byte-identical to it
+(`diff` clean), so the 512 column below is a re-run of the Step 4
+baseline, not a new index.
+
+| Chunk size | Chunks | Mean / max chunk chars | recall@3 / recall@5 | Answer relevance (proxy) | Answer-only relevance | Faithfulness | Abstention | Eligibility | Retrieval mean | Total mean |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 256 tokens (1,024 chars) | 60 | 1,023.2 / 1,224 | 1.0 / 1.0 | 0.912 | 0.853 (29/34) | 1.0 | 1.0 (5/5) | 0.818 (9/11) | 93.0 ms | 1,011.5 ms |
+| **512 tokens (2,048 chars)** | **31** | **1,797.8 / 2,248** | **1.0 / 1.0** | **1.0** | **0.912 (31/34)** | **1.0** | **1.0 (5/5)** | **1.0 (11/11)** | **97.6 ms** | **1,264.0 ms** |
+| 1,024 tokens (4,096 chars) | 19 | 2,808.6 / 4,283 | 1.0 / 1.0 | 0.971 | 0.853 (29/34) | 1.0 | 1.0 (5/5) | 0.909 (10/11) | 256.3 ms | 2,463.6 ms |
+
+### Decision: keep 512 tokens — chosen by the numbers
+
+- **512 wins the headline and the safety metric.** Answer-only
+  relevance 0.912 (31/34) vs 0.853 (29/34) at both other sizes, and
+  eligibility 1.0 (11/11) vs 0.818 (9/11) at 256 and 0.909 (10/11)
+  at 1,024. No default change, no index rebuild, no rule change.
+- **The losses at other sizes are systematic, not noise.** The
+  eligibility rules pin chunk ids (e.g. the SI citizenship list
+  must be in `sweden-si-2`); a size that moves an evidence sentence
+  to another chunk drops that rule, with a warning, and the verdict
+  degrades. Rules dropped: **7 at 256** (erasmus-mundus levels +
+  citizenship, manaaki levels + citizenship, mext levels,
+  sweden-si citizenship, vanier citizenship) and **2 at 1,024**
+  (erasmus-mundus levels — `erasmus-mundus-1` does not exist at
+  1,024 tokens, the whole document is one chunk — and sweden-si
+  citizenship); **0 at 512**.
+- **The worst failure is a false "eligible".** At both 256 and
+  1,024, e03 (Pakistani master's applicant, SI Scholarship) returns
+  `eligible` instead of `not_eligible`: the citizenship rule that
+  says Pakistan is not among the 34 eligible countries is gone, so
+  the system tells an ineligible applicant they can apply. At 256,
+  e07 (Manaaki undergraduate) additionally drops to `unknown`
+  (both manaaki rules gone), and e04's verdict stays `eligible` but
+  its answer loses the "Bangladesh is among the 34 eligible
+  countries" phrase at both non-default sizes. A wrong `eligible`
+  is the failure this system is built not to produce — it outweighs
+  any latency gain.
+- **256 does win one thing: q03.** Factual questions only (23,
+  eligibility excluded), answer-only is 21/23 at 256 vs 20/23 at
+  512 and 20/23 at 1,024 — the 256-token chunks isolate the SI
+  duration sentence so the picker finds it, fixing the q03
+  paraphrase-gap miss. It is a real +1, and it is outweighed by the
+  three eligibility rows 256 loses (e03, e04, e07). q10 and q17
+  miss at every size.
+- **Recall, faithfulness and abstention do not separate the sizes.**
+  recall@3/@5 1.0, faithfulness 1.0, abstention 1.0 (5/5) at all
+  three sizes — on this 31-chunk corpus the right document is
+  always in the top 5, whatever the chunk size.
+- **Latency does not rescue 256 or condemn 1,024.** Retrieval mean
+  93.0 / 97.6 / 256.3 ms and total mean 1,011.5 / 1,264.0 / 2,463.6 ms
+  (256 / 512 / 1,024). But total p50 is 879.0 / 1,120.7 / 1,190.4 ms
+  — nearly flat: the 1,024-token mean is a tail effect (p95
+  5,900.8 ms, max 10,920.9 ms), which may be CPU contention as much
+  as chunk size. 256's ~250 ms total-mean edge over 512 is not
+  worth a false `eligible` verdict.
+- **Honest confound: the rules were authored at 512.** The
+  eligibility evidence chunk ids were written against the 512-token
+  chunking, so 512's eligibility advantage is partly home-field
+  advantage, not a pure chunk-size effect. The ablation measures
+  the system as built — and as built, changing size would also
+  require re-authoring every pinned chunk id, for no net gain. A
+  future chunk-size change must re-pin the rules first and re-run
+  this ablation; the script (`scripts/run_chunk_ablation.py`) and
+  the per-size indexes exist for exactly that.
+- **What changed in code to make this measurable (not a metric
+  change):** `chunk_document()` now takes `chunk_chars` /
+  `overlap_chars` parameters; `scripts/build_index.py` is a function
+  `build_index(chunk_tokens, out_dir)` with `--chunk-tokens`
+  (256/512/1,024) and `--out-dir` flags (defaults reproduce the old
+  behaviour exactly); `app/eval.py:run_eval` now resolves
+  eligibility against the retriever's own chunks instead of always
+  reading `data/processed/chunks.jsonl` — without that fix, an eval
+  "at 256 tokens" would silently have used the 512-token chunks for
+  every eligibility verdict.
 
 ## Phase 2, Step 4 — eligibility reads the closure flag
 
@@ -355,7 +443,12 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**145 passed, 0 failed** (18 Nov 2026, 239.72 s). Step 3's 136 plus
+**158 passed, 0 failed** (18 Nov 2026, 281.16 s). Step 4's 145 plus
+13 new Step 5 chunk-ablation tests in `tests/test_chunk_ablation.py`:
+chunks within budget and overlap preserved at 256/512/1,024 tokens,
+index builder accepts a chunk-size parameter (256 → 60 chunks /
+60 vectors, invalid size rejected), and the eval runs against a
+non-default chunk size without crashing. Step 3's 136 plus
 9 new Step 4 closure tests in `tests/test_eligibility.py`: closed
 verdict for a doctoral applicant, for other degree levels, and with
 nationality only; open programmes unaffected; verbatim-evidence
@@ -389,6 +482,7 @@ Coverage by area:
 | `test_eligibility.py` | eligibility | 44 tests: 26 verdict cases (4 Vanier now `closed`), 9 closure tests, evidence grounding, API profile behaviour |
 | `test_data_quality.py` | messy data | All known findings, no false positives, report files valid |
 | `test_ablation.py` | retrieval modes | `bm25` / `dense` / `hybrid` modes, invalid mode, config coverage |
+| `test_chunk_ablation.py` | chunk-size ablation | 13 tests: chunks within budget + overlap preserved at 256/512/1,024 tokens, index builder accepts a chunk-size parameter (256 → 60 chunks / 60 vectors, invalid size rejected), eval runs against a non-default chunk size without crashing |
 | `test_before_after.py` | report integrity | Generated report matches the measured results files |
 | `test_generative.py` | generative + verification + judge | 25 tests, fake model only (see above) |
 | `test_dense_verification.py` | dense scoring + answer verification | 16 tests, real embedder for scoring, fake model for the generative o04 test (see above) |
@@ -455,7 +549,8 @@ python -m benchmarks.audit_retrieval # per-question retrieval traces
 python -m benchmarks.before_after   # before/after report + failure tables
 python -m scripts.check_data_quality # corpus mess report
 python -m scripts.ci_gate           # quality gate
-python -m pytest tests/ -q          # 128 tests
+python -m scripts.run_chunk_ablation # chunk-size ablation, 256/512/1,024 tokens (~7 min)
+python -m pytest tests/ -q          # 158 tests
 ```
 
 Note: the dense model (`all-MiniLM-L6-v2`, ~90 MB) downloads on
