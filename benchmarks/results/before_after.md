@@ -17,9 +17,9 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 | Evidence relevance (proxy) | 1.0 | 1.0 | +0.000 |
 | Answer-only relevance | 0.522 | 0.87 | +0.348 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
-| Abstention accuracy | 0.0 | 0.8 | +0.800 |
-| Retrieval latency (mean) | 0.2 ms | 66.4 ms | +66.2 ms |
-| Total latency (mean) | 0.5 ms | 70.2 ms | +69.7 ms |
+| Abstention accuracy | 0.0 | 1.0 | +1.000 |
+| Retrieval latency (mean) | 0.2 ms | 123.7 ms | +123.5 ms |
+| Total latency (mean) | 0.5 ms | 1490.6 ms | +1490.1 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 (local CPU, no API calls) |
 
 ## Why it changed

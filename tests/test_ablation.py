@@ -61,5 +61,7 @@ def test_ablation_configs_cover_each_component():
     # Each ablation pair must exist.
     for required in ("baseline-naive", "hybrid-plain", "improved-bm25",
                      "dense-only", "hybrid-no-rerank", "hybrid-no-gates",
-                     "improved-hybrid"):
+                     "improved-hybrid", "hybrid-cross-encoder"):
         assert required in names, f"missing ablation configuration: {required}"
+    for c in CONFIGS:
+        assert c.get("reranker", "lexical") in ("lexical", "cross-encoder")

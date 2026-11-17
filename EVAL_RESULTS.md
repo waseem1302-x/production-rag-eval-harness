@@ -197,7 +197,7 @@ large for this VM's RAM. Cost $0.00 per query (local, no API calls).
   ~70 ms total for the extractive pipeline) plus 3.82 s per judge
   call, on 1.5 shared CPUs. Fine for an opt-in path; not a default.
 
-## Benchmarks — 7-configuration ablation
+## Benchmarks — 8-configuration ablation
 
 Command: `python -m benchmarks.run_benchmark`
 
@@ -209,34 +209,60 @@ no API calls). Latency varies run to run by tens of milliseconds on
 this VM; the order of magnitude is stable, the exact figures are one
 measured run.
 
-| Configuration | Mode | recall@3 | recall@5 | Evidence relevance | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
-|---|---|---|---|---|---|---|---|---|---|---|
-| baseline-naive | bm25 | 1.0 | 1.0 | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | 0.5 ms | $0.00 |
-| hybrid-plain | hybrid | 1.0 | 1.0 | 1.0 | 0.565 | 1.0 | 0.0 | 39.9 ms | 42.7 ms | $0.00 |
-| improved-bm25 | bm25 | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.8 | 1.3 ms | 2.3 ms | $0.00 |
-| dense-only | dense | 1.0 | 1.0 | 1.0 | 0.826 | 1.0 | 0.8 | 108.8 ms | 110.2 ms | $0.00 |
-| hybrid-no-rerank | hybrid | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.8 | 99.9 ms | 103.8 ms | $0.00 |
-| hybrid-no-gates | hybrid | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.0 | 69.9 ms | 75.6 ms | $0.00 |
-| improved-hybrid | hybrid | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.8 | 66.4 ms | 70.2 ms | $0.00 |
+Re-run in Phase 2, Step 3 with the current code: the Step 1 numbers
+were stale after Step 2 changed the `answer()` defaults (dense
+sentence scoring on, answer verification on). Two things changed on
+the re-run: abstention is now 1.0, not 0.8 (Step 2's verification
+abstains on o04), and total latency is ~1–1.5 s, not ~70 ms (Step 2's
+dense sentence scoring embeds the candidate sentences per question;
+retrieval itself is unchanged). The new configuration,
+`hybrid-cross-encoder`, is identical to `improved-hybrid` except
+for the reranker, so any delta is the cross-encoder's.
+
+| Configuration | Mode | Reranker | recall@3 | recall@5 | Evidence relevance | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| baseline-naive | bm25 | lexical | 1.0 | 1.0 | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | 0.5 ms | $0.00 |
+| hybrid-plain | hybrid | lexical | 1.0 | 1.0 | 1.0 | 0.565 | 1.0 | 0.0 | 103.5 ms | 106.5 ms | $0.00 |
+| improved-bm25 | bm25 | lexical | 1.0 | 1.0 | 0.87 | 1.0 | 1.0 | 6.2 ms | 1070.7 ms | $0.00 |
+| dense-only | dense | lexical | 1.0 | 1.0 | 1.0 | 0.826 | 1.0 | 1.0 | 57.6 ms | 961.3 ms | $0.00 |
+| hybrid-no-rerank | hybrid | lexical | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 1.0 | 77.4 ms | 1307.1 ms | $0.00 |
+| hybrid-no-gates | hybrid | lexical | 1.0 | 1.0 | 1.0 | 0.826 | 1.0 | 0.0 | 74.9 ms | 1342.9 ms | $0.00 |
+| improved-hybrid | hybrid | lexical | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 1.0 | 123.7 ms | 1490.6 ms | $0.00 |
+| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 1.0 | 4238.0 ms | 5429.1 ms | $0.00 |
 
 ### What the ablation shows
 
 - **The improvement is the answering discipline, not the retrieval
   signal.** Baseline → improved-hybrid: answer-only 0.522 → 0.87,
-  abstention 0.0 → 0.8. Hybrid-plain (hybrid retrieval, naive
+  abstention 0.0 → 1.0. Hybrid-plain (hybrid retrieval, naive
   answering) scores only 0.565 — the dense signal alone adds
   almost nothing.
 - **Dense buys no recall here.** recall@5 is 1.0 for every
   configuration. On a 31-chunk corpus the right document is always
   in the top 5 by keyword alone.
 - **Dense slightly hurts answer-only relevance** (dense-only 0.826
-  vs BM25-only 0.87) at ~50–80x the latency. On this corpus
-  BM25-only is the better engineering choice.
+  vs BM25-only 0.87) at ~10x the retrieval latency of BM25. On this
+  corpus BM25-only is the better engineering choice.
 - **The reranker adds nothing measurable** (0.87 with and without
   it). Kept because the mechanism is sound; must be re-measured on
   a larger corpus.
+- **The cross-encoder adds nothing either** (Phase 2, Step 3).
+  `hybrid-cross-encoder` vs `improved-hybrid`: answer-only 0.87 →
+  0.87, recall@5 1.0 → 1.0, abstention 1.0 → 1.0, at 4,238.0 ms vs
+  123.7 ms retrieval mean (~34x). It does reorder — 17 of 23
+  in-corpus top-5 lists change order — but the top chunk and every
+  picked answer sentence stay the same, so no metric moves. On a
+  synthetic lexical trap the cross-encoder flips the order where
+  the lexical reranker does not (logits 7.13 vs 5.97), so the
+  mechanism works; the corpus is too small and too clean for it to
+  matter. Model: `cross-encoder/ms-marco-MiniLM-L-6-v2`, 22.7M
+  params, model.safetensors 90,870,598 bytes, CPU-only, $0. The
+  lexical reranker stays the default.
 - **The gates are the entire abstention story** (hybrid-no-gates
-  0.0 → improved-hybrid 0.8).
+  0.0 → improved-hybrid 1.0). They also protect answer-only
+  relevance: with the gates off, sentence picking is no longer
+  restricted to the named scholarship's chunks, and q16 loses its
+  expected phrase (0.87 → 0.826).
 
 Full per-configuration results: `benchmarks/results/<config>.json`.
 Ablation summary: `benchmarks/results/summary.md`.
@@ -252,9 +278,9 @@ Before/after report with failure tables:
 | Evidence relevance | 1.0 | 1.0 | +0.000 |
 | Answer-only relevance | 0.522 | 0.87 | +0.348 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
-| Abstention accuracy | 0.0 | 0.8 | +0.800 |
-| Retrieval latency (mean) | 0.2 ms | 66.4 ms | +66.2 ms |
-| Total latency (mean) | 0.5 ms | 70.2 ms | +69.7 ms |
+| Abstention accuracy | 0.0 | 1.0 | +1.000 |
+| Retrieval latency (mean) | 0.2 ms | 123.7 ms | +123.5 ms |
+| Total latency (mean) | 0.5 ms | 1490.6 ms | +1490.1 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 |
 
 ## Tests
@@ -345,7 +371,7 @@ pip install -r requirements.txt
 python -m scripts.build_index        # chunks + embeddings + FAISS index
 python -m scripts.run_eval           # eval harness numbers (writes benchmarks/results/extractive_eval.json)
 python -m scripts.run_generative_eval # generative + judge, same 38 questions (~5-11 min depending on CPU contention)
-python -m benchmarks.run_benchmark   # 7-configuration ablation
+python -m benchmarks.run_benchmark   # 8-configuration ablation
 python -m benchmarks.audit_retrieval # per-question retrieval traces
 python -m benchmarks.before_after   # before/after report + failure tables
 python -m scripts.check_data_quality # corpus mess report

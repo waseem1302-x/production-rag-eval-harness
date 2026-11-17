@@ -36,7 +36,7 @@ POST /ask ──► retrieval.py ──► top-10 candidates (hybrid 0.5 dense +
 
                         quality (eval/, benchmarks/, scripts/)
 eval/golden.json (38 questions) ──► eval.py ──► metrics
-benchmarks/run_benchmark.py ──► 7 configurations, same golden set
+benchmarks/run_benchmark.py ──► 8 configurations, same golden set
 benchmarks/audit_retrieval.py ──► per-question retrieval trace
 scripts/check_data_quality.py ──► corpus mess report
 scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
@@ -50,14 +50,15 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 | `app/textnorm.py` | Normalise document text before chunking: unwrap hard line breaks inside sentences, keep headers separate, add terminal punctuation to fragments | Official pages put line breaks in the middle of sentences and mix headers with content. Without this, chunks contain broken sentences and answers quote fragments. Normalisation happens at chunking time, so `data/raw/` stays verbatim. |
 | `app/chunking.py` | Recursive, sentence-aware chunking: ~512 tokens (~2,048 chars), 200-char overlap | One chunk should hold one complete idea. Overlap keeps facts that straddle a boundary. See "Chunking" below. |
 | `app/embeddings.py` | `sentence-transformers` `all-MiniLM-L6-v2`, 384-dim, L2-normalised | The dense signal. Falls back to BM25-only and reports `"embedder": "bm25-only"` if the model cannot load — never silently pretends dense ran. |
-| `app/retrieval.py` | FAISS `IndexFlatIP` (cosine) + BM25, min-max normalised, combined 0.5/0.5, then a lexical reranker (query-term coverage bonus +0.1). `mode` selects `bm25` / `dense` / `hybrid` | Hybrid retrieval + an auditable rerank step. The `mode` parameter exists for the ablation: each signal's contribution is measured, not assumed. |
+| `app/retrieval.py` | FAISS `IndexFlatIP` (cosine) + BM25, min-max normalised, combined 0.5/0.5, then a reranker. `mode` selects `bm25` / `dense` / `hybrid`; `reranker` selects `lexical` (query-term coverage bonus +0.1, the default) or `cross-encoder` (ms-marco MiniLM-L6, joint pair scoring, sigmoid-mapped to 0-1; falls back to lexical if the model cannot load, and the trace says which ran) | Hybrid retrieval + an auditable rerank step. The `mode` parameter exists for the ablation: each signal's contribution is measured, not assumed. |
+| `app/cross_encoder.py` | Cross-encoder reranker (Phase 2, Step 3): `sentence-transformers` `CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")`, 22.7M params, ~91 MB, CPU-only, $0. Lazy-loaded like the embedder; `score_pairs` returns raw logits or `None` when the model is unavailable | The reranker the lexical bonus is measured against. Same lazy-load / honest-fallback pattern as `app/embeddings.py`: a missing model degrades the reranker, never crashes a search. |
 | `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates + answer verification | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. Phase 2, Step 2: sentence scores add `2.0 ×` dense cosine similarity to the question (local MiniLM, $0), and after the lexical gates `verify_answer_relevance` checks the picked sentences actually answer the question (dense floor 0.45 + ranking-focus check). Measured: dense scoring buys nothing on this corpus (see §4), verification fixes o04. |
 | `app/generative.py` | Generative answers (Phase 2, Step 1): local Qwen2.5-0.5B-Instruct, greedy, + LLM-as-judge | The opt-in generator. Loads the 0.5B model lazily (bf16, CPU, 2 torch threads — measured faster than 4 on this VM), prompts it with the top-3 chunks of the *named* scholarship only, and returns a verified answer or falls back to extractive. `judge_answer` scores one answer with the same model (label-aware parsing: the judge sometimes swaps the two lines). All model text goes through `complete()`, which honours a test override so unit tests never load the model. Phase 2, Step 2: the kept sentences also pass `verify_answer_relevance`; on failure the path falls back to extractive (`relevance_verification_failed`). |
 | `app/verification.py` | Deterministic verification of generated sentences against the cited chunks | The guard, not the judge. A sentence is kept only if its *novel* stems (content stems not already in the question) are covered ≥50% by one chunk, and every number in it appears in the chunks. Two fixes came from measured failures: the named-doc filter (q17 — the model copied SI's field list into a Manaaki answer) and novel-stem coverage (question-word overlap alone passed an ungrounded sentence). Verification stops invented facts; it cannot tell whether a grounded sentence answers the question (o04) or contradicts a corpus fact the model did not read (q21). |
 | `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. |
 | `app/api.py` | FastAPI: `GET /health`, `POST /ask` (optional `profile`) | One endpoint. The response carries the answer, citations with source URLs, the eligibility verdicts, and a full retrieval trace. |
 | `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy, LLM-as-judge | The measurement instrument. Every claim in the README is a number this file produces. `run_eval(generative=True, judge=True)` runs the same golden set through the generative path and scores each substantive answer with the local model as judge; the string proxies are always computed too, so generative and extractive stay comparable. Eligibility statements are tagged `answer_mode: "eligibility"` and are not judge-scored (template + verbatim evidence, not a generated answer). |
-| `benchmarks/` | 7-configuration ablation (`run_benchmark.py`), per-question retrieval audit (`audit_retrieval.py`), generated before/after report (`before_after.py`) | The proof that each component earns its place — or does not. See `benchmarks/results/summary.md` and `before_after.md`. |
+| `benchmarks/` | 8-configuration ablation (`run_benchmark.py`), per-question retrieval audit (`audit_retrieval.py`), generated before/after report (`before_after.py`) | The proof that each component earns its place — or does not. See `benchmarks/results/summary.md` and `before_after.md`. |
 | `scripts/check_data_quality.py` | Finds the corpus's messy data (closures, two amounts, database pages, approximate/year-specific figures, missing fields, stale markers) | Real pages are messy. A system that hides the mess will invent answers for it. |
 | `scripts/ci_gate.py` | Fails the build if any metric drops below its threshold | The eval harness is a gate, not a report. Thresholds are set below the measured numbers so jitter does not fail the build; lowering a threshold requires a reason in the commit message. |
 
@@ -156,9 +157,13 @@ choice is measured.**
 
 | Signal (full discipline) | recall@5 | Answer-only relevance | Retrieval latency (mean) |
 |---|---|---|---|
-| BM25-only | 1.0 | 0.87 | 1.3 ms |
-| Dense-only | 1.0 | 0.826 | 108.8 ms |
-| Hybrid | 1.0 | 0.87 | 66.4 ms |
+| BM25-only | 1.0 | 0.87 | 6.2 ms |
+| Dense-only | 1.0 | 0.826 | 57.6 ms |
+| Hybrid | 1.0 | 0.87 | 123.7 ms |
+
+(Fresh re-run, Phase 2 Step 3; the Step 1 run measured 1.3 / 108.8 /
+66.4 ms. Latency varies run to run on this shared-CPU VM; the order
+of magnitude is the stable finding.)
 
 **Why hybrid is the default anyway:** recall is saturated at 1.0
 for every signal on this corpus — the right document is always in
@@ -231,10 +236,25 @@ relevance is 0.87 with and without it, recall identical. It is kept
 because the mechanism is sound and the corpus is small; on a larger
 corpus it must be re-measured before it is claimed to help.
 
-**Rejected (for Phase 1):** a cross-encoder (e.g. `ms-marco-MiniLM`).
-It would cost a model call per candidate and its benefit is
-unproven here. Phase 2 adds it as an ablation configuration and
-measures it against the lexical reranker on the same golden set.
+**Phase 2, Step 3 — cross-encoder measured:** `hybrid-cross-encoder`
+is now an ablation configuration (`cross-encoder/ms-marco-MiniLM-L-6-v2`,
+22.7M params, ~91 MB, CPU-only, $0; re-sorts the top 10 by
+sigmoid(logit), term coverage recorded but unused). On the same
+28-question golden set it changes nothing either: answer-only
+relevance 0.87 → 0.87, recall@5 1.0 → 1.0, abstention 1.0 → 1.0 —
+but retrieval mean latency is 4,238.0 ms vs 123.7 ms for the lexical
+reranker (~34x; scoring 10 full chunks takes ~2.5–3.4 s per question
+on this VM). It does reorder: 17 of 23 in-corpus top-5 lists change
+order, but the top chunk and every picked answer sentence stay the
+same, so no metric moves. On a synthetic trap — a chunk repeating
+every query term without answering, vs the answering chunk — the
+cross-encoder does flip the order where the lexical reranker does
+not (logits 7.13 vs 5.97), so the mechanism works; the corpus is
+just too small and too clean for it to matter. The cross-encoder
+also scores like a lexical model more often than its name suggests:
+on a second synthetic trap (MEXT deadline) it kept the trap first
+(7.51 vs 6.92). Lexical stays the default; the cross-encoder is a
+measured option, not a win.
 
 ### 6. Local embeddings vs API embeddings
 
@@ -364,7 +384,11 @@ change to any of them that regresses quality fails the build.
   closure flag.
 - **Chunk size not ablated:** 512 tokens was chosen by reasoning,
   not by measurement. Fix: ablate 256 / 512 / 1,024 tokens.
-- **Reranker unproven:** adds nothing on this corpus. Fix: add a
-  cross-encoder configuration and measure it.
+- **Reranker unproven:** adds nothing on this corpus. **Measured in
+  Phase 2, Step 3:** the cross-encoder configuration
+  (`hybrid-cross-encoder`) changes no metric either (0.87 answer-only,
+  1.0 abstention, both ways) at ~34x the retrieval latency — see §5.
+  Both rerankers are now measured non-wins on this corpus; re-measure
+  on a larger corpus.
 - **Corpus is 10 pages, 31 chunks:** every "dense buys nothing"
   finding is a finding *about this corpus size*. Re-measure as it grows.

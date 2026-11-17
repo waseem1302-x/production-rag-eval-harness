@@ -64,7 +64,8 @@ No scraped private data.
 official pages -> ingest.py (fetch + extract text, save raw + metadata)
   -> chunking.py (text normalisation + recursive chunking, ~512 tokens, 200-char overlap)
   -> embeddings.py (sentence-transformers all-MiniLM-L6-v2, 384-dim)
-  -> retrieval.py (FAISS dense + BM25, 0.5/0.5 hybrid, lexical rerank)
+  -> retrieval.py (FAISS dense + BM25, 0.5/0.5 hybrid, lexical rerank;
+     cross-encoder rerank available as an ablation configuration)
   -> eligibility.py (degree + citizenship checks, corpus-grounded, only if profile given)
   -> answer.py (extractive answer + citations + abstention gates)
   -> generative.py (OPT-IN: local LLM answer + verification, falls back to extractive)
@@ -102,8 +103,15 @@ So retrieval is hybrid: FAISS cosine similarity over
 `all-MiniLM-L6-v2` embeddings, plus BM25 over chunk tokens, each
 normalised to 0–1 and combined 0.5/0.5. The top 10 are then reranked
 with a transparent lexical reranker (query-term coverage bonus).
-That reranker is **not** a cross-encoder; Phase 2 adds one and
-measures whether it actually helps.
+Phase 2, Step 3 added a cross-encoder reranker
+(`cross-encoder/ms-marco-MiniLM-L-6-v2`, 22.7M params, ~91 MB,
+CPU-only, $0) as an ablation configuration (`hybrid-cross-encoder`)
+and measured it against the lexical reranker on the same 38-question
+golden set: it reorders 17 of 23 top-5 lists but changes no answer
+and no metric — answer-only relevance 0.87 with and without it,
+abstention 1.0 both ways — at 4,238 ms retrieval mean vs 123.7 ms
+for the lexical reranker (~34x). The lexical reranker stays the
+default; the cross-encoder is kept as a measured option, not a win.
 
 Honest finding from the ablation: on this 31-chunk corpus, dense
 retrieval buys **no measured recall** (recall@5 is 1.0 for every
@@ -316,18 +324,29 @@ is invented.
 ## Benchmarks and ablation
 
 ```bash
-python -m benchmarks.run_benchmark   # 7 configurations, same golden set
+python -m benchmarks.run_benchmark   # 8 configurations, same golden set
 ```
 
-| Configuration | Mode | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Cost / query |
-|---|---|---|---|---|---|---|---|
-| baseline-naive | bm25 | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | $0.00 |
-| hybrid-plain | hybrid | 1.0 | 0.565 | 1.0 | 0.0 | 39.9 ms | $0.00 |
-| improved-bm25 | bm25 | 1.0 | 0.87 | 1.0 | 0.8 | 1.3 ms | $0.00 |
-| dense-only | dense | 1.0 | 0.826 | 1.0 | 0.8 | 108.8 ms | $0.00 |
-| hybrid-no-rerank | hybrid | 1.0 | 0.87 | 1.0 | 0.8 | 99.9 ms | $0.00 |
-| hybrid-no-gates | hybrid | 1.0 | 0.87 | 1.0 | 0.0 | 69.9 ms | $0.00 |
-| improved-hybrid | hybrid | 1.0 | 0.87 | 1.0 | 0.8 | 66.4 ms | $0.00 |
+Re-run in Phase 2, Step 3 with the current code — the Step 1 numbers
+were stale after Step 2 changed the `answer()` defaults (dense
+sentence scoring on, verification on). Two things changed on the
+re-run: abstention is now 1.0, not 0.8 (Step 2's verification
+abstains on o04), and total latency is ~1–1.5 s, not ~70 ms (Step 2's
+dense sentence scoring embeds the candidate sentences per question;
+retrieval itself is unchanged). The cross-encoder buys nothing: it
+reorders 17 of 23 top-5 lists but changes no answer and no metric,
+at ~34x the retrieval latency.
+
+| Configuration | Mode | Reranker | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
+|---|---|---|---|---|---|---|---|---|---|
+| baseline-naive | bm25 | lexical | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | 0.5 ms | $0.00 |
+| hybrid-plain | hybrid | lexical | 1.0 | 0.565 | 1.0 | 0.0 | 103.5 ms | 106.5 ms | $0.00 |
+| improved-bm25 | bm25 | lexical | 1.0 | 0.87 | 1.0 | 1.0 | 6.2 ms | 1070.7 ms | $0.00 |
+| dense-only | dense | lexical | 1.0 | 0.826 | 1.0 | 1.0 | 57.6 ms | 961.3 ms | $0.00 |
+| hybrid-no-rerank | hybrid | lexical | 1.0 | 0.87 | 1.0 | 1.0 | 77.4 ms | 1307.1 ms | $0.00 |
+| hybrid-no-gates | hybrid | lexical | 1.0 | 0.826 | 1.0 | 0.0 | 74.9 ms | 1342.9 ms | $0.00 |
+| improved-hybrid | hybrid | lexical | 1.0 | 0.87 | 1.0 | 1.0 | 123.7 ms | 1490.6 ms | $0.00 |
+| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 0.87 | 1.0 | 1.0 | 4238.0 ms | 5429.1 ms | $0.00 |
 
 Each configuration changes one thing from its neighbour, so each
 component's contribution is isolated. Full results:
@@ -345,8 +364,8 @@ python -m benchmarks.before_after   # generated from the results files
 | recall@5 | 1.0 | 1.0 | +0.000 |
 | Answer-only relevance | 0.522 | 0.87 | +0.348 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
-| Abstention accuracy | 0.0 | 0.8 | +0.800 |
-| Retrieval latency (mean) | 0.2 ms | 66.4 ms | +66.2 ms |
+| Abstention accuracy | 0.0 | 1.0 | +1.000 |
+| Retrieval latency (mean) | 0.2 ms | 123.7 ms | +123.5 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 |
 
 Why it changed: the answering discipline (scored picking + gates),
@@ -529,7 +548,12 @@ only container execution is blocked.)
 - ~~No generative LLM answer (extractive only).~~ Done in Phase 2,
   Step 1: opt-in generative answer, local Qwen2.5-0.5B-Instruct,
   `POST /ask` with `"generate": true`; extractive stays the default.
-- No cross-encoder reranker (lexical rerank only).
+- ~~No cross-encoder reranker (lexical rerank only).~~ Done in Phase 2,
+  Step 3: `cross-encoder/ms-marco-MiniLM-L-6-v2` as the
+  `hybrid-cross-encoder` ablation configuration — measured to buy
+  nothing on this corpus (0.87 answer-only with and without it,
+  abstention 1.0 both ways) at ~34x the retrieval latency. Lexical
+  stays the default.
 - ~~No LLM-as-judge (string-match proxies only).~~ Done in Phase 2,
   Step 1: same local model judges faithfulness and relevance
   alongside the proxies (`scripts/run_generative_eval.py`).
