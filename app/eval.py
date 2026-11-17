@@ -10,7 +10,11 @@ Definitions (all string-based proxies in Phase 1 — no LLM judge):
   the expected answer phrase (lowercased) appears in the answer
   text or in any cited chunk. This measures whether the evidence
   retrieved actually contains the answer, not whether a generator
-  wrote it well. Phase 2 replaces this with an LLM-as-judge.
+  wrote it well. Phase 2 adds an LLM-as-judge alongside it
+  (`judge=True` in `run_eval`): the proxy stays so before/after
+  is comparable, and the judge scores faithfulness and relevance
+  semantically — the proxy cannot judge a paraphrasing generator,
+  whose sentences are grounded but not verbatim.
 - answer-only relevance: fraction where the expected phrase appears
   in the answer text alone, not just in the citations. This is the
   metric that separates the naive baseline from the improved
@@ -34,18 +38,34 @@ from .textnorm import norm_text
 
 
 def _answer_question(question: str, profile: dict | None, retrieved: list[dict],
-                     chunks: list[dict], answer_kwargs: dict) -> tuple[dict, list[dict]]:
+                     chunks: list[dict], answer_kwargs: dict,
+                     answer_fn=None) -> tuple[dict, list[dict]]:
     """One question through the same path the API uses: substantive
-    answer, with eligibility-first routing when a profile is given."""
+    answer, with eligibility-first routing when a profile is given.
+
+    `answer_fn`, when given, builds the substantive answer instead
+    of the extractive answerer (the generative path passes
+    `generate_answer` here); eligibility routing is identical.
+    """
     from .answer import answer as build_answer
     from .eligibility import resolve as resolve_eligibility
 
-    substantive = build_answer(question, retrieved, **answer_kwargs)
+    build = answer_fn or build_answer
+    substantive = build(question, retrieved, **answer_kwargs) \
+        if answer_fn is None else build(question, retrieved)
     if not profile:
         return substantive, []
     answer, eligibility = resolve_eligibility(
         question, profile, retrieved, chunks, substantive)
-    return (answer if answer is not None else substantive), eligibility
+    if answer is None:
+        return substantive, eligibility
+    # Tag the replacement so the eval can tell an eligibility
+    # statement (template + verbatim evidence, never generated)
+    # apart from a substantive answer: the judge scores the
+    # substantive answers only, and the generative-mode counts
+    # report these as "eligibility", not "unknown".
+    answer["answer_mode"] = "eligibility"
+    return answer, eligibility
 
 
 def load_golden(path=GOLDEN_FILE) -> list[dict]:
@@ -54,12 +74,31 @@ def load_golden(path=GOLDEN_FILE) -> list[dict]:
 
 def run_eval(retriever: Retriever, golden: list[dict] | None = None,
              search_kwargs: dict | None = None,
-             answer_kwargs: dict | None = None) -> dict:
+             answer_kwargs: dict | None = None,
+             generative: bool = False, judge: bool = False,
+             judge_fn=None, progress=None) -> dict:
     """Run the golden set. `search_kwargs` / `answer_kwargs` let the
     benchmark run other pipeline configurations (e.g. the naive
     baseline: no rerank, no abstention gates) on the same questions.
-    Defaults are the full Phase 1 pipeline."""
+    Defaults are the full Phase 1 pipeline.
+    `progress`, when given, is called as progress(i, n, question_id)
+    after each in-corpus question (the generative run takes
+    minutes; the caller uses it for a progress log).
+
+    Phase 2: `generative=True` answers with the local generative
+    model + verification step (see app/generative.py) instead of
+    the extractive answerer; `judge=True` additionally scores each
+    given answer with the same local model as judge (one short
+    completion per question, two 0/1 scores). The string-proxy
+    metrics are ALWAYS computed, so generative and extractive runs
+    stay comparable — but note the proxy `faithfulness` measures
+    verbatim substring overlap, which a paraphrasing generator
+    fails by design; the judge's faithfulness is the meaningful
+    number for generative answers. `judge_fn`, when given, replaces
+    the model for judging (tests inject a fake).
+    """
     from .answer import answer as build_answer
+    from .generative import generate_answer, judge_answer
 
     golden = golden if golden is not None else load_golden()
     search_kwargs = search_kwargs or {}
@@ -73,17 +112,26 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
     answer_only_relevant = 0
     faithful_sents = total_sents = 0
     elig_correct = elig_total = 0
+    judge_faith = judge_rel = judge_n = judge_unparsed = 0
+    generative_modes: dict[str, int] = {}
     per_question = []
 
-    for q in in_corpus:
+    for qi, q in enumerate(in_corpus, start=1):
         retrieved = retriever.search(q["question"], top_k=5, **search_kwargs)
         docs = [c["doc"] for c in retrieved]
         hit3 = q["expected_doc"] in docs[:3]
         hit5 = q["expected_doc"] in docs
         recall3 += hit3
         recall5 += hit5
-        result, eligibility = _answer_question(
-            q["question"], q.get("profile"), retrieved, chunks, answer_kwargs)
+        if generative:
+            result, eligibility = _answer_question(
+                q["question"], q.get("profile"), retrieved, chunks,
+                answer_kwargs, answer_fn=generate_answer)
+            mode = result.get("answer_mode", "unknown")
+            generative_modes[mode] = generative_modes.get(mode, 0) + 1
+        else:
+            result, eligibility = _answer_question(
+                q["question"], q.get("profile"), retrieved, chunks, answer_kwargs)
         if q.get("profile"):
             elig_total += 1
             verdict = next((v["verdict"] for v in eligibility
@@ -123,26 +171,51 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
                 cited = norm_text(" ".join(c["text"] for c in result["citations"]))
                 if norm_text(sent) in cited:
                     faithful_sents += 1
-        per_question.append({
+        row = {
             "id": q["id"], "question": q["question"],
             "expected_doc": q["expected_doc"], "found_doc_top5": docs,
             "recall@3": hit3, "recall@5": hit5,
-            "found": result["found"], "answer_relevant": is_relevant,
+            "found": result["found"], "answer": result["answer"],
+            "answer_relevant": is_relevant,
             "answer_only_relevant": is_answer_only,
             "eligibility_verdict": next(
                 (v["verdict"] for v in eligibility if v["doc"] == q["expected_doc"]),
                 None) if q.get("profile") else None,
-        })
+        }
+        if generative:
+            row["answer_mode"] = result.get("answer_mode")
+            if result.get("generation", {}).get("latency_s") is not None:
+                row["generation_latency_s"] = result["generation"]["latency_s"]
+        # The judge scores substantive answers only: an eligibility
+        # statement is a template + verbatim evidence, not a
+        # generated answer, and the 0.5B judge misreads its format.
+        if judge and result["found"] and result.get("answer_mode") != "eligibility":
+            judge_chunks = result["citations"] or retrieved[:3]
+            verdict = judge_answer(q["question"], result["answer"],
+                                   judge_chunks, judge_fn=judge_fn)
+            row["judge"] = verdict
+            if verdict["parsed"]:
+                judge_n += 1
+                judge_faith += verdict["faithfulness"]
+                judge_rel += verdict["relevance"]
+            else:
+                judge_unparsed += 1
+        per_question.append(row)
+        if progress is not None:
+            progress(qi, len(in_corpus), q["id"])
 
     abstained = 0
     for q in out_corpus:
         retrieved = retriever.search(q["question"], top_k=5, **search_kwargs)
-        result = build_answer(q["question"], retrieved, **answer_kwargs)
+        if generative:
+            result = generate_answer(q["question"], retrieved)
+        else:
+            result = build_answer(q["question"], retrieved, **answer_kwargs)
         if not result["found"]:
             abstained += 1
 
     n = max(1, len(in_corpus))
-    return {
+    out = {
         "n_in_corpus": len(in_corpus),
         "n_out_of_corpus": len(out_corpus),
         "n_eligibility": elig_total,
@@ -155,3 +228,11 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
         "eligibility_accuracy": round(elig_correct / elig_total, 3) if elig_total else None,
         "per_question": per_question,
     }
+    if generative:
+        out["generative_modes"] = generative_modes
+    if judge:
+        out["judge_faithfulness"] = round(judge_faith / judge_n, 3) if judge_n else None
+        out["judge_relevance"] = round(judge_rel / judge_n, 3) if judge_n else None
+        out["judge_n"] = judge_n
+        out["judge_unparsed"] = judge_unparsed
+    return out

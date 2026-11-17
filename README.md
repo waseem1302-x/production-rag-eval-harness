@@ -1,4 +1,4 @@
-# Production RAG with Eval Harness — Phase 1
+# Production RAG with Eval Harness — Phase 2, Step 1
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
@@ -7,9 +7,17 @@ when a profile is given, and says **"Not found in the corpus"** when
 the evidence is weak — instead of hallucinating.
 
 Phase 1 is **retrieval + extractive answers + eligibility-first
-answering + a measured eval harness**. There is no generative LLM
-yet. That is deliberate: if retrieval is wrong, a generator only
-hides it. Phase 2 adds a generator and an LLM-as-judge.
+answering + a measured eval harness**. Phase 2, Step 1 (done, on
+branch `feat/generative-answer`) adds an **opt-in generative answer**
+from a local $0 model (Qwen2.5-0.5B-Instruct, 988.1 MB, CPU) with a
+**deterministic verification step** (every generated sentence checked
+against the cited chunks; unsupported sentences dropped, otherwise
+fall back to the extractive answer) and an **LLM-as-judge** alongside
+the string-proxy metrics. The extractive default is unchanged, and
+the generator is deliberately the weaker path on this corpus — see
+the numbers in [`EVAL_RESULTS.md`](EVAL_RESULTS.md). That is the
+point of measuring: a generator does not automatically beat quoting
+the source.
 
 **Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
 why, trade-offs) · [`EVAL_RESULTS.md`](EVAL_RESULTS.md) (every measured
@@ -54,8 +62,10 @@ official pages -> ingest.py (fetch + extract text, save raw + metadata)
   -> retrieval.py (FAISS dense + BM25, 0.5/0.5 hybrid, lexical rerank)
   -> eligibility.py (degree + citizenship checks, corpus-grounded, only if profile given)
   -> answer.py (extractive answer + citations + abstention gates)
+  -> generative.py (OPT-IN: local LLM answer + verification, falls back to extractive)
   -> api.py (FastAPI, POST /ask)
-  -> eval.py (golden set, recall@k, faithfulness, answer relevance, eligibility accuracy)
+  -> eval.py (golden set, recall@k, faithfulness, answer relevance, eligibility accuracy,
+              + LLM-as-judge faithfulness / relevance with the same local model)
 ```
 
 ### Chunking choice (why 512 tokens, why overlap)
@@ -191,8 +201,23 @@ curl -X POST http://localhost:8000/ask \
 
 `GET /health` — `{"status": "ok", "docs": 10, "chunks": 31, "embedder": ...}`
 
-`POST /ask` — body `{"question": "...", "top_k": 5, "profile": {"nationality": "...", "degree_level": "..."}}`
-(`profile` is optional.)
+`POST /ask` — body `{"question": "...", "top_k": 5, "profile": {"nationality": "...", "degree_level": "..."}, "generate": false}`
+(`profile` is optional; `generate` is optional, default `false` —
+the extractive default is unchanged.)
+
+With `"generate": true` the answer comes from the local generative
+model instead, verified sentence-by-sentence against the cited
+chunks (`app/verification.py`): unsupported sentences are dropped,
+and if none survives the answer falls back to the extractive one.
+The response then carries `"answer_mode": "generative" |
+"generative_fallback_extractive" | "abstained" | "eligibility"`,
+a `"generation"` object (`model`, `latency_s`, `reason`), and, for
+verified answers, a `"verification"` object (`kept`, `dropped`,
+`n_dropped`). Eligibility answers are never generated, and an
+abstention stays an abstention — `generate=true` cannot override
+the gates. Model: Qwen/Qwen2.5-0.5B-Instruct, 0.5B params,
+988.1 MB bf16 weights, CPU-only, greedy decoding, $0.00 per query;
+mean generation latency 4.75 s on this VM (1.5 shared CPUs).
 
 ```json
 {
@@ -344,10 +369,39 @@ the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 
 Full detail: [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 
+### Results (Phase 2, Step 1 — generative, same 38 questions, 18 Nov 2026)
+
+Command: `python -m scripts.run_generative_eval` (288.1 s on this VM;
+model load 3.6 s; full results in `benchmarks/results/generative_eval.json`).
+
+| Metric | Extractive (Phase 1) | Generative (Phase 2 Step 1) |
+|---|---|---|
+| Answer-only relevance | 0.909 (30/33) | 0.697 (23/33) |
+| Faithfulness (verbatim proxy) | 1.0 | 0.754 |
+| Judge faithfulness / relevance | — | 0.957 / 0.957 (n=23, 0 unparsed) |
+| Abstention / eligibility accuracy | 0.8 / 1.0 | 0.8 / 1.0 |
+| Answer modes (n=33) | — | 16 generative, 7 fallback to extractive, 10 eligibility |
+| Mean generation / judge latency | — | 4.75 s / 3.82 s |
+| Cost per query | $0.00 | $0.00 (local CPU, no API calls) |
+
+Read honestly: the 0.5B generator is **worse** than quoting the
+source at putting the expected phrase in the answer (0.697 vs
+0.909) — it paraphrases, omits the key phrase, and sometimes
+declines when the evidence is there (q15). Verification + fallback
+kept it safe (7 fallbacks; every kept sentence passed the grounding
+and number checks, by construction),
+and it did fix one Phase 1 paraphrase-gap failure (q03). The judge's
+0.957 overstates quality: the same small model grades itself
+leniently — it scored q10's "one academic year" (expected "1 to 2
+academic years") 1/1, and scored the correct Vanier-closure
+extractive answer (q21) 0/0. The judge is a weak instrument at
+0.5B; the proxy metrics and the failure tables are the numbers to
+trust. Full analysis in [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
+
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 87 passed
+python -m pytest tests/ -q   # 112 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text
@@ -359,6 +413,13 @@ eligibility (27 verdict cases, evidence grounding, API profile
 behaviour), data quality (all known findings, no false positives),
 ablation (retrieval modes, configuration coverage), and report
 integrity (generated before/after report matches the results files).
+Phase 2, Step 1 adds 25 tests (`tests/test_generative.py`, fake
+model only — the real 0.5B model is never loaded in tests):
+verification (supported / invented-number / low-overlap /
+novel-stem sentences), generative fallback on verification failure
+and on model failure, judge parsing (including reversed label
+order), and the API `generate=true` opt-in with the extractive
+default unchanged.
 
 ## Docker
 
@@ -383,12 +444,21 @@ only container execution is blocked.)
 
 ## What Phase 1 does NOT do (Phase 2)
 
-- No generative LLM answer (extractive only).
+- ~~No generative LLM answer (extractive only).~~ Done in Phase 2,
+  Step 1: opt-in generative answer, local Qwen2.5-0.5B-Instruct,
+  `POST /ask` with `"generate": true`; extractive stays the default.
 - No cross-encoder reranker (lexical rerank only).
-- No LLM-as-judge (string-match proxies only).
+- ~~No LLM-as-judge (string-match proxies only).~~ Done in Phase 2,
+  Step 1: same local model judges faithfulness and relevance
+  alongside the proxies (`scripts/run_generative_eval.py`).
 - No query rewriting, no multi-hop retrieval.
 - No dense sentence scoring (the paraphrase-gap fix).
-- No answer-verification step (the o04 fix).
+- ~~No answer-verification step (the o04 fix).~~ Done in Phase 2,
+  Step 1: deterministic verification in `app/verification.py` —
+  every generated sentence grounded in the cited chunks or dropped,
+  with fallback to the extractive answer. (o04 itself still answers
+  instead of abstaining: its Vanier sentences are grounded, so
+  verification cannot catch that they do not answer the question.)
 - No eligibility check for programme closure (the Vanier gap).
 - No deployment (local + Docker only; not deployed anywhere).
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually,
