@@ -56,7 +56,8 @@ def ask(req: AskRequest):
     if not r.chunks:
         return {"question": req.question, "found": False,
                 "answer": "Not found in the corpus. The index is empty; run scripts.build_index first.",
-                "score": 0.0, "embedder": r.embedder, "citations": []}
+                "score": 0.0, "embedder": r.embedder, "citations": [],
+                "abstention_reason": "empty_index", "retrieval_trace": None}
     retrieved = r.search(req.question, top_k=req.top_k)
     result = build_answer(req.question, retrieved)
     result["embedder"] = r.embedder
@@ -64,4 +65,21 @@ def ask(req: AskRequest):
     urls = {s["slug"]: s["source_url"] for s in load_sources()}
     for cit in result["citations"]:
         cit["source_url"] = urls.get(cit["doc"], "")
+    # Auditable retrieval trace: every candidate the retriever
+    # considered, in reranked order, with all three scores — plus
+    # which chunks were actually injected into the answer. A wrong
+    # answer can be traced back to the exact chunk and score that
+    # produced it; an abstention can be traced to the gate that fired.
+    injected_ids = {c["chunk_id"] for c in result["citations"]}
+    result["retrieval_trace"] = {
+        "embedder": r.embedder,
+        "candidates": [
+            {"chunk_id": c["chunk_id"], "doc": c["doc"],
+             "dense_score": c["dense_score"], "bm25_score": c["bm25_score"],
+             "combined_score": c["score"], "rerank_score": c["rerank_score"],
+             "term_coverage": c.get("term_coverage"),
+             "injected": c["chunk_id"] in injected_ids}
+            for c in retrieved
+        ],
+    }
     return result

@@ -27,8 +27,7 @@ import re
 
 from .config import ABSTAIN_THRESHOLD
 from .retrieval import _query_terms, tokenize
-
-_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
+from .textnorm import segment_sentences as _sentences
 
 GENERIC_TERMS = {
     "scholarship", "scholarships", "program", "programs",
@@ -79,10 +78,6 @@ def _stems(text: str) -> set[str]:
     return {_stem(t) for t in tokenize(text)}
 
 
-def _sentences(text: str) -> list[str]:
-    return [s.strip() for s in _SENTENCE_RE.split(text.strip()) if s.strip()]
-
-
 def _named_docs(question: str) -> set[str]:
     # Alias keys must be stemmed the same way as the question tokens:
     # "chevening" stems to "cheven", "erasmus" to "erasmu".
@@ -130,15 +125,25 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
             picked = _sentences(chunks[0]["text"])[:1]
         return picked
     scored_list: list[tuple[int, int, str]] = []
+    seen: set[str] = set()
     for order, chunk in enumerate(chunks):
         for sent in _sentences(chunk["text"]):
             if not re.search(r"[.!?]$", sent):
                 continue
+            if sent in seen:
+                continue
+            seen.add(sent)
             stems = _stems(sent)
             shared = query_stems & stems
             if not shared:
                 continue
             score = len(shared) + 2 * len(specific_stems & stems)
+            # Short fragments are usually headers ("Scholarships |
+            # Chevening.", "Home Page - Vanier..."). They share the
+            # document name and little else, so they outscore real
+            # content on raw stem count. Demote them by one point.
+            if len(sent) < 50:
+                score -= 1
             scored_list.append((score, -order, sent))
     scored_list.sort(key=lambda item: (item[0], item[1]), reverse=True)
     picked = [sent for _, _, sent in scored_list[:max_sentences]]
@@ -164,9 +169,9 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
     query_stems = {_stem(t) for t in _query_terms(question)}
     best = retrieved[0]["rerank_score"] if retrieved else 0.0
     if not retrieved:
-        return _abstain(question, best)
+        return _abstain(question, best, "empty_index")
     if gates and best < threshold:
-        return _abstain(question, best)
+        return _abstain(question, best, "weak_score")
 
     # Rule 2: doc-name consistency.
     named = _named_docs(question)
@@ -174,12 +179,13 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
     if gates and named:
         candidates = [c for c in retrieved if c["doc"] in named]
         if not candidates:
-            return _abstain(question, best)
+            return _abstain(question, best, "doc_name_mismatch")
 
     sentences = _pick_sentences(candidates[:3], query_stems,
-                                _specific_terms(question), scored=scored_picking)
+                                _specific_terms(question),
+                                max_sentences=5, scored=scored_picking)
     if not sentences:
-        return _abstain(question, best)
+        return _abstain(question, best, "no_matching_sentences")
 
     if gates:
         # Shared-stem gate: the picked sentences must share at least two
@@ -189,7 +195,7 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
         # New Zealand scholarships") and must abstain, not answer.
         shared_stems = query_stems & _stems(" ".join(sentences))
         if len(shared_stems) < 2:
-            return _abstain(question, best)
+            return _abstain(question, best, "weak_overlap")
 
         # Rule 3: specific-term gate.
         specific = _specific_terms(question)
@@ -198,9 +204,9 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
             for sent in sentences:
                 present |= specific & _stems(sent)
             if not present:
-                return _abstain(question, best)
+                return _abstain(question, best, "missing_specific_term")
         elif not (query_stems & _stems(" ".join(sentences))):
-            return _abstain(question, best)
+            return _abstain(question, best, "weak_overlap")
 
     citations = [
         {"doc": c["doc"], "chunk_id": c["chunk_id"], "score": c["score"],
@@ -213,14 +219,19 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
         "answer": " ".join(sentences),
         "score": round(float(best), 4),
         "citations": citations,
+        "answer_sentences": sentences,
     }
 
 
-def _abstain(question: str, best: float) -> dict:
+def _abstain(question: str, best: float, reason: str = "abstained") -> dict:
+    """Every abstention names its reason, so the eval's failure table
+    can say WHY the system refused — "weak_overlap" and
+    "missing_specific_term" are different bugs with different fixes."""
     return {
         "question": question,
         "found": False,
         "answer": "Not found in the corpus.",
         "score": round(float(best), 4),
         "citations": [],
+        "abstention_reason": reason,
     }

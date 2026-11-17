@@ -18,6 +18,7 @@ Algorithm:
 import re
 
 from .config import CHUNK_CHARS, CHUNK_OVERLAP_CHARS
+from .textnorm import normalize_document
 
 _SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"'])")
 _WORD_RE = re.compile(r"\S+\s*")
@@ -65,21 +66,20 @@ def _pack(units: list[str], size: int) -> list[str]:
 
 def chunk_text(text: str, chunk_chars: int = CHUNK_CHARS,
                overlap_chars: int = CHUNK_OVERLAP_CHARS) -> list[str]:
-    """Split text into overlapping chunks of at most `chunk_chars` chars."""
-    text = re.sub(r"[ \t]+", " ", text).strip()
+    """Split text into overlapping chunks of at most `chunk_chars` chars.
+
+    The text is normalised first (see `app.textnorm`): hard line
+    breaks inside a sentence are unwrapped, so each line is one
+    sentence. Lines are then packed into chunks; a single over-long
+    sentence is hard-split on word boundaries.
+    """
+    text = normalize_document(text)
     if not text:
         return []
     if len(text) <= chunk_chars:
         return [text]
 
-    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
-    # First pass: pack paragraphs; long paragraphs are split into sentences.
-    units: list[str] = []
-    for para in paragraphs:
-        if len(para) <= chunk_chars:
-            units.append(para)
-        else:
-            units.extend(_split_sentences(para))
+    units = [line.strip() for line in text.splitlines() if line.strip()]
     chunks = _pack(units, chunk_chars)
 
     if overlap_chars <= 0 or len(chunks) <= 1:

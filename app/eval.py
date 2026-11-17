@@ -70,8 +70,11 @@ def run_eval(retriever: Retriever, golden: list[dict] | None = None,
         # Faithfulness is only meaningful for answers that were given.
         # An abstention ("Not found in the corpus.") is not a claim
         # drawn from the chunks, so it is neither faithful nor unfaithful.
+        # Check the stored answer sentences directly: re-splitting the
+        # joined answer string cannot recover sentences that were
+        # joined without punctuation.
         if result["found"]:
-            for sent in _sentences(result["answer"]):
+            for sent in result.get("answer_sentences") or _sentences(result["answer"]):
                 total_sents += 1
                 cited = " ".join(c["text"] for c in result["citations"])
                 if sent in cited:
