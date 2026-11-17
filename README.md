@@ -369,10 +369,17 @@ docker run -p 8000:8000 production-rag-eval-harness
 
 The Dockerfile builds the index at image build time from the
 committed `data/` so the container starts without re-fetching the
-corpus. **Note:** Docker is not installed in this development VM,
-so the image has **never been built or run here** — the Docker path
-is untested and no deployment is claimed. Build it on a machine
-with Docker before trusting it.
+corpus. **Note (verified 18 Nov 2026):** Docker 29.1.3 is installed
+in this development VM and the daemon runs (vfs storage driver,
+`--iptables=false --bridge=none`, data-root under the home
+directory; `python:3.12-slim` pulls fine), but **no container can
+start here**: the VM's seccomp policy blocks `setns` into any mount
+or network namespace, so `docker run hello-world` and the `RUN`
+steps of `docker build` both fail (`operation not permitted`). The
+image has therefore **not been built or run in Docker here** — build
+it on a machine whose Docker can start containers before trusting
+it. (The Dockerfile itself parses and its base image resolves;
+only container execution is blocked.)
 
 ## What Phase 1 does NOT do (Phase 2)
 
