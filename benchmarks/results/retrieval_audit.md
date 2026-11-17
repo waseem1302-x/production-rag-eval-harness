@@ -262,3 +262,102 @@ Welcome to our scholarship d
 - #3 sweden-si-2 [—] dense=0.6978 bm25=0.4323 combined=0.565 rerank=0.615 coverage=0.5 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
 - #4 sweden-si-1 [—] dense=0.7039 bm25=0.4358 combined=0.5698 rerank=0.5948 coverage=0.25 :: master’s programmes through University Admissions. 13 November 2026. : SI Scholarship application docum ent s and eligib
 - #5 sweden-si-0 [—] dense=0.6718 bm25=0.4213 combined=0.5466 rerank=0.5716 coverage=0.25 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+
+## e01: I want to do a PhD in the UK. Can I apply for the Chevening Scholarship?
+Expected doc: chevening | found: True | abstention: —
+Answer: Not eligible for the Chevening Scholarship. The Chevening Scholarship covers masters level study only, so a phd applicant is not eligible on degree level. The corpus does not state a citizenship rule 
+- #1 chevening-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.0833333333333333 coverage=0.833 :: Scholarships | Chevening.
+Study in the UK on a fully-funded scholarship with Chevening.
+Chevening Scholarships enable ou
+- #2 erasmus-mundus-0 [—] dense=0.5201 bm25=0.3488 combined=0.4344 rerank=0.46773333333333333 coverage=0.333 :: Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. Students from all over the world are 
+- #3 sweden-si-6 [—] dense=0.6432 bm25=0.1885 combined=0.4159 rerank=0.4659 coverage=0.5 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #4 hkpfs-0 [—] dense=0.6099 bm25=0.212 combined=0.4109 rerank=0.4442333333333333 coverage=0.333 :: Background. Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (
+- #5 sweden-si-2 [—] dense=0.5859 bm25=0.185 combined=0.3854 rerank=0.41873333333333335 coverage=0.333 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
+
+## e02: Can I apply for the Vanier Scholarship for a master's degree?
+Expected doc: vanier | found: True | abstention: —
+Answer: Not eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Valued at
+- #1 vanier-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.05 coverage=0.5 :: Home Page - Vanier Canada Graduate Scholarships.
+We are no longer accepting applications for the Vanier Canada Graduate 
+- #2 erasmus-mundus-0 [—] dense=0.8755 bm25=0.8746 combined=0.875 rerank=0.9416666666666667 coverage=0.667 :: Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. Students from all over the world are 
+- #3 sweden-si-5 [—] dense=0.7681 bm25=0.8065 combined=0.7873 rerank=0.8706333333333334 coverage=0.833 :: your leadership experience. The experience may be demonstrated through, for instance, previous work experience, entrepre
+- #4 sweden-si-6 [—] dense=0.897 bm25=0.6721 combined=0.7846 rerank=0.8512666666666666 coverage=0.667 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #5 sweden-si-0 [—] dense=0.8849 bm25=0.6038 combined=0.7444 rerank=0.7944 coverage=0.5 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+
+## e03: I am from Pakistan. Can I apply for the SI Scholarship for Global Professionals?
+Expected doc: sweden-si | found: True | abstention: —
+Answer: Not eligible for the SI Scholarship for Global Professionals. The SI Scholarship for Global Professionals covers masters level study, so a masters applicant meets the degree requirement. Pakistan is n
+- #1 sweden-si-9 [—] dense=0.8369 bm25=1.0 combined=0.9184 rerank=0.9684 coverage=0.5 :: and outside experts who have signed a contract of compliance. For more information, please read. SI’s privacy policy. . 
+- #2 sweden-si-0 [INJECTED] dense=0.9542 bm25=0.8376 combined=0.8959 rerank=0.9625666666666667 coverage=0.667 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+- #3 sweden-si-1 [—] dense=1.0 bm25=0.6926 combined=0.8463 rerank=0.9296333333333334 coverage=0.833 :: master’s programmes through University Admissions. 13 November 2026. : SI Scholarship application docum ent s and eligib
+- #4 sweden-si-5 [—] dense=0.81 bm25=0.7827 combined=0.7963 rerank=0.8796333333333334 coverage=0.833 :: your leadership experience. The experience may be demonstrated through, for instance, previous work experience, entrepre
+- #5 sweden-si-6 [—] dense=0.9202 bm25=0.5914 combined=0.7558 rerank=0.8391333333333334 coverage=0.833 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+
+## e04: I am from Bangladesh. Can I apply for the SI Scholarship for Global Professionals?
+Expected doc: sweden-si | found: True | abstention: —
+Answer: Eligible for the SI Scholarship for Global Professionals. The SI Scholarship for Global Professionals covers masters level study, so a masters applicant meets the degree requirement. Bangladesh is amo
+- #1 sweden-si-4 [—] dense=1.0 bm25=0.8183 combined=0.9092 rerank=1.0092 coverage=1.0 :: and Evaluation’. Previous Experience. Work Experience. To be eligible for the SI. Scholarship you must have w ork experi
+- #2 sweden-si-2 [INJECTED] dense=0.8812 bm25=0.9005 combined=0.8909 rerank=0.9742333333333334 coverage=0.833 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
+- #3 sweden-si-9 [—] dense=0.8484 bm25=1.0 combined=0.9242 rerank=0.9742000000000001 coverage=0.5 :: and outside experts who have signed a contract of compliance. For more information, please read. SI’s privacy policy. . 
+- #4 sweden-si-0 [INJECTED] dense=0.92 bm25=0.8558 combined=0.8879 rerank=0.9545666666666667 coverage=0.667 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+- #5 sweden-si-1 [—] dense=0.9606 bm25=0.727 combined=0.8438 rerank=0.9271333333333334 coverage=0.833 :: master’s programmes through University Admissions. 13 November 2026. : SI Scholarship application docum ent s and eligib
+
+## e05: I am a Canadian citizen starting a PhD. Can I apply for the Vanier Scholarship?
+Expected doc: vanier | found: True | abstention: —
+Answer: Eligible for the Vanier Canada Graduate Scholarship. The Vanier Canada Graduate Scholarship covers phd level study, so a phd applicant meets the degree requirement. The Vanier Canada Graduate Scholars
+- #1 vanier-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.05 coverage=0.5 :: Home Page - Vanier Canada Graduate Scholarships.
+We are no longer accepting applications for the Vanier Canada Graduate 
+- #2 sweden-si-5 [—] dense=0.5873 bm25=0.5471 combined=0.5672 rerank=0.6297 coverage=0.625 :: your leadership experience. The experience may be demonstrated through, for instance, previous work experience, entrepre
+- #3 sweden-si-2 [—] dense=0.646 bm25=0.4218 combined=0.5339 rerank=0.5714 coverage=0.375 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
+- #4 sweden-si-0 [—] dense=0.6468 bm25=0.4023 combined=0.5246 rerank=0.5620999999999999 coverage=0.375 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+- #5 eiffel-1 [—] dense=0.6635 bm25=0.3443 combined=0.5039 rerank=0.5539000000000001 coverage=0.5 :: of an engineering degree. Doctorate level. The France Excellence Eiffel scholarship is awarded for a period of maximum 1
+
+## e06: Can I apply for the Hong Kong PhD Fellowship for a master's degree?
+Expected doc: hkpfs | found: True | abstention: —
+Answer: Not eligible for the Hong Kong PhD Fellowship Scheme. The Hong Kong PhD Fellowship Scheme covers phd level study only, so a masters applicant is not eligible on degree level. Evidence: Established by 
+- #1 hkpfs-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.075 coverage=0.75 :: Background. Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (
+- #2 hkpfs-1 [—] dense=0.663 bm25=0.479 combined=0.571 rerank=0.621 coverage=0.5 :: following two Selection Panels comprising experts in the relevant board areas: Sciences, Medicine, Engineering and Techn
+- #3 erasmus-mundus-0 [—] dense=0.5161 bm25=0.3157 combined=0.4159 rerank=0.4659 coverage=0.5 :: Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. Students from all over the world are 
+- #4 sweden-si-6 [—] dense=0.5624 bm25=0.1954 combined=0.3789 rerank=0.4164 coverage=0.375 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #5 erasmus-mundus-1 [—] dense=0.5029 bm25=0.2112 combined=0.357 rerank=0.39449999999999996 coverage=0.375 :: of selected Erasmus Mundus Masters is added to the list each year. In most cases, you should submit your application bet
+
+## e07: Can I apply for a Manaaki Scholarship for undergraduate study?
+Expected doc: manaaki | found: True | abstention: —
+Answer: Eligible for a Manaaki New Zealand Scholarship. A Manaaki New Zealand Scholarship covers masters, phd, undergraduate level study, so an undergraduate applicant meets the degree requirement. Evidence: 
+- #1 manaaki-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.0666666666666667 coverage=0.667 :: Manaaki New Zealand Scholarships.
+Nau Mai, Haere Mai.
+Welcome to the home of Manaaki New Zealand scholarships.
+Manaaki N
+- #2 mext-0 [—] dense=0.7916 bm25=0.1576 combined=0.4746 rerank=0.5412666666666667 coverage=0.667 :: Planning to Study in Japan. Scholarships. HOME. Planning to Study in Japan. Scholarships. Japanese Government (MEXT) Sch
+- #3 sweden-si-6 [—] dense=0.8349 bm25=0.1272 combined=0.481 rerank=0.531 coverage=0.5 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #4 sweden-si-0 [—] dense=0.7967 bm25=0.1281 combined=0.4624 rerank=0.5124 coverage=0.5 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+- #5 sweden-si-2 [—] dense=0.8026 bm25=0.1074 combined=0.455 rerank=0.505 coverage=0.5 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
+
+## e08: I want to do a one-year master's in the UK. Can I apply for the Chevening Scholarship?
+Expected doc: chevening | found: True | abstention: —
+Answer: Eligible for the Chevening Scholarship. The Chevening Scholarship covers masters level study, so a masters applicant meets the degree requirement. Evidence: Chevening Scholarships enable outstanding e
+- #1 chevening-0 [INJECTED] dense=1.0 bm25=1.0 combined=1.0 rerank=1.1 coverage=1.0 :: Scholarships | Chevening.
+Study in the UK on a fully-funded scholarship with Chevening.
+Chevening Scholarships enable ou
+- #2 erasmus-mundus-0 [—] dense=0.6598 bm25=0.3649 combined=0.5124 rerank=0.5749 coverage=0.625 :: Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. Students from all over the world are 
+- #3 sweden-si-0 [—] dense=0.6535 bm25=0.2425 combined=0.448 rerank=0.5105 coverage=0.625 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr
+- #4 sweden-si-6 [—] dense=0.6576 bm25=0.2613 combined=0.4594 rerank=0.5094 coverage=0.5 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #5 sweden-si-2 [—] dense=0.6159 bm25=0.2844 combined=0.4501 rerank=0.5001 coverage=0.5 :: to University Admissions. Allow changes to the study programme. We are only able to support you through the awarded mast
+
+## e09: Can I apply for the Eiffel Scholarship for a PhD in France?
+Expected doc: eiffel | found: True | abstention: —
+Answer: Eligible for the France Excellence Eiffel Scholarship. The France Excellence Eiffel Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. The France Excellence 
+- #1 eiffel-0 [INJECTED] dense=0.9906 bm25=1.0 combined=0.9953 rerank=1.0619666666666667 coverage=0.667 :: Facebook. Twitter. LinkedIn. Email. The France Excellence Eiffel scholarship program. Flag this item. Students. Grants a
+- #2 eiffel-1 [—] dense=1.0 bm25=0.8756 combined=0.9378 rerank=1.0211333333333332 coverage=0.833 :: of an engineering degree. Doctorate level. The France Excellence Eiffel scholarship is awarded for a period of maximum 1
+- #3 eiffel-2 [—] dense=0.7255 bm25=0.3433 combined=0.5344 rerank=0.5844 coverage=0.5 :: Flag this item. Plaquette Eiffel – Doctorat. Collection. Scholarship grant programs. Mise à jour. December 2025. Prev. N
+- #4 sweden-si-6 [—] dense=0.5986 bm25=0.2741 combined=0.4363 rerank=0.4863 coverage=0.5 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #5 erasmus-mundus-0 [—] dense=0.5269 bm25=0.3572 combined=0.442 rerank=0.47533333333333333 coverage=0.333 :: Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. Students from all over the world are 
+
+## e10: Can I apply for the Fulbright Foreign Student Program for a master's degree?
+Expected doc: fulbright | found: True | abstention: —
+Answer: Eligibility for the Fulbright Foreign Student Program cannot be decided from the corpus. The corpus does not state which degree levels the Fulbright Foreign Student Program covers, so the degree check
+- #1 fulbright-0 [—] dense=1.0 bm25=1.0 combined=1.0 rerank=1.075 coverage=0.75 :: Foreign Fulbright Program - Foreign Student Program. History. Foreign Student Program. FLTA Program. Partner Agencies. F
+- #2 erasmus-mundus-0 [—] dense=0.8673 bm25=0.4166 combined=0.6419 rerank=0.6919000000000001 coverage=0.5 :: Erasmus Mundus Joint Masters (students). Apply for an Erasmus Mundus Joint Master. Students from all over the world are 
+- #3 erasmus-mundus-1 [—] dense=0.756 bm25=0.3007 combined=0.5283 rerank=0.5658 coverage=0.375 :: of selected Erasmus Mundus Masters is added to the list each year. In most cases, you should submit your application bet
+- #4 sweden-si-6 [—] dense=0.7333 bm25=0.2832 combined=0.5082 rerank=0.5457 coverage=0.375 :: Admissions. It is a centralised process and, on their portal, you can apply for up to 4 master’s programmes. Go to Unive
+- #5 sweden-si-0 [—] dense=0.7482 bm25=0.2586 combined=0.5034 rerank=0.5284 coverage=0.25 :: Opens for applications 8 February. Overview. What's included. Criteria. How to apply. FAQ. Overview. What's included. Cr

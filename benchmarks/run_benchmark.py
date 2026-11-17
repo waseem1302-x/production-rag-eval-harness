@@ -106,7 +106,12 @@ def run_config(chunks: list[dict], golden: list[dict], config: dict) -> dict:
 
 def main() -> None:
     chunks = [json.loads(line) for line in CHUNKS_FILE.read_text().splitlines() if line.strip()]
-    golden = load_golden(GOLDEN_FILE)
+    # Benchmarks compare the retrieval/answering pipeline on the 25
+    # factual questions. The 10 eligibility questions carry a profile
+    # and are measured separately by the eval harness (eligibility
+    # accuracy) and the CI gate — mixing them in would compare the
+    # baseline's substantive answers against eligibility verdicts.
+    golden = [q for q in load_golden(GOLDEN_FILE) if not q.get("profile")]
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     results = []
     for config in CONFIGS:
