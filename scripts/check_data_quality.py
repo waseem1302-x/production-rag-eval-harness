@@ -93,10 +93,13 @@ RESOLUTIONS = {
         "resolution": "The Vanier programme as described on this page is "
                       "closed: applications are no longer accepted and the "
                       "page points to the new harmonized Canada Graduate "
-                      "Research Scholarship - Doctoral program. The system "
-                      "answers the closure fact (golden q21) but the "
-                      "eligibility rules do not yet factor closure into a "
-                      "profile verdict — a known gap, see DATA_QUALITY.md.",
+                      "Research Scholarship - Doctoral program. FIXED in "
+                      "Phase 2, Step 4: the closure is now a flag in "
+                      "data/closures.json, read and verbatim-validated by "
+                      "the eligibility module, so a profile check for "
+                      "Vanier returns verdict 'closed' with this evidence "
+                      "and the replacement, whatever the profile (golden "
+                      "e02, e05, e11).",
         "evidence": "We are no longer accepting applications for the Vanier "
                     "Canada Graduate Scholarships. Please refer to the Canada "
                     "Graduate Research Scholarship - Doctoral program web page "

@@ -169,11 +169,11 @@
     "id": "e02",
     "question": "Can I apply for the Vanier Scholarship for a master's degree?",
     "expected_doc": "vanier",
-    "expected_answer": "doctoral studies",
+    "expected_answer": "no longer accepting applications",
     "profile": {
       "degree_level": "masters"
     },
-    "expected_verdict": "not_eligible"
+    "expected_verdict": "closed"
   },
   {
     "id": "e03",
@@ -201,12 +201,12 @@
     "id": "e05",
     "question": "I am a Canadian citizen starting a PhD. Can I apply for the Vanier Scholarship?",
     "expected_doc": "vanier",
-    "expected_answer": "Canadian citizens",
+    "expected_answer": "no longer accepting applications",
     "profile": {
       "nationality": "Canada",
       "degree_level": "phd"
     },
-    "expected_verdict": "eligible"
+    "expected_verdict": "closed"
   },
   {
     "id": "e06",
@@ -258,6 +258,17 @@
       "degree_level": "masters"
     },
     "expected_verdict": "unknown"
+  },
+  {
+    "id": "e11",
+    "question": "I am from Pakistan and starting a PhD. Can I apply for the Vanier Scholarship?",
+    "expected_doc": "vanier",
+    "expected_answer": "no longer accepting applications",
+    "profile": {
+      "nationality": "Pakistan",
+      "degree_level": "phd"
+    },
+    "expected_verdict": "closed"
   },
   {
     "id": "q21",

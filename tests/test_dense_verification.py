@@ -30,9 +30,13 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # Step 1 baseline (benchmarks/results/generative_eval.json, extractive
 # column): the 30 in-corpus questions whose answer contained the
 # expected phrase. No Step 2 change may lose one of these.
+# Phase 2, Step 4 adds golden e11 (Vanier doctoral applicant, verdict
+# "closed"), which is answer-only correct, so the pinned set is 31
+# and answer-only relevance is 0.912 (31/34) — the 30 originals are
+# still all required, below.
 BASELINE_CORRECT = [
     "e01", "e02", "e03", "e04", "e05", "e06", "e07", "e08", "e09",
-    "e10", "q01", "q02", "q04", "q05", "q06", "q07", "q08", "q09",
+    "e10", "e11", "q01", "q02", "q04", "q05", "q06", "q07", "q08", "q09",
     "q11", "q12", "q13", "q14", "q15", "q16", "q18", "q19", "q20",
     "q21", "q22", "q23",
 ]
@@ -252,9 +256,13 @@ def test_no_baseline_correct_answer_lost(retriever):
     fix the o04 abstention. Dense scoring is measured to change no
     golden answer at the shipped weight (2.0), so the correct set
     is exactly the Step 1 set; q03, q10 and q17 remain extractive
-    misses (documented remaining failures, not regressions)."""
+    misses (documented remaining failures, not regressions).
+    Phase 2, Step 4: the pinned set grows by exactly e11 (new
+    golden question, answer-only correct) and answer-only relevance
+    moves 0.909 -> 0.912 (31/34); e02 and e05 stay in the set with
+    their verdicts changed to "closed"."""
     result = run_eval(retriever, load_golden())
-    assert result["answer_only_relevance"] == 0.909
+    assert result["answer_only_relevance"] == 0.912
     assert result["answer_relevance_proxy"] == 1.0
     assert result["faithfulness"] == 1.0
     assert result["abstention_accuracy"] == 1.0

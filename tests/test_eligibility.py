@@ -47,8 +47,8 @@ CASES = [
     # Degree level
     ({"degree_level": "phd"}, "chevening", "not_eligible"),
     ({"degree_level": "masters"}, "chevening", "eligible"),
-    ({"degree_level": "masters"}, "vanier", "not_eligible"),
-    ({"degree_level": "phd"}, "vanier", "eligible"),
+    ({"degree_level": "masters"}, "vanier", "closed"),
+    ({"degree_level": "phd"}, "vanier", "closed"),
     ({"degree_level": "masters"}, "hkpfs", "not_eligible"),
     ({"degree_level": "phd"}, "hkpfs", "eligible"),
     ({"degree_level": "undergraduate"}, "manaaki", "eligible"),
@@ -62,8 +62,8 @@ CASES = [
     ({"nationality": "Pakistan", "degree_level": "masters"}, "sweden-si", "not_eligible"),
     ({"nationality": "Bangladesh", "degree_level": "masters"}, "sweden-si", "eligible"),
     ({"nationality": "Malaysia", "degree_level": "masters"}, "sweden-si", "eligible"),
-    ({"nationality": "Canada", "degree_level": "phd"}, "vanier", "eligible"),
-    ({"nationality": "Pakistan", "degree_level": "phd"}, "vanier", "eligible"),
+    ({"nationality": "Canada", "degree_level": "phd"}, "vanier", "closed"),
+    ({"nationality": "Pakistan", "degree_level": "phd"}, "vanier", "closed"),
     ({"nationality": "Pakistan"}, "hkpfs", "eligible"),
     ({"nationality": "France", "degree_level": "phd"}, "eiffel", "not_eligible"),
     ({"nationality": "Pakistan", "degree_level": "phd"}, "eiffel", "eligible"),
@@ -96,6 +96,128 @@ def test_unknown_verdict_has_no_evidence(checker):
     assert verdict["verdict"] == "unknown"
     assert verdict["evidence"] == []
     assert "does not state" in " ".join(verdict["reasons"])
+
+
+# --- Programme closure (Phase 2, Step 4) -------------------------------
+
+def test_all_closures_have_verbatim_evidence(checker):
+    """Every closure entry survives load only if each evidence
+    sentence is found verbatim in the chunk it cites — the same
+    rule as the eligibility rules."""
+    from app.textnorm import norm_text
+    for doc, closure in checker.closures.items():
+        assert closure["replacement"], f"{doc}: closure must name its replacement"
+        for ev in closure["evidence"]:
+            chunk = checker.chunks[ev["chunk_id"]]
+            assert chunk["doc"] == doc
+            assert norm_text(ev["sentence"]) in norm_text(chunk["text"]), (doc, ev)
+
+
+def test_closed_verdict_for_doctoral_applicant(checker):
+    """The known gap: a doctoral applicant who meets every Vanier
+    rule must be told the programme is closed, not 'doctoral
+    only' / eligible."""
+    verdict = checker.check({"nationality": "Canada", "degree_level": "phd"}, "vanier")
+    assert verdict["verdict"] == "closed"
+    assert any("closed" in r.lower() for r in verdict["reasons"])
+    assert any("Canada Graduate Research Scholarship - Doctoral program" in r
+               for r in verdict["reasons"]), "answer must name what replaced it"
+    assert {ev["chunk_id"] for ev in verdict["evidence"]} == {"vanier-0"}
+    assert any("no longer accepting applications" in ev["sentence"]
+               for ev in verdict["evidence"])
+
+
+def test_closed_verdict_for_other_degree_levels(checker):
+    """Closure does not depend on the degree level: a master's or
+    undergraduate applicant gets the same closed verdict, not a
+    degree-level rejection."""
+    for level in ("masters", "undergraduate", "bachelor"):
+        verdict = checker.check({"degree_level": level}, "vanier")
+        assert verdict["verdict"] == "closed", (level, verdict)
+        assert "doctoral only" not in " ".join(verdict["reasons"]).lower()
+
+
+def test_closed_verdict_with_nationality_only(checker):
+    """Closure is a property of the programme, not of the profile:
+    it fires even when the profile carries no degree level."""
+    verdict = checker.check({"nationality": "Pakistan"}, "vanier")
+    assert verdict["verdict"] == "closed"
+
+
+def test_open_programmes_unaffected(checker):
+    """No other programme is flagged closed: the open verdicts are
+    exactly what they were before this step."""
+    assert checker.check({"degree_level": "phd"}, "hkpfs")["verdict"] == "eligible"
+    assert checker.check({"degree_level": "masters"}, "chevening")["verdict"] == "eligible"
+    assert checker.check({"degree_level": "masters"}, "fulbright")["verdict"] == "unknown"
+    assert set(checker.closures) == {"vanier"}
+
+
+def test_closure_entry_dropped_when_evidence_missing():
+    """Verbatim validation: if a re-ingest removed the closure
+    sentence from the chunk, the entry is dropped (with a warning)
+    and the programme falls back to its rules instead of citing a
+    sentence that is no longer there."""
+    mutated = []
+    for chunk in CHUNKS:
+        if chunk["chunk_id"] == "vanier-0":
+            chunk = dict(chunk, text=chunk["text"].replace(
+                "We are no longer accepting applications for the Vanier "
+                "Canada Graduate Scholarships.", "").replace(
+                "Please refer to the Canada Graduate Research Scholarship - "
+                "Doctoral program web page for information regarding the new "
+                "harmonized program.", ""))
+        mutated.append(chunk)
+    with pytest.warns(UserWarning, match="closure"):
+        checker = EligibilityChecker(mutated)
+    assert "vanier" not in checker.closures
+    # Falls back to the pre-closure behaviour: doctoral is eligible.
+    assert checker.check({"degree_level": "phd"}, "vanier")["verdict"] == "eligible"
+
+
+def test_closure_table_matches_data_quality_checker(checker):
+    """The flag file and the data-quality checker's closure finding
+    must not drift apart: every closure evidence sentence is part
+    of the checker's recorded resolution evidence for that doc."""
+    from scripts.check_data_quality import RESOLUTIONS
+    for doc, closure in checker.closures.items():
+        resolution = RESOLUTIONS.get((doc, "closure"))
+        assert resolution is not None, f"{doc}: no closure resolution in the checker"
+        for ev in closure["evidence"]:
+            assert ev["sentence"] in resolution["evidence"], (doc, ev)
+
+
+def test_api_closed_verdict_with_citation():
+    """A Vanier doctoral applicant gets the closed answer through
+    the API, with the closure cited — not the $50,000 fact answer."""
+    client = TestClient(api_module.app)
+    resp = client.post("/ask", json={
+        "question": "I am a Canadian citizen starting a PhD. Can I apply for the Vanier Scholarship?",
+        "profile": {"nationality": "Canada", "degree_level": "phd"}})
+    body = resp.json()
+    assert resp.status_code == 200
+    assert body["found"] is True
+    assert "Closed" in body["answer"]
+    assert "no longer accepting applications" in body["answer"]
+    assert "Canada Graduate Research Scholarship - Doctoral program" in body["answer"]
+    vanier = next(v for v in body["eligibility"] if v["doc"] == "vanier")
+    assert vanier["verdict"] == "closed"
+    assert vanier["evidence"], "closed verdict must cite its evidence"
+    assert body["citations"], "closed answer must carry citations"
+    assert any(c["chunk_id"] == "vanier-0" for c in body["citations"])
+
+
+def test_api_substantive_vanier_question_with_profile_is_closed():
+    """Eligibility first, closure version: a PhD applicant asking
+    what Vanier is worth is told it is closed, not given the
+    $50,000 stipend as if they could still apply for it."""
+    client = TestClient(api_module.app)
+    resp = client.post("/ask", json={
+        "question": "How much is the Vanier Canada Graduate Scholarship worth per year?",
+        "profile": {"nationality": "Pakistan", "degree_level": "phd"}})
+    body = resp.json()
+    assert "Closed" in body["answer"]
+    assert "no longer accepting applications" in body["answer"]
 
 
 def test_api_profile_returns_eligibility_block():

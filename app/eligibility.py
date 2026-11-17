@@ -33,12 +33,25 @@ Design decisions:
   asks for is grounded and passes. One failed check makes the
   whole verdict "not_eligible". If no check can be grounded, the
   verdict is "unknown".
+- A programme the corpus says is closed gets the distinct verdict
+  "closed", whatever the profile is — even a profile that would
+  otherwise pass every check. Closure is read from
+  data/closures.json (driven by the data-quality checker's closure
+  findings), validated verbatim against chunk text at load time
+  exactly like the rules above: an entry whose evidence is not
+  found in the named chunk is dropped with a warning and the
+  programme is treated as open. Closure is checked before any
+  degree or citizenship check, so a closed programme is never
+  reported as eligible.
 """
+import json
 import re
 import warnings
+from pathlib import Path
 from typing import Optional
 
 from app.answer import _named_docs
+from app.config import CLOSURES_FILE
 from app.textnorm import norm_text as _norm_text
 
 # ---------------------------------------------------------------- rules
@@ -229,6 +242,52 @@ def normalize_country(raw: Optional[str]) -> Optional[str]:
     return " ".join(raw.strip().lower().split())
 
 
+def load_closures(chunks: list[dict], path: Path = CLOSURES_FILE) -> dict[str, dict]:
+    """Read the closure flag file and validate it against the corpus.
+
+    Returns {doc: {"replacement": str, "evidence": [{sentence, chunk_id}]}}.
+    Every evidence sentence must be found verbatim (normalised) in
+    the chunk it cites, and that chunk must belong to the doc; a
+    sentence that fails is dropped with a warning, and an entry
+    with no surviving evidence is dropped entirely — the same
+    fail-safe as the eligibility rules. A missing or unreadable
+    flag file means no programme is flagged closed (warn, don't
+    crash): closure is a positive claim that needs its file.
+    """
+    try:
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        warnings.warn(f"eligibility: closure file {path} unreadable ({exc}); "
+                      "no programme flagged closed")
+        return {}
+    by_id = {c["chunk_id"]: c for c in chunks}
+    closures: dict[str, dict] = {}
+    for entry in data.get("closures", []):
+        doc = entry.get("doc")
+        if entry.get("status") != "closed" or not doc:
+            continue
+        replacement = entry.get("replacement") or ""
+        kept: list[dict] = []
+        for ev in entry.get("evidence", []):
+            sentence, chunk_id = ev.get("sentence", ""), ev.get("chunk_id", "")
+            chunk = by_id.get(chunk_id)
+            if chunk is None or chunk["doc"] != doc:
+                warnings.warn(f"eligibility: closure evidence chunk {chunk_id} missing "
+                              f"for {doc}; sentence dropped")
+                continue
+            if _norm_text(sentence) not in _norm_text(chunk["text"]):
+                warnings.warn(f"eligibility: closure evidence sentence for {doc} not found "
+                              f"verbatim in {chunk_id}; sentence dropped")
+                continue
+            kept.append({"sentence": sentence, "chunk_id": chunk_id})
+        if not kept:
+            warnings.warn(f"eligibility: closure entry for {doc} has no validated "
+                          "evidence; programme treated as open")
+            continue
+        closures[doc] = {"replacement": replacement, "evidence": kept}
+    return closures
+
+
 class EligibilityChecker:
     """Checks a profile against the corpus-grounded rules.
 
@@ -236,10 +295,13 @@ class EligibilityChecker:
     evidence sentence against the chunk it claims to come from. A
     rule whose evidence is missing is dropped to unknown, so the
     checker can never cite a sentence that is not in the corpus.
+    Closure entries from data/closures.json are validated the same
+    way and checked first in check().
     """
 
-    def __init__(self, chunks: list[dict]):
+    def __init__(self, chunks: list[dict], closures_file: Path = CLOSURES_FILE):
         self.chunks = {c["chunk_id"]: c for c in chunks}
+        self.closures = load_closures(chunks, closures_file)
         self.rules = {}
         for doc, rule in RULES.items():
             kept = {"levels": rule["levels"], "citizenship": rule["citizenship"],
@@ -264,7 +326,28 @@ class EligibilityChecker:
 
     def check(self, profile: dict, doc: str) -> dict:
         """Verdict for one scholarship. Profile keys: nationality,
-        degree_level (free text, normalised here)."""
+        degree_level (free text, normalised here).
+
+        A closed programme short-circuits everything: the verdict
+        is "closed" whatever the profile, with the closure evidence
+        and the replacement programme. Degree and citizenship are
+        not checked — they are moot when nobody can apply, and
+        reporting "doctoral only" for a closed programme would
+        mislead a qualified applicant into thinking they can apply.
+        """
+        display = _DOC_DISPLAY.get(doc, doc)
+        closed = self.closures.get(doc)
+        if closed is not None:
+            replacement = closed["replacement"]
+            reasons = [
+                f"{display} is closed: applications are no longer accepted.",
+            ]
+            if replacement:
+                reasons.append(
+                    f"It has been replaced by the {replacement}; see that "
+                    "programme's page for current information.")
+            return {"doc": doc, "verdict": "closed", "reasons": reasons,
+                    "evidence": list(closed["evidence"])}
         rule = self.rules.get(doc)
         if rule is None:
             return {"doc": doc, "verdict": "unknown",
@@ -274,7 +357,6 @@ class EligibilityChecker:
         evidence: list[dict] = []
         grounded = False
         failed = False
-        display = _DOC_DISPLAY.get(doc, doc)
 
         level = normalize_level(profile.get("degree_level"))
         if level:
@@ -366,7 +448,9 @@ def eligibility_statement(verdict: dict) -> str:
     the reader sees the rule as the official page states it, not
     just the system's paraphrase of it."""
     display = _DOC_DISPLAY.get(verdict["doc"], verdict["doc"])
-    if verdict["verdict"] == "not_eligible":
+    if verdict["verdict"] == "closed":
+        lead = f"Closed: {display}."
+    elif verdict["verdict"] == "not_eligible":
         lead = f"Not eligible for {display}."
     elif verdict["verdict"] == "eligible":
         lead = f"Eligible for {display}."
@@ -404,7 +488,7 @@ def resolve(question: str, profile: Optional[dict], retrieved: list[dict],
     if not named_verdicts:
         return None, eligibility
     verdict = named_verdicts[0]
-    if verdict["verdict"] == "not_eligible" or ELIGIBILITY_QUESTION_RE.search(question):
+    if verdict["verdict"] in ("not_eligible", "closed") or ELIGIBILITY_QUESTION_RE.search(question):
         chunk_by_id = {c["chunk_id"]: c for c in chunks}
         citations = [
             {"doc": verdict["doc"], "chunk_id": ev["chunk_id"],

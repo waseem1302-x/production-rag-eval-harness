@@ -55,7 +55,7 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 | `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates + answer verification | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. Phase 2, Step 2: sentence scores add `2.0 ×` dense cosine similarity to the question (local MiniLM, $0), and after the lexical gates `verify_answer_relevance` checks the picked sentences actually answer the question (dense floor 0.45 + ranking-focus check). Measured: dense scoring buys nothing on this corpus (see §4), verification fixes o04. |
 | `app/generative.py` | Generative answers (Phase 2, Step 1): local Qwen2.5-0.5B-Instruct, greedy, + LLM-as-judge | The opt-in generator. Loads the 0.5B model lazily (bf16, CPU, 2 torch threads — measured faster than 4 on this VM), prompts it with the top-3 chunks of the *named* scholarship only, and returns a verified answer or falls back to extractive. `judge_answer` scores one answer with the same model (label-aware parsing: the judge sometimes swaps the two lines). All model text goes through `complete()`, which honours a test override so unit tests never load the model. Phase 2, Step 2: the kept sentences also pass `verify_answer_relevance`; on failure the path falls back to extractive (`relevance_verification_failed`). |
 | `app/verification.py` | Deterministic verification of generated sentences against the cited chunks | The guard, not the judge. A sentence is kept only if its *novel* stems (content stems not already in the question) are covered ≥50% by one chunk, and every number in it appears in the chunks. Two fixes came from measured failures: the named-doc filter (q17 — the model copied SI's field list into a Manaaki answer) and novel-stem coverage (question-word overlap alone passed an ungrounded sentence). Verification stops invented facts; it cannot tell whether a grounded sentence answers the question (o04) or contradicts a corpus fact the model did not read (q21). |
-| `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. |
+| `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. Phase 2, Step 4: the checker also reads `data/closures.json` — one entry per programme the corpus says is closed, with verbatim evidence validated the same way — and a closed programme gets the distinct verdict `closed` (checked before degree/citizenship, whatever the profile), with the replacement programme named. An entry whose evidence is not found is dropped with a warning and the programme is treated as open. |
 | `app/api.py` | FastAPI: `GET /health`, `POST /ask` (optional `profile`) | One endpoint. The response carries the answer, citations with source URLs, the eligibility verdicts, and a full retrieval trace. |
 | `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy, LLM-as-judge | The measurement instrument. Every claim in the README is a number this file produces. `run_eval(generative=True, judge=True)` runs the same golden set through the generative path and scores each substantive answer with the local model as judge; the string proxies are always computed too, so generative and extractive stay comparable. Eligibility statements are tagged `answer_mode: "eligibility"` and are not judge-scored (template + verbatim evidence, not a generated answer). |
 | `benchmarks/` | 8-configuration ablation (`run_benchmark.py`), per-question retrieval audit (`audit_retrieval.py`), generated before/after report (`before_after.py`) | The proof that each component earns its place — or does not. See `benchmarks/results/summary.md` and `before_after.md`. |
@@ -71,7 +71,7 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
    coverage. Returns the top 5 with all four scores
    (`dense_score`, `bm25_score`, `combined_score`, `rerank_score`).
 3. If a profile is given, `eligibility.resolve` checks the named
-   scholarship(s) first. A `not_eligible` verdict — or an eligibility
+   scholarship(s) first. A `not_eligible` or `closed` verdict — or an eligibility
    question — replaces the substantive answer with the verdict, its
    reasons, and the verbatim evidence sentences. Otherwise the
    substantive answer stands and the verdicts are attached.
@@ -339,7 +339,7 @@ change to any of them that regresses quality fails the build.
 | Embedding model unavailable | `embedder` field in every response | BM25-only retrieval, reported honestly |
 | Empty index | `/health` shows 0 chunks; `/ask` returns `empty_index` | "Not found in the corpus. The index is empty…" |
 | Question names a scholarship not in the corpus | Doc-name gate | Abstains (`doc_name_mismatch`) |
-| Corpus page closed / stale | `scripts/check_data_quality.py` | Documented in `DATA_QUALITY.md`; closure is a golden question (q21) |
+| Corpus page closed / stale | `scripts/check_data_quality.py` + `data/closures.json` | Documented in `DATA_QUALITY.md`; closure is a golden question (q21), and eligibility returns verdict `closed` for a closed programme (Phase 2, Step 4) |
 | Metric regression | `scripts/ci_gate.py` + GitHub workflow | Build fails; thresholds are pinned |
 | Corpus re-ingest changes the facts | Re-run eval + data-quality checker | Numbers must be re-measured before any claim |
 
@@ -380,8 +380,17 @@ change to any of them that regresses quality fails the build.
   human-graded spot checks on the failure table.
 - **Eligibility ignores closure:** the Vanier rules say "doctoral
   only" but the programme is closed; the verdict does not factor
-  that in. Fix: the eligibility module should read the checker's
-  closure flag.
+  that in. **Fixed in Phase 2, Step 4:** `data/closures.json` holds
+  one entry per closed programme (Vanier, with its two verbatim
+  closure sentences from chunk `vanier-0` and its replacement, the
+  Canada Graduate Research Scholarship - Doctoral program), read
+  and verbatim-validated at load time by `app/eligibility.py`
+  exactly like the rules; `check()` returns verdict `closed`
+  before any degree or citizenship check, whatever the profile.
+  Measured: eligibility 1.0 (11/11, with new golden e11 for a
+  foreign doctoral applicant); e02 and e05 flipped to `closed`;
+  no other golden row changed. Adding a future closure is one
+  JSON entry plus the matching checker resolution — no code change.
 - **Chunk size not ablated:** 512 tokens was chosen by reasoning,
   not by measurement. Fix: ablate 256 / 512 / 1,024 tokens.
 - **Reranker unproven:** adds nothing on this corpus. **Measured in

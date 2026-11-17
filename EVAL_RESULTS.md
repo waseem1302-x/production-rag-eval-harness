@@ -1,8 +1,76 @@
-# Eval Results — Phase 2, Step 2 (final)
+# Eval Results — Phase 2, Step 4
 
 All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
+
+## Phase 2, Step 4 — eligibility reads the closure flag
+
+Command: `python -m scripts.run_eval` (writes
+`benchmarks/results/extractive_eval.json`). Baseline re-run first
+on the same command with the pre-step code and the 38-question
+golden set, saved as
+`benchmarks/results/extractive_eval_before_closure.json`, so the
+before/after below is two generated files, not hand-typed numbers.
+
+| Metric | Before (38 q, Step 3 code) | After (39 q) | Change |
+|---|---|---|---|
+| n_in_corpus / n_out_of_corpus | 33 / 5 | 34 / 5 | +1 eligibility question (e11) |
+| n_eligibility | 10 | 11 | +1 |
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 | none |
+| answer_relevance_proxy | 1.0 | 1.0 | none |
+| answer_only_relevance | 0.909 (30/33) | 0.912 (31/34) | +1 question, still passing |
+| faithfulness | 1.0 | 1.0 | none |
+| abstention_accuracy | 1.0 (5/5) | 1.0 (5/5) | none |
+| eligibility_accuracy | 1.0 (10/10) | **1.0 (11/11)** | e02, e05 now `closed`; e11 `closed` |
+
+### What Step 4 changed (read honestly)
+
+- **Exactly two verdicts changed, one question added, zero lost.**
+  Per-question diff of the two generated eval files: e02
+  (`not_eligible` → `closed`, master's applicant) and e05
+  (`eligible` → `closed`, Canadian doctoral applicant — the known
+  gap: a qualified doctoral applicant was told "doctoral only" /
+  eligible for a programme that no longer accepts applications).
+  New golden e11 (Pakistani doctoral applicant) returns `closed`.
+  Every other row is byte-identical in verdict and metric;
+  answer-only misses are still exactly q03, q10, q17. No question
+  the baseline got right was lost.
+- **Why a distinct `closed` verdict, not `not_eligible`.** Closure
+  is a property of the programme, not of the applicant: a doctoral
+  applicant who meets every Vanier rule must not be told they "do
+  not qualify". The verdict set (`eligible` / `not_eligible` /
+  `unknown` / `closed`) supports it cleanly — the eval compares
+  verdict strings, `resolve()` replaces the substantive answer for
+  `closed` exactly as for `not_eligible`, and the statement leads
+  with "Closed: …" plus the replacement programme.
+- **The mechanism generalises.** `data/closures.json` is the flag
+  file: one entry per closed programme (doc, status, replacement,
+  verbatim evidence sentences + chunk ids), driven by the
+  data-quality checker's closure findings — a test asserts every
+  closure evidence sentence appears in the checker's recorded
+  resolution evidence, so the two cannot drift apart. The
+  eligibility module validates each sentence verbatim against the
+  chunk at load time, exactly like the rules; an entry whose
+  evidence is missing is dropped with a warning and the programme
+  falls back to its rules (covered by a test that mutates the
+  chunk text). Adding a future closure is one JSON entry plus the
+  matching checker resolution — no code change.
+- **e02/e05 expected answers changed, on purpose.** Their old
+  expected phrases ("doctoral studies", "Canadian citizens") were
+  the old rules' answers; the correct answer for a closed
+  programme is the closure, so both now expect "no longer
+  accepting applications", which the closure statement contains.
+  Both still pass answer-only, as does e11.
+- **Generative eval not re-run in this step.** Eligibility answers
+  are template + verbatim evidence and bypass the generator
+  (`generate_answer` is never called for them), and the closure
+  verdict flows through the same `resolve()` path in both modes —
+  but `benchmarks/results/generative_eval.json` still holds the
+  Step 2 run on the 38-question set, so its eligibility column
+  (1.0, 10/10) is stale by one question, not wrong in mechanism.
+  Re-running it is a ~10-minute model run; it was not needed to
+  measure this fix, which is extractive-path only.
 
 ## Phase 2, Step 2 — dense sentence scoring + answer verification
 
@@ -95,15 +163,15 @@ code change.
 
 ## Golden set
 
-`eval/golden.json` — 38 hand-written questions, every expected answer
+`eval/golden.json` — 39 hand-written questions, every expected answer
 verified against the actual fetched text:
 
 | Group | Count | What it tests |
 |---|---|---|
 | In-corpus factual (q01–q23) | 23 | Answer the question from the cited document |
 | Out-of-corpus (o01–o05) | 5 | Abstain when the corpus cannot answer |
-| Eligibility (e01–e10) | 10 | Degree-level / citizenship verdicts with a profile |
-| **Total** | **38** | |
+| Eligibility (e01–e11) | 11 | Degree-level / citizenship verdicts with a profile, including closed-programme verdicts (e02, e05, e11) |
+| **Total** | **39** | |
 
 ## Eval harness — full Phase 1 pipeline
 
@@ -287,9 +355,19 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**128 passed, 0 failed** (18 Nov 2026, 465 s — the shared CPU was
-under contention from other jobs on the VM; the Step 1 suite took
-70 s on a quieter VM). Phase 1's 87 plus 25 new generative tests
+**145 passed, 0 failed** (18 Nov 2026, 239.72 s). Step 3's 136 plus
+9 new Step 4 closure tests in `tests/test_eligibility.py`: closed
+verdict for a doctoral applicant, for other degree levels, and with
+nationality only; open programmes unaffected; verbatim-evidence
+validation for every closure entry; entry dropped (with a warning)
+when its evidence is missing from the chunk; closure table matches
+the data-quality checker's resolution evidence; API returns the
+closed verdict with citation for both an eligibility question and
+a substantive Vanier question. The no-regression pin in
+`tests/test_dense_verification.py` was updated for the new golden
+question (pinned correct set 30 → 31, answer-only 0.909 → 0.912) —
+no baseline-correct question was lost; the pin now requires e11 too.
+Phase 1's 87 plus 25 new generative tests
 plus 16 new Step 2 tests (`tests/test_dense_verification.py`):
 dense similarity ranking (duration / levels sentences above
 boilerplate), verification unit tests with injected sims (ranking
@@ -308,7 +386,7 @@ Coverage by area:
 | `test_api.py` | API | `/health`, `/ask`, citations, abstention responses |
 | `test_edge_cases.py` | edge cases | Empty documents, empty index, missing context, weak retrieval, duplicate chunks, single long sentence, abstention |
 | `test_audit.py` | auditable retrieval | Text normalisation, abstention reasons, retrieval trace in `/ask` |
-| `test_eligibility.py` | eligibility | 26 verdict cases, evidence grounding, API profile behaviour |
+| `test_eligibility.py` | eligibility | 44 tests: 26 verdict cases (4 Vanier now `closed`), 9 closure tests, evidence grounding, API profile behaviour |
 | `test_data_quality.py` | messy data | All known findings, no false positives, report files valid |
 | `test_ablation.py` | retrieval modes | `bm25` / `dense` / `hybrid` modes, invalid mode, config coverage |
 | `test_before_after.py` | report integrity | Generated report matches the measured results files |
@@ -325,7 +403,8 @@ Command: `python -m scripts.check_data_quality`
 `DATA_QUALITY.md`.
 
 Headline findings: Vanier is closed and replaced by a harmonized
-doctoral programme; Eiffel €1,200 is the Master's allowance and
+doctoral programme, and eligibility now returns verdict `closed`
+for it (Phase 2, Step 4); Eiffel €1,200 is the Master's allowance and
 €2,000 the Doctorate stipend (not a contradiction); HKPFS HK$344,400
 ≈ US$44,150 is one 2026/27 stipend in two currencies; DAAD is a
 147-option database, not one award; only SI states a deadline; only
@@ -349,7 +428,7 @@ and term coverage, in reranked order):
 | q10 (Erasmus duration) | Generative answer says "one academic year" (expected "1 to 2 academic years"); judge scored it 1/1 | Paraphrase gap + weak 0.5B judge | As above; judge needs a larger model. Correct sentence ranks 8th by dense sim (0.438) |
 | q17 (Manaaki levels) | Generative draft copied the SI field list into a Manaaki answer; verification dropped it and fell back to extractive | Cross-document contamination, caught by verification | Named-doc filter added (Step 1); answer still misses the expected phrase. Correct sentence ranks 14th by dense sim (0.527) |
 | o04 (Vanier ranked university) | **Fixed in Step 2:** system now abstains with reason `unanswered_ranking`, in both the extractive and generative paths (abstention 1.0, 5/5) | Lexical gates + grounding verification check overlap/grounding, not whether the sentences answer the question; dense similarity alone cannot separate it (0.667, above several answerable questions) | Answer-verification step (dense floor + ranking-focus check); the check is ranking-only and looks for a ranking term, not a ranked entity |
-| Eligibility vs Vanier closure | Verdict says "doctoral only", not "closed" | Eligibility rules do not read the data-quality closure flag | Eligibility module reads the closure flag |
+| Eligibility vs Vanier closure | **Fixed in Step 4:** verdict is now `closed` with the closure evidence and replacement (e02, e05, e11; eligibility 1.0, 11/11) | Closure is a property of the programme, not the profile | `data/closures.json` + `app/eligibility.py:load_closures` / `check()` |
 
 ## CI gate
 
@@ -357,7 +436,7 @@ Command: `python -m scripts.ci_gate`
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured (Phase 2, Step 2): 1.0, 0.909, 1.0, 1.0, 1.0 — **gate passes**.
+Measured (Phase 2, Step 4): 1.0, 0.912, 1.0, 1.0, 1.0 — **gate passes**.
 Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly
 fails on answer-only relevance (0.909), proving the gate can fail.
 Workflow: `.github/workflows/eval.yml`

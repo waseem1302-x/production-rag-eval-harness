@@ -52,13 +52,13 @@ Resolution: The DAAD page is a scholarship database (147 options), not one award
 > We are no longer accepting applications for the Vanier Canada Graduate Scholarships.
 Chunk: vanier-0 | https://vanier.gc.ca/en/home-accueil.html
 Note: The programme as described may no longer exist.
-Resolution: The Vanier programme as described on this page is closed: applications are no longer accepted and the page points to the new harmonized Canada Graduate Research Scholarship - Doctoral program. The system answers the closure fact (golden q21) but the eligibility rules do not yet factor closure into a profile verdict — a known gap, see DATA_QUALITY.md.
+Resolution: The Vanier programme as described on this page is closed: applications are no longer accepted and the page points to the new harmonized Canada Graduate Research Scholarship - Doctoral program. FIXED in Phase 2, Step 4: the closure is now a flag in data/closures.json, read and verbatim-validated by the eligibility module, so a profile check for Vanier returns verdict 'closed' with this evidence and the replacement, whatever the profile (golden e02, e05, e11).
 
 ### vanier — closure [high] (resolved)
 > Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program.
 Chunk: vanier-0 | https://vanier.gc.ca/en/home-accueil.html
 Note: The programme as described may no longer exist.
-Resolution: The Vanier programme as described on this page is closed: applications are no longer accepted and the page points to the new harmonized Canada Graduate Research Scholarship - Doctoral program. The system answers the closure fact (golden q21) but the eligibility rules do not yet factor closure into a profile verdict — a known gap, see DATA_QUALITY.md.
+Resolution: The Vanier programme as described on this page is closed: applications are no longer accepted and the page points to the new harmonized Canada Graduate Research Scholarship - Doctoral program. FIXED in Phase 2, Step 4: the closure is now a flag in data/closures.json, read and verbatim-validated by the eligibility module, so a profile check for Vanier returns verdict 'closed' with this evidence and the replacement, whatever the profile (golden e02, e05, e11).
 
 ### hkpfs — approximate_figure [low] (open)
 > In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years.

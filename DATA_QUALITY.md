@@ -13,7 +13,7 @@ report is `benchmarks/results/data_quality.json` (36 findings:
 
 | # | Issue | Documents | Status |
 |---|---|---|---|
-| 1 | Programme closed / replaced | Vanier | Resolved (documented) |
+| 1 | Programme closed / replaced | Vanier | Resolved (documented; eligibility returns `closed` since Phase 2, Step 4) |
 | 2 | Two stipend amounts, one page | Eiffel, HKPFS | Resolved (documented) |
 | 3 | Page is a database, not one award | DAAD | Resolved (documented) |
 | 4 | Approximate figures | Fulbright, HKPFS | Open — quote with hedge |
@@ -38,11 +38,14 @@ would mislead an applicant.
 How the system handles it: the closure is a golden question (q21:
 "Is the Vanier Canada Graduate Scholarship still accepting
 applications?"), and the system answers it correctly from the
-corpus. **Known gap:** the eligibility rules still describe Vanier
-as doctoral-only and say nothing about closure, so a profile-based
-eligibility check does not yet factor the closure into its verdict.
-Fixing that is a Phase 2 item: the checker flags closure, and the
-eligibility module should read that flag.
+corpus. **Fixed in Phase 2, Step 4:** the eligibility module now
+reads the closure flag — `data/closures.json`, one entry for
+Vanier with the two verbatim sentences above and the replacement
+programme, validated against chunk `vanier-0` at load time — so a
+profile check for Vanier returns verdict `closed` with this
+evidence and the replacement named, whatever the profile (golden
+e02, e05, e11). A doctoral applicant who meets every other Vanier
+rule is told the programme is closed, not "doctoral only".
 
 ## 2. Two stipend amounts on one page
 
@@ -173,9 +176,12 @@ eligibility module both use the list from the chunk.
   in the corpus." with a recorded reason (`missing_specific_term`
   / `weak_overlap`). Measured: abstention accuracy 0.8 (4/5).
 - **Eligibility**: `unknown` verdicts where the corpus states no
-  rule (Fulbright e10). Measured: eligibility accuracy 1.0 (10/10).
+  rule (Fulbright e10); `closed` where the corpus says the programme
+  is closed (Vanier e02, e05, e11 — Phase 2, Step 4). Measured:
+  eligibility accuracy 1.0 (11/11).
 - **Golden set**: q21 (Vanier closure), q22/q23 (Eiffel amounts by
-  level) were added for this step and all pass.
+  level) were added for this step and all pass; e11 (Vanier doctoral
+  applicant, verdict `closed`) was added in Phase 2, Step 4 and passes.
 - **Re-ingest rule**: after any re-fetch, run
   `python -m scripts.check_data_quality` and update this document
   from its report before claiming the numbers still hold.
