@@ -1,0 +1,184 @@
+# Eval Results — Phase 1 (final)
+
+All numbers below come from real local runs on 18 Nov 2026, on this
+VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
+invented. Reproduce them with the commands in "How to reproduce".
+
+## Golden set
+
+`eval/golden.json` — 38 hand-written questions, every expected answer
+verified against the actual fetched text:
+
+| Group | Count | What it tests |
+|---|---|---|
+| In-corpus factual (q01–q23) | 23 | Answer the question from the cited document |
+| Out-of-corpus (o01–o05) | 5 | Abstain when the corpus cannot answer |
+| Eligibility (e01–e10) | 10 | Degree-level / citizenship verdicts with a profile |
+| **Total** | **38** | |
+
+## Eval harness — full Phase 1 pipeline
+
+Command: `python -m scripts.run_eval`
+
+| Metric | Value | Meaning |
+|---|---|---|
+| n_in_corpus | 33 | 23 factual + 10 eligibility |
+| n_out_of_corpus | 5 | |
+| n_eligibility | 10 | |
+| recall@3 | 1.0 | Expected document in top 3 for all 33 |
+| recall@5 | 1.0 | Expected document in top 5 for all 33 |
+| answer_relevance_proxy | 1.0 | Expected phrase in answer or citations for all 33 |
+| answer_only_relevance | 0.909 | Expected phrase in the answer text alone: 30/33 |
+| faithfulness | 1.0 | Every answer sentence verbatim in a cited chunk |
+| abstention_accuracy | 0.8 | 4/5 out-of-corpus questions correctly refused |
+| eligibility_accuracy | 1.0 | 10/10 verdicts correct |
+
+The 3 answer-only misses are q03, q10, q17 — the paraphrase gap
+(see "Failures"). The 1 abstention miss is o04 (see "Failures").
+
+## Benchmarks — 7-configuration ablation
+
+Command: `python -m benchmarks.run_benchmark`
+
+Same golden set for every configuration, factual questions only
+(23 in-corpus + 5 out-of-corpus; eligibility questions are measured
+by the eval harness, not the benchmark). Latency after warm-up,
+embedding model already loaded. Cost $0.00 everywhere (local CPU,
+no API calls). Latency varies run to run by tens of milliseconds on
+this VM; the order of magnitude is stable, the exact figures are one
+measured run.
+
+| Configuration | Mode | recall@3 | recall@5 | Evidence relevance | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
+|---|---|---|---|---|---|---|---|---|---|---|
+| baseline-naive | bm25 | 1.0 | 1.0 | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | 0.5 ms | $0.00 |
+| hybrid-plain | hybrid | 1.0 | 1.0 | 1.0 | 0.565 | 1.0 | 0.0 | 39.9 ms | 42.7 ms | $0.00 |
+| improved-bm25 | bm25 | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.8 | 1.3 ms | 2.3 ms | $0.00 |
+| dense-only | dense | 1.0 | 1.0 | 1.0 | 0.826 | 1.0 | 0.8 | 108.8 ms | 110.2 ms | $0.00 |
+| hybrid-no-rerank | hybrid | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.8 | 99.9 ms | 103.8 ms | $0.00 |
+| hybrid-no-gates | hybrid | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.0 | 69.9 ms | 75.6 ms | $0.00 |
+| improved-hybrid | hybrid | 1.0 | 1.0 | 1.0 | 0.87 | 1.0 | 0.8 | 66.4 ms | 70.2 ms | $0.00 |
+
+### What the ablation shows
+
+- **The improvement is the answering discipline, not the retrieval
+  signal.** Baseline → improved-hybrid: answer-only 0.522 → 0.87,
+  abstention 0.0 → 0.8. Hybrid-plain (hybrid retrieval, naive
+  answering) scores only 0.565 — the dense signal alone adds
+  almost nothing.
+- **Dense buys no recall here.** recall@5 is 1.0 for every
+  configuration. On a 31-chunk corpus the right document is always
+  in the top 5 by keyword alone.
+- **Dense slightly hurts answer-only relevance** (dense-only 0.826
+  vs BM25-only 0.87) at ~50–80x the latency. On this corpus
+  BM25-only is the better engineering choice.
+- **The reranker adds nothing measurable** (0.87 with and without
+  it). Kept because the mechanism is sound; must be re-measured on
+  a larger corpus.
+- **The gates are the entire abstention story** (hybrid-no-gates
+  0.0 → improved-hybrid 0.8).
+
+Full per-configuration results: `benchmarks/results/<config>.json`.
+Ablation summary: `benchmarks/results/summary.md`.
+Before/after report with failure tables:
+`benchmarks/results/before_after.md`.
+
+## Before / after (baseline → full pipeline)
+
+| Metric | Before | After | Change |
+|---|---|---|---|
+| recall@3 | 1.0 | 1.0 | +0.000 |
+| recall@5 | 1.0 | 1.0 | +0.000 |
+| Evidence relevance | 1.0 | 1.0 | +0.000 |
+| Answer-only relevance | 0.522 | 0.87 | +0.348 |
+| Faithfulness | 1.0 | 1.0 | +0.000 |
+| Abstention accuracy | 0.0 | 0.8 | +0.800 |
+| Retrieval latency (mean) | 0.2 ms | 66.4 ms | +66.2 ms |
+| Total latency (mean) | 0.5 ms | 70.2 ms | +69.7 ms |
+| Cost per query | $0.00 | $0.00 | $0.00 |
+
+## Tests
+
+Command: `python -m pytest tests/ -q`
+
+**87 passed, 0 failed** (18 Nov 2026, 75 s). Coverage by area:
+
+| Test file | Tests | What it covers |
+|---|---|---|
+| `test_rag.py` | chunking, retrieval, answering | Chunk size/overlap, hybrid retrieval, extractive answers |
+| `test_api.py` | API | `/health`, `/ask`, citations, abstention responses |
+| `test_edge_cases.py` | edge cases | Empty documents, empty index, missing context, weak retrieval, duplicate chunks, single long sentence, abstention |
+| `test_audit.py` | auditable retrieval | Text normalisation, abstention reasons, retrieval trace in `/ask` |
+| `test_eligibility.py` | eligibility | 26 verdict cases, evidence grounding, API profile behaviour |
+| `test_data_quality.py` | messy data | All known findings, no false positives, report files valid |
+| `test_ablation.py` | retrieval modes | `bm25` / `dense` / `hybrid` modes, invalid mode, config coverage |
+| `test_before_after.py` | report integrity | Generated report matches the measured results files |
+
+## Data quality
+
+Command: `python -m scripts.check_data_quality`
+
+**36 findings (8 resolved, 28 open)**, each citing sentence + chunk
++ source URL. Full report: `benchmarks/results/data_quality.json`,
+`benchmarks/results/data_quality.md`. Curated documentation:
+`DATA_QUALITY.md`.
+
+Headline findings: Vanier is closed and replaced by a harmonized
+doctoral programme; Eiffel €1,200 is the Master's allowance and
+€2,000 the Doctorate stipend (not a contradiction); HKPFS HK$344,400
+≈ US$44,150 is one 2026/27 stipend in two currencies; DAAD is a
+147-option database, not one award; only SI states a deadline; only
+Vanier/Eiffel/HKPFS state a stipend.
+
+## Retrieval audit
+
+Command: `python -m benchmarks.audit_retrieval`
+
+38 questions audited, 52 chunks injected into answers. Per-question
+traces (every candidate with dense / BM25 / combined / rerank scores
+and term coverage, in reranked order):
+`benchmarks/results/retrieval_audit.json` and
+`benchmarks/results/retrieval_audit.md`.
+
+## Failures (known, not hidden)
+
+| Question | What happens | Why | Fix (Phase 2) |
+|---|---|---|---|
+| q03 (SI master's duration) | Answer misses "one- or two-year master" | Paraphrase gap: "one", "two", "year" are not in the question | Dense sentence scoring or generative answer + verification |
+| q10 (Erasmus duration) | Answer misses "1 to 2 academic years" | Paraphrase gap: "academic", "years" are not in the question | As above |
+| q17 (Manaaki levels) | Answer misses "undergraduate and postgraduate study" | Paraphrase gap: "undergraduate", "postgraduate" are not in the question | As above |
+| o04 (Vanier ranked university) | System answers instead of abstaining | Lexical gates check word overlap, not whether the sentences answer the question | Answer-verification step |
+| Eligibility vs Vanier closure | Verdict says "doctoral only", not "closed" | Eligibility rules do not read the data-quality closure flag | Eligibility module reads the closure flag |
+
+## CI gate
+
+Command: `python -m scripts.ci_gate`
+
+Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
+faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
+Measured: 1.0, 0.909, 1.0, 0.8, 1.0 — **gate passes**.
+Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly
+fails on answer-only relevance (0.909) and abstention (0.8),
+proving the gate can fail. Workflow: `.github/workflows/eval.yml`
+(build index → tests → gate on every push/PR).
+
+## How to reproduce
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python -m scripts.build_index        # chunks + embeddings + FAISS index
+python -m scripts.run_eval           # eval harness numbers
+python -m benchmarks.run_benchmark   # 7-configuration ablation
+python -m benchmarks.audit_retrieval # per-question retrieval traces
+python -m benchmarks.before_after   # before/after report + failure tables
+python -m scripts.check_data_quality # corpus mess report
+python -m scripts.ci_gate           # quality gate
+python -m pytest tests/ -q          # 87 tests
+```
+
+Note: the dense model (`all-MiniLM-L6-v2`, ~90 MB) downloads on
+first use from Hugging Face and takes ~30–60 s to load in this VM;
+eval and benchmark runs take minutes, mostly model loading. The
+`.tmp/` directory in the repo holds pip's temporary files (~1.4 GB,
+gitignored) from the original install — it is not part of the
+project and can be deleted.
