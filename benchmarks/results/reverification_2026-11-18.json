@@ -1,0 +1,177 @@
+{
+  "reverified_at": "2026-11-18",
+  "method": "Each of the 19 source URLs re-fetched 18 Nov 2026: direct HTTP with the repo's own extractor (app.ingest.extract_text) into /tmp for comparison, plus a browser text fetch for the 11 pages originally saved that way (chevening, daad, gates-cambridge, rhodes, knight-hennessy, schwarzman, commonwealth-shared, rtp, marshall, erasmus-mundus-org, si-pioneering-women) and for RTP whose direct fetch timed out. No raw HTML saved or committed; .txt files updated only on a real content change — none qualified, so no data/raw/*.txt or *.json was rewritten. Secret scan over re-fetched text: 0 matches (counts only).",
+  "pages": [
+    {
+      "slug": "chevening",
+      "source_url": "https://www.chevening.org/scholarships/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "No deadline and no stipend figure on the page (fully-funded, one-year master's). No new marker.",
+      "action": "No .txt change: browser text adds nav headings only; all facts as stored."
+    },
+    {
+      "slug": "sweden-si",
+      "source_url": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt. Deadlines 15 Jan / 24 Feb 2027 as recorded; SEK 12,000/month allowance + SEK 15,000 travel grant as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "fulbright",
+      "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt. ~4,000 students/year, 160+ countries as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "daad",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "Database page, 147 options, as recorded. Direct-HTTP extraction differs only in line-wrapping/duplicated disclaimer (extraction artefact).",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "erasmus-mundus",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt. Marker still 'Last updated: 26 June 2025'.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "eiffel",
+      "source_url": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "status": "live",
+      "content": "changed (sidebar only)",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "One line changed: recommended-article teaser 'MOPGA Research Themes' -> 'Co-financing of 12- to 24-month postdoctoral research contracts'. Amounts EUR 1,200 / EUR 2,000 unchanged; markers 'Mise a jour October 2022' and 'December 2025' unchanged.",
+      "action": "No .txt change: the changed line is a sidebar teaser, not Eiffel content; rewriting would churn chunks for no fact change."
+    },
+    {
+      "slug": "vanier",
+      "source_url": "https://vanier.gc.ca/en/home-accueil.html",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt. Still 'no longer accepting applications'; $50,000/year as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "manaaki",
+      "source_url": "https://www.nzscholarships.govt.nz/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "hkpfs",
+      "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt. HK$344,400 / ~US$44,150 stipend + HK$14,400 travel allowance as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "mext",
+      "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "direct HTTP",
+      "deadline_stipend": "Byte-identical to stored .txt. Yen amounts Y117,000 / Y143,000-145,000 / Y242,000 per month as recorded (table headings lost in extraction).",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "gates-cambridge",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "Around 70 full-cost scholarships/year; maintenance allowance GBP 23,152 (2026-27); US$210m founding donation. Direct-HTTP extraction differs only in punctuation spacing/nav (extraction artefact).",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "rhodes",
+      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "Stipend GBP 21,060 for 2026-27 (GBP 1,755/month) as recorded. Direct-HTTP extraction is a single copy; stored .txt has narrative+Q&A duplicated (extraction difference, same facts).",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "knight-hennessy",
+      "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "Funding up to three years as recorded; funding table values unchanged. Direct extraction flattens the table (extraction artefact).",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "schwarzman",
+      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "'Not yet 29 years of age as of August 1' as recorded; application windows Jan-May 20 / Apr-Sep as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "commonwealth-shared",
+      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "Closing date 8 December 2026 (2027/28) as recorded; stipend GBP 1,712/month (GBP 2,000 London) as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "rtp",
+      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text (direct HTTP timed out)",
+      "deadline_stipend": "Stipend rates unchanged: 2027 base $35,550, 2026 base $34,315, 2025 base $33,511. No deadline stated.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "marshall",
+      "source_url": "https://marshallscholarship.org/about/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "Up to 50 scholarships/year; open 29 May 2026; closing 29 September 2026 as recorded.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "erasmus-mundus-org",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "EUR 1,400/month per individual and EUR 5 million max grant per project as recorded. Direct-HTTP extraction shows a footer 'Last updated: 15 April 2026' that the browser-text extraction does not show (the 18 Nov fetch lacked the footer too), so it is recorded as a newly observed marker, not a verified change.",
+      "action": "No .txt change."
+    },
+    {
+      "slug": "si-pioneering-women",
+      "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
+      "status": "live",
+      "content": "unchanged",
+      "fetch": "browser-text + direct HTTP",
+      "deadline_stipend": "SEK 12,000/month allowance; key dates 16 Oct 2026-15 Jan 2027, 8-24 Feb 2027, 1 Apr 2027, 22 Apr 2027 as recorded. Direct extraction adds a repeated timeline/FAQ section (extraction difference, same dates).",
+      "action": "No .txt change."
+    }
+  ]
+}

@@ -59,7 +59,7 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 | `app/api.py` | FastAPI: `GET /health`, `POST /ask` (optional `profile`) | One endpoint. The response carries the answer, citations with source URLs, the eligibility verdicts, and a full retrieval trace. |
 | `app/eval.py` | Golden-set harness: recall@k, answer relevance (proxy + answer-only), faithfulness, abstention accuracy, eligibility accuracy, LLM-as-judge | The measurement instrument. Every claim in the README is a number this file produces. `run_eval(generative=True, judge=True)` runs the same golden set through the generative path and scores each substantive answer with the local model as judge; the string proxies are always computed too, so generative and extractive stay comparable. Eligibility statements are tagged `answer_mode: "eligibility"` and are not judge-scored (template + verbatim evidence, not a generated answer). Phase 2, Step 5: `run_eval` resolves eligibility against the retriever's own chunks, not the default chunks file — otherwise an eval at a non-default chunk size would silently measure 512-token eligibility. |
 | `benchmarks/` | 8-configuration ablation (`run_benchmark.py`), per-question retrieval audit (`audit_retrieval.py`), generated before/after report (`before_after.py`) | The proof that each component earns its place — or does not. See `benchmarks/results/summary.md` and `before_after.md`. |
-| `scripts/check_data_quality.py` | Finds the corpus's messy data (closures, two amounts, database pages, approximate/year-specific figures, missing fields, stale markers) | Real pages are messy. A system that hides the mess will invent answers for it. |
+| `scripts/check_data_quality.py` | Finds the corpus's messy data (closures, two amounts, database pages, approximate/year-specific figures, missing fields, stale markers) | Real pages are messy. A system that hides the mess will invent answers for it. Phase 2, Step 7: `MONEY_RE` now matches £/SEK/¥ and detached "($)" rates (findings 72 → 73, resolved 9 → 16; stipend-missing 14 → 8 of 19), and every source carries `reverified_at` in `data/sources.json` with the per-page record in `benchmarks/results/reverification_2026-11-18.json`. |
 | `scripts/ci_gate.py` | Fails the build if any metric drops below its threshold | The eval harness is a gate, not a report. Thresholds are set below the measured numbers so jitter does not fail the build; lowering a threshold requires a reason in the commit message. |
 
 ## Request path (query time)
@@ -363,7 +363,7 @@ change to any of them that regresses quality fails the build.
 | Embedding model unavailable | `embedder` field in every response | BM25-only retrieval, reported honestly |
 | Empty index | `/health` shows 0 chunks; `/ask` returns `empty_index` | "Not found in the corpus. The index is empty…" |
 | Question names a scholarship not in the corpus | Doc-name gate + scholarship-subject focus check in the answer verification | Abstains (`doc_name_mismatch` for a known name answered from the wrong page; `unanswered_scholarship_subject` when the named scholarship is not in the corpus at all — Phase 2, Step 6) |
-| Corpus page closed / stale | `scripts/check_data_quality.py` + `data/closures.json` | Documented in `DATA_QUALITY.md`; closure is a golden question (q21), and eligibility returns verdict `closed` for a closed programme (Phase 2, Step 4) |
+| Corpus page closed / stale | `scripts/check_data_quality.py` + `data/closures.json` | Documented in `DATA_QUALITY.md`; closure is a golden question (q21), and eligibility returns verdict `closed` for a closed programme (Phase 2, Step 4). All 19 pages re-verified 18 Nov 2026 (Phase 2, Step 7): all live, 18 substantively unchanged, Eiffel changed only in a sidebar teaser; per-page record in `benchmarks/results/reverification_2026-11-18.json` |
 | Metric regression | `scripts/ci_gate.py` + GitHub workflow | Build fails; thresholds are pinned |
 | Corpus re-ingest changes the facts | Re-run eval + data-quality checker | Numbers must be re-measured before any claim |
 
@@ -451,7 +451,15 @@ change to any of them that regresses quality fails the build.
   data-quality checker flags degree-levels/citizenship as missing
   for all nine in the meantime.
 - **Data-quality checker misses £/SEK amounts (Step 6):** its money
-  pattern matches €/$ only, so it flags "stipend missing" for Gates
+  pattern matched €/$ only, so it flagged "stipend missing" for Gates
   (£23,152), Rhodes (£21,060), Commonwealth (£1,712/month) and SI
   Pioneering (SEK 12,000/month) even though the pages state amounts.
-  Pinned by a test; fix by extending the pattern to £/SEK/¥.
+  **Fixed in Phase 2, Step 7:** the pattern now matches £/SEK/¥ and
+  detached "($)" rates — the false flags for Rhodes, Commonwealth
+  Shared, SI Pioneering, Sweden SI, MEXT and RTP are gone
+  (stipend-missing 14 → 8 of 19), seven new two-amounts findings are
+  resolved with the field each amount belongs to, and findings went
+  72 → 73 (9 → 16 resolved). Remaining, named in `DATA_QUALITY.md`
+  §10: a money amount appearing is still not proof it is a stipend
+  (Gates's "US$210m" donation still matches), and MEXT's ¥ amounts
+  cannot be tied to a category from the extracted text.

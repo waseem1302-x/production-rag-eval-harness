@@ -1,13 +1,16 @@
 # Data Quality — Messy Real Scholarship Data
 
 The corpus is 19 real official scholarship pages, fetched 18 Nov 2026
-(the original 10 plus 9 more in Phase 2, Step 6). Real pages are
+(the original 10 plus 9 more in Phase 2, Step 6) and **re-verified
+18 Nov 2026** (Phase 2, Step 7: every page re-fetched and compared
+with the stored text — see §11 and
+`benchmarks/results/reverification_2026-11-18.json`). Real pages are
 messy. This document records every mess found, the exact evidence
 for it, what it means for the system, and how it is handled. Nothing
 here is hidden: the checker that produced these findings is
 `scripts/check_data_quality.py`, and its machine-readable
-report is `benchmarks/results/data_quality.json` (72 findings:
-9 resolved, 63 open). Re-run the checker after any re-ingest;
+report is `benchmarks/results/data_quality.json` (73 findings:
+16 resolved, 57 open). Re-run the checker after any re-ingest;
 `DATA_QUALITY.md` must be updated from its output, not from memory.
 
 ## Summary of findings
@@ -20,10 +23,10 @@ report is `benchmarks/results/data_quality.json` (72 findings:
 | 4 | Approximate figures | Fulbright, HKPFS, Gates Cambridge, Schwarzman | Open — quote with hedge |
 | 5 | Year-specific figures | HKPFS, Commonwealth Shared | Open — quote with year |
 | 6 | Deadline not stated on fetched page | 15 of 19 docs | Open — must abstain |
-| 7 | Stipend not stated on fetched page | 14 of 19 docs | Open — must abstain |
-| 8 | Degree levels / citizenship not stated | 11 docs missing degree levels, 12 missing a citizenship rule (all 9 new docs, by construction — no rules authored yet) | Open — verdict `unknown` |
-| 9 | Stale page markers | Erasmus, Eiffel | Open — re-fetch before launch |
-| 10 | Checker currency gap (£/SEK not matched) | Rhodes, Commonwealth Shared, SI Pioneering Women flagged missing though they state amounts; Gates not flagged though its stipend is in £ (a US$210m donation matches instead) | Open — checker limitation, pinned by a test; the pages DO state amounts |
+| 7 | Stipend not stated on fetched page | **8 of 19 docs** (was 14 before the Step 7 checker fix) | Open — must abstain |
+| 8 | Degree levels / citizenship not stated | 11 docs missing degree levels, 12 missing a citizenship rule (all 9 new docs, by construction — no rules authored yet); Sweden SI now has no missing field at all | Open — verdict `unknown` |
+| 9 | Stale page markers | Erasmus (26 June 2025), Eiffel (Oct 2022); EMJM organisations page footer "Last updated: 15 April 2026" newly observed in Step 7 | Open — re-fetch before launch (done 18 Nov 2026, §11) |
+| 10 | Checker currency gap (£/SEK not matched) | **Fixed in Step 7** — Rhodes, Commonwealth Shared, SI Pioneering, Sweden SI, MEXT and RTP no longer falsely flagged; Gates now matches on its real stipend too. Remaining: the "US$210m" donation still matches, and MEXT's ¥ amounts cannot be tied to a category | Fixed (with named remainders) — see §10 |
 
 ## 1. Vanier is closed (high severity)
 
@@ -80,17 +83,20 @@ individual student. Quote each with its field. Golden question q31
 (individual → €1,400/month) passes; the resolution is recorded in
 `scripts/check_data_quality.py:RESOLUTIONS` and pinned by a test.
 
-### HKPFS — resolved, one figure in two currencies
+### HKPFS — resolved, two fields, each in two currencies
 
 Chunk `hkpfs-0`:
 
-> "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150)…"
+> "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years."
 
 HK$344,400 and ~US$44,150 are the same stipend in two currencies,
-not two stipends. Quote both with the year, and keep
-"approximately" on the US dollar figure. The 400 fellowships figure
-is separate and year-specific: "400 PhD Fellowships will be awarded
-in the 2027/28 academic year".
+not two stipends — and HK$14,400 (~US$1,840) is a separate
+conference/travel allowance, also in two currencies. Quote both
+figures with the year, and keep "approximately" on the US dollar
+figures. (Step 7 correction: the earlier resolution mentioned only
+the stipend; the travel allowance is a second field on the same
+page.) The 400 fellowships figure is separate and year-specific:
+"400 PhD Fellowships will be awarded in the 2027/28 academic year".
 
 ## 3. DAAD is a database, not one award
 
@@ -170,34 +176,47 @@ question and a DAAD deadline question both abstain — and an
 Australia Awards deadline question (o06) abstains too, since that
 scholarship is not in the corpus at all.
 
-## 7. Stipend not stated on the fetched page (14 of 19, by the checker)
+## 7. Stipend not stated on the fetched page (8 of 19, by the checker)
 
 The checker counts a stipend as stated when the text contains a
-€/$/HK$/US$ amount. By that rule it flags 14 of 19 pages as missing
-a stipend, and counts 5 as stating one: Eiffel, Erasmus Mundus
-(organisations), Gates Cambridge, HKPFS and Vanier. Read the rule
-honestly, in both directions:
+€/$/HK$/US$/£/SEK/¥ amount, or a detached "($) 35,550" table rate
+(the £/SEK/¥ and detached patterns were added in Phase 2, Step 7 —
+see §10). By that rule it flags 8 of 19 pages as missing a stipend,
+and counts 11 as stating one. Before Step 7 the rule matched €/$
+only and flagged 14 — the six pages it wrongly flagged are Rhodes,
+Commonwealth Shared, SI Pioneering Women, Sweden SI, MEXT and RTP
+(see §10). Read the rule honestly, in both directions:
 
-- **Gates is a false positive.** The amount the checker matched is
-  "US$210m" — the Trust's founding donation, not a stipend. The
-  page's real stipend (£23,152) is in pounds, which the pattern
-  does not match (see §10). So the checker's "states a stipend"
-  really means "contains a €/$ amount somewhere".
-- **RTP is a false negative.** The page states the rates, but
-  written as "Full-time base RTP stipend rate ($) 35,550" — the
-  dollar sign detached from the digits by a parenthesis — so the
-  pattern finds nothing and the page is flagged missing.
+- **Gates is still a partial false positive.** The amounts the
+  checker matches include "US$210m" — the Trust's founding
+  donation, not a stipend. But since Step 7 the page's real stipend
+  (£23,152) also matches, so the page is flagged as stating a
+  stipend for the right reason as well as the wrong one (see §10).
+- **MEXT states amounts, but not one quotable stipend.** The page
+  lists ¥117,000, ¥143,000–145,000 and ¥242,000 per month in a
+  table whose category headings are lost in the extracted text, so
+  no amount can be tied to a category from the stored text alone.
+  The checker now correctly counts MEXT as stating an amount; the
+  golden out-of-corpus question o02 ("monthly stipend for the MEXT
+  scholarship in yen") still correctly abstains, because there is
+  no single MEXT stipend to quote.
 - The true stipend statements on the fetched pages: Vanier
   ($50,000/year, doctoral), Eiffel (€1,200 / €2,000 per month, see
-  §2), HKPFS (HK$344,400/year, see §2), Erasmus Mundus
-  (organisations) (€1,400/month, see §2), Gates (£23,152), Rhodes
-  (£21,060 in 2026-27, golden q25), Commonwealth Shared (£1,712
-  per month, £2,000 in London), SI Pioneering Women (SEK 12,000
-  per month, golden q32), and RTP (base $35,550/year for 2027;
-  $34,315 for 2026, golden q29). Chevening ("fully-funded", no
-  figure), Sweden SI, Fulbright, DAAD, Erasmus Mundus (student
-  page), Manaaki, MEXT, Knight-Hennessy, Schwarzman and Marshall
-  state no amount on the fetched page.
+  §2), HKPFS (HK$344,400/year plus a HK$14,400 travel allowance,
+  see §2), Erasmus Mundus (organisations) (€1,400/month, see §2),
+  Gates (£23,152), Rhodes (£21,060 in 2026-27, golden q25),
+  Commonwealth Shared (£1,712 per month, £2,000 in London),
+  SI Pioneering Women (SEK 12,000 per month, golden q32), Sweden SI
+  (SEK 12,000 per month, plus a SEK 15,000 one-time travel grant),
+  MEXT (¥ amounts per category, see above), and RTP (base $35,550/year
+  for 2027; $34,315 for 2026, golden q29). Chevening ("fully-funded",
+  no figure), Fulbright, DAAD, Erasmus Mundus (student page), Manaaki,
+  Knight-Hennessy, Schwarzman and Marshall state no amount on the
+  fetched page. The 8 pages the checker flags as missing a stipend
+  are exactly those 8.
+
+The 15-of-19 deadline count in §6 is unchanged by the re-verification
+(§11): no re-fetched page gained or lost a deadline.
 
 ## 8. Degree levels / citizenship not stated
 
@@ -235,35 +254,65 @@ eligibility module both use the list from the chunk.
 
 - Erasmus Mundus (chunk `erasmus-mundus-1`): "Last updated:
   26 June 2025." — about 5 months before the fetch (18 Nov 2026).
+  **Re-verified 18 Nov 2026 (§11): the marker is still 26 June 2025.**
 - Eiffel (chunk `eiffel-1`): "Mise à jour. October 2022." for the
   main page content — about 4 years old — while the brochures were
   updated December 2025 (chunk `eiffel-2`). The amounts are marked
   "from January 2026", so they are current, but the page's own
-  update marker is stale. Re-fetch before launch and re-run the
-  checker.
+  update marker is stale. **Re-verified 18 Nov 2026 (§11): both
+  markers unchanged.**
+- Erasmus Mundus (organisations page): the browser-text extraction
+  carries no last-updated marker, but the direct-HTTP re-fetch in
+  Step 7 shows a page footer the text fetcher strips: "Last
+  updated: 15 April 2026", plus "Related calls: There are no calls
+  open at the moment. The next round of funding will open towards
+  the end of the year." The 18 Nov fetch also lacked the footer, so
+  this marker is recorded as **newly observed, not a verified
+  change** — it may have been there all along, below the extracted
+  text. It does not change any fact on the page.
 
-## 10. Checker currency gap: £ and SEK amounts are missed
+## 10. Checker currency gap: £ and SEK amounts are missed — fixed in Step 7
 
 The checker's money pattern (`MONEY_RE` in
-`scripts/check_data_quality.py`) matches €, $ and HK$/US$ only —
-not £ or SEK. So it flags "stipend missing" for three pages that DO
-state an amount:
+`scripts/check_data_quality.py`) matched €, $ and HK$/US$ only —
+not £ or SEK — until Phase 2, Step 7 fixed it. The pattern now
+matches €, $, HK$, US$, £, SEK and ¥, plus amounts with the
+currency sign detached from the digits ("($) 35,550"), and a value
+group that ends on a digit so "£4,000," in running text is recorded
+as £4,000. What the fix changed, measured by re-running the
+checker (72 → 73 findings, 9 → 16 resolved, 63 → 57 open):
 
-- Rhodes: £21,060 for 2026-27 (golden q25).
-- Commonwealth Shared: £1,712 per month (£2,000 in London).
-- SI Pioneering Women: SEK 12,000 per month (golden q32).
+- Six false "stipend missing" flags are gone: Rhodes (£21,060),
+  Commonwealth Shared (£1,712/month), SI Pioneering Women
+  (SEK 12,000/month), Sweden SI (SEK 12,000/month), MEXT
+  (¥117,000–¥242,000/month) and RTP ("($) 35,550"). The
+  "stipend not stated" count in §7 is now 8 of 19, not 14 of 19.
+- Seven new `multiple_amounts` findings appear (Gates, Rhodes,
+  Commonwealth Shared, RTP, Sweden SI, SI Pioneering Women, MEXT),
+  all resolved with the field each amount belongs to (see §2 and
+  `RESOLUTIONS` in the checker). The HKPFS resolution was also
+  corrected in the same step: the page carries a travel allowance
+  (HK$14,400) as well as the stipend, not only one figure in two
+  currencies.
+- Gates Cambridge is still not flagged, but now for the right
+  reason as well as the wrong one: its real stipend (£23,152)
+  matches, alongside the "US$210m" founding donation.
 
-And it fails to flag a fourth for the wrong reason: Gates Cambridge
-is NOT flagged, because the page's "US$210m" founding donation
-matches the pattern, while its real stipend (£23,152) is in pounds.
+What the fix did **not** do (remaining gaps, pinned by
+`tests/test_reverification.py`):
 
-The same pattern gap is why RTP is flagged (§7: "($) 35,550").
-This is a checker limitation, not a corpus gap — pinned by
-`tests/test_corpus_growth.py::test_stipend_flag_is_a_currency_gap`,
-so a future checker fix (adding £/SEK/¥, and amounts with the
-currency sign detached from the digits) shows up as a changed
-count. Until then, the "14 of 19" stipend-missing count in §7 is
-the checker's count, not the truth.
+- The pattern still only proves that a money amount *appears* on
+  the page, not that it is a stipend. Gates's "US$210m" donation
+  still matches; the resolution documents it, the pattern does not
+  distinguish it.
+- MEXT's ¥ amounts cannot be tied to a category from the stored
+  text (the table headings are lost in extraction), so the checker
+  counts MEXT as stating an amount while no single MEXT stipend
+  can be quoted — golden o02 still correctly abstains.
+- Amounts written without any currency sign or code (a bare
+  "35,550" with the "$" only in a table header, or a "kr" amount
+  with no SEK prefix) would still be missed; no such amount is in
+  this corpus.
 
 ## How the system uses this
 
@@ -289,3 +338,61 @@ the checker's count, not the truth.
 - **Re-ingest rule**: after any re-fetch, run
   `python -m scripts.check_data_quality` and update this document
   from its report before claiming the numbers still hold.
+
+## 11. Re-verification, 18 Nov 2026 (Phase 2, Step 7)
+
+Every source page was re-fetched and compared with the stored
+`.txt` before any launch claim: direct HTTP with the repo's own
+extractor (`app.ingest.extract_text`) for all 19, plus a browser
+text fetch for the 11 pages originally saved that way (Chevening,
+DAAD, Gates Cambridge, Rhodes, Knight-Hennessy, Schwarzman,
+Commonwealth Shared, RTP, Marshall, Erasmus Mundus organisations
+page, SI Pioneering Women) and for RTP, whose direct fetch timed
+out. No raw HTML was saved or committed; the secret scan over the
+re-fetched text found 0 matches (counts only). Machine-readable
+record: `benchmarks/results/reverification_2026-11-18.json`;
+per-source date: `reverified_at` in `data/sources.json`.
+
+**Result: all 19 pages live; 18 substantively unchanged, 1 changed
+only in a sidebar teaser. No `data/raw/*.txt` or `*.json` was
+rewritten** — a re-fetch that differs only by extraction method
+(line-wrapping, punctuation spacing, nav duplication, table
+flattening, a duplicated FAQ section) is not a page change, and
+rewriting on that basis would churn the chunks and break the
+pinned chunk ids for no fact change. The one real change (Eiffel)
+is a recommended-article teaser title, not Eiffel content, so it
+was recorded and the file left alone.
+
+| # | Scholarship | Source URL | Status | Changed? | Re-verified |
+|---|---|---|---|---|---|
+| 1 | Chevening (UK) | https://www.chevening.org/scholarships/ | live | Unchanged — no deadline, no stipend figure; fully-funded, one-year master's | 2026-11-18 |
+| 2 | Sweden SI Global Professionals | https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/ | live | Unchanged — byte-identical | 2026-11-18 |
+| 3 | Fulbright Foreign Student Program (USA) | https://foreign.fulbrightonline.org/about/foreign-student-program | live | Unchanged — byte-identical | 2026-11-18 |
+| 4 | DAAD (Germany) | https://www.daad.de/en/study-and-research-in-germany/scholarships/ | live | Unchanged — 147 options; direct extraction differs only in line-wrapping | 2026-11-18 |
+| 5 | Erasmus Mundus Joint Masters | https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters | live | Unchanged — byte-identical; marker still "Last updated: 26 June 2025" | 2026-11-18 |
+| 6 | France Excellence Eiffel | https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program | live | **Changed (sidebar only)** — recommended-article teaser "MOPGA Research Themes" → "Co-financing of 12- to 24-month postdoctoral research contracts"; €1,200 / €2,000 and Oct 2022 / Dec 2025 markers unchanged | 2026-11-18 |
+| 7 | Vanier Canada Graduate Scholarships | https://vanier.gc.ca/en/home-accueil.html | live | Unchanged — byte-identical; still closed | 2026-11-18 |
+| 8 | Manaaki New Zealand Scholarships | https://www.nzscholarships.govt.nz/ | live | Unchanged — byte-identical | 2026-11-18 |
+| 9 | Hong Kong PhD Fellowship Scheme (HKPFS) | https://cerg1.ugc.edu.hk/hkpfs/index.html | live | Unchanged — byte-identical | 2026-11-18 |
+| 10 | MEXT (Japan) | https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/ | live | Unchanged — byte-identical | 2026-11-18 |
+| 11 | Gates Cambridge | https://www.gatescambridge.org/programme/the-scholarship/ | live | Unchanged — around 70/year, £23,152, US$210m | 2026-11-18 |
+| 12 | Rhodes Scholarship (FAQs) | https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/ | live | Unchanged — £21,060 for 2026-27; direct extraction is a single copy where the stored text has narrative+Q&A duplicated | 2026-11-18 |
+| 13 | Knight-Hennessy Scholars — Funding (Stanford) | https://knight-hennessy.stanford.edu/program-overview/funding | live | Unchanged — up to three years | 2026-11-18 |
+| 14 | Schwarzman Scholars (FAQs) | https://www.schwarzmanscholars.org/frequently-asked-questions/ | live | Unchanged — not yet 29 on 1 Aug | 2026-11-18 |
+| 15 | Commonwealth Shared Scholarships | https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/ | live | Unchanged — closing 8 December 2026, £1,712/month | 2026-11-18 |
+| 16 | Research Training Program (RTP, Australia) | https://www.education.gov.au/research-block-grants/research-training-program | live | Unchanged — 2027 base $35,550, 2026 base $34,315 (direct fetch timed out; browser text fetch used) | 2026-11-18 |
+| 17 | Marshall Scholarship | https://marshallscholarship.org/about/ | live | Unchanged — up to 50/year, closing 29 September 2026 | 2026-11-18 |
+| 18 | Erasmus Mundus Joint Masters (organisations page) | https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters | live | Unchanged — €1,400/month, €5m/project; footer marker "Last updated: 15 April 2026" newly observed, not a verified change (§9) | 2026-11-18 |
+| 19 | SI Scholarship Pioneering Women in STEM | https://si.se/en/apply/scholarships/pioneeringwomeninstem/ | live | Unchanged — SEK 12,000/month; key dates 8–24 Feb 2027 | 2026-11-18 |
+
+What the re-verification did **not** change: no golden question
+was updated (every expected answer still appears on its page —
+verified per question during the re-fetch), no question was
+dropped, the rebuilt index is byte-identical (101 chunks), and
+the re-run eval is byte-identical to the before-run file
+(`benchmarks/results/extractive_eval.json` ==
+`extractive_eval_before_reverification.json`: answer-only 0.907,
+recall@5 1.0, faithfulness 1.0, abstention 1.0, eligibility 1.0).
+The next re-verification should re-run the same comparison; the
+stale markers to watch are Erasmus (26 June 2025) and Eiffel
+(October 2022), and the EMJM organisations footer (15 April 2026).

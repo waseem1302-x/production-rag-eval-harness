@@ -1,4 +1,4 @@
-# Production RAG with Eval Harness — Phase 2, Step 6
+# Production RAG with Eval Harness — Phase 2, Step 7
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
@@ -55,7 +55,24 @@ again, with the dip recorded, not hidden. Answer-only relevance is
 0.907 (39/43), recall@5 and faithfulness still 1.0, eligibility
 still 1.0 (11/11). Dense retrieval still buys nothing, the
 reranker still changes nothing, and q03/q10/q17 still miss —
-re-measured, not assumed.
+re-measured, not assumed. Phase 2, Step 7 (this branch,
+`feat/reverify-stale-pages`) re-verifies all 19 pages before any
+launch claim: every source re-fetched 18 Nov 2026 (direct HTTP
+plus a browser text fetch for the 11 pages originally saved that
+way), all 19 live, 18 substantively unchanged, Eiffel changed only
+in a sidebar recommended-article teaser — so no `data/raw/*.txt`
+was rewritten, the rebuilt index is byte-identical (101 chunks),
+and the re-run eval is byte-identical to the before-run file
+(answer-only 0.907, recall@5 1.0, abstention 1.0, eligibility 1.0;
+no golden question changed or dropped). The same step fixes the
+data-quality checker's currency gap: its money pattern now matches
+£, SEK and ¥ plus detached "($) 35,550" rates, so the false
+"stipend missing" flags for Rhodes, Commonwealth Shared,
+SI Pioneering, Sweden SI, MEXT and RTP are gone (14 of 19 → 8 of
+19), seven new two-amounts findings are resolved with the field
+each amount belongs to, and findings go 72 → 73 (9 → 16 resolved).
+Full per-page table in [`DATA_QUALITY.md`](DATA_QUALITY.md) §11
+and `benchmarks/results/reverification_2026-11-18.json`.
 
 **Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
 why, trade-offs) · [`EVAL_RESULTS.md`](EVAL_RESULTS.md) (every measured
@@ -520,7 +537,7 @@ one fails the build.
 python -m scripts.check_data_quality
 ```
 
-72 findings (9 resolved, 63 open), each citing sentence + chunk +
+73 findings (16 resolved, 57 open), each citing sentence + chunk +
 source URL. Headline findings: Vanier is **closed** and replaced by
 a harmonized doctoral programme — and eligibility now returns
 verdict `closed` for it (Step 4); Eiffel €1,200 is the Master's
@@ -528,16 +545,25 @@ allowance and €2,000 the Doctorate stipend (not a contradiction);
 the EMJM organisations page's €5 million (max grant per project)
 and €1,400/month (scholarship per individual) are different fields,
 not a contradiction (resolved in Step 6); HKPFS HK$344,400 ≈
-US$44,150 is one 2026/27 stipend in two currencies; DAAD is a
+US$44,150 is one 2026/27 stipend in two currencies, plus a HK$14,400
+travel allowance (resolution corrected in Step 7); DAAD is a
 147-option database, not one award; 15 of 19 pages state no
-deadline and 14 of 19 state no stipend (by the checker's rules: a
+deadline and **8 of 19 state no stipend** (by the checker's rules: a
 deadline needs a date-bearing sentence with a deadline word, a
-stipend needs a €/$/HK$/US$ amount). Known checker gap, pinned by
-a test: its money pattern matches €/$ only, not £/SEK, so it flags
-"stipend missing" for Rhodes (£21,060), Commonwealth (£1,712/month)
-and SI Pioneering (SEK 12,000/month) even though the pages state
-amounts — and fails to flag Gates, whose "US$210m" founding donation
-matches the pattern while its real stipend (£23,152) is in pounds.
+stipend needs a €/$/HK$/US$/£/SEK/¥ amount or a detached "($)"
+rate). Step 7 fixed the known checker gap and re-verified every
+page 18 Nov 2026 (all 19 live, 18 substantively unchanged, Eiffel
+changed only in a sidebar teaser): its money pattern now matches
+£/SEK/¥, so it no longer flags "stipend missing" for Rhodes
+(£21,060), Commonwealth (£1,712/month), SI Pioneering
+(SEK 12,000/month), Sweden SI (SEK 12,000/month), MEXT
+(¥117,000–¥242,000/month) or RTP ("($) 35,550") even though the
+pages state amounts — and Gates is now matched on its real stipend
+(£23,152) as well as its "US$210m" donation. Remaining gaps, named
+in [`DATA_QUALITY.md`](DATA_QUALITY.md) §10: a money amount
+appearing is still not proof it is a stipend (the donation still
+matches), and MEXT's ¥ amounts cannot be tied to a category from
+the extracted text.
 No eligibility rules are
 authored for the 9 new documents yet, so the checker flags
 degree-levels/citizenship as missing for all nine by construction
@@ -552,12 +578,43 @@ python -m scripts.ci_gate
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured (Phase 2, Step 6): 1.0, 0.907, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
+Measured (Phase 2, Step 7, re-run after re-verification): 1.0, 0.907, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
 (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.907),
 proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 (build index → tests → gate on every push/PR).
 
 ## Results (Phase 1, real local run, 18 Nov 2026)
+
+### Results (Phase 2, Step 7 — re-verification + checker fix, same 50 questions, 18 Nov 2026)
+
+Commands: `python -m scripts.check_data_quality` (writes
+`benchmarks/results/data_quality.json`; before-run saved as
+`benchmarks/results/data_quality_before_reverification.json`),
+`python -m scripts.build_index`,
+`python -m scripts.run_eval` (writes
+`benchmarks/results/extractive_eval.json`; before-run saved as
+`benchmarks/results/extractive_eval_before_reverification.json`)
+and `python -m scripts.ci_gate` (passes: 1.0, 0.907, 1.0, 1.0, 1.0).
+
+| Metric | Before (Step 6) | After (Step 7) | Change |
+|---|---|---|---|
+| Pages re-verified live / substantively unchanged | — | 19 / 18 (Eiffel: sidebar teaser only) | — |
+| Data-quality findings (resolved / open) | 72 (9 / 63) | 73 (16 / 57) | +7 resolved, −6 open |
+| Pages flagged "stipend missing" | 14 of 19 | **8 of 19** | −6 false flags (Rhodes, Commonwealth, SI Pioneering, Sweden SI, MEXT, RTP) |
+| Pages flagged "deadline missing" | 15 of 19 | 15 of 19 | none |
+| `multiple_amounts` findings (resolved) | 3 | 10 | +7, each resolved with its field |
+| answer_only_relevance | 0.907 (39/43) | 0.907 (39/43) | none — re-run eval file byte-identical to before-run |
+| recall@5 / faithfulness / abstention / eligibility | 1.0 / 1.0 / 1.0 / 1.0 | 1.0 / 1.0 / 1.0 / 1.0 | none |
+| Golden questions changed / dropped | — | 0 / 0 | none — no page fact changed |
+| Chunks (rebuilt index) | 101 | 101 (byte-identical) | none |
+
+Read honestly: the re-verification found almost nothing, and that
+is the result — a launch claim needs the pages checked, not assumed
+fresh. The checker fix is the real change, and it changed the
+documentation, not the answers: the corpus always stated those six
+stipends; the checker could not see them. Full per-page table in
+[`DATA_QUALITY.md`](DATA_QUALITY.md) §11; full analysis in
+[`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 
 ### Results (Phase 2, Step 6 — corpus growth, same 50 questions, 18 Nov 2026)
 
@@ -695,7 +752,7 @@ trust. Full analysis in [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 174 passed
+python -m pytest tests/ -q   # 179 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text
@@ -728,7 +785,14 @@ sentences fail relevance, and the full-eval no-regression test
 preserved at 256/512/1,024 tokens, the index builder accepting a
 chunk-size parameter (256 → 60 chunks / 60 vectors, invalid size
 rejected), and the eval running against a non-default chunk size
-without crashing.
+without crashing. Phase 2, Step 7 adds 5 tests
+(`tests/test_reverification.py`): every source records a
+`reverified_at` date and the per-page record covers all 19 pages,
+all live; the checker matches £/SEK/¥ and detached "($)" amounts;
+the seven new two-amounts findings are resolved with their field
+named; the re-run eval is identical to the saved before-run file;
+and no secret pattern appears in the stored text. The Step 6
+stipend-gap pin was rewritten as a fix test in the same step.
 
 ## Docker
 
