@@ -63,7 +63,23 @@ DATABASE_PATTERNS = [
 ]
 APPROX_PATTERNS = ["approximately", "around ", "~"]
 YEAR_RE = re.compile(r"\b20\d\d/\d\d\b")
-MONEY_RE = re.compile(r"(€|\$|HK\$|US\$)\s?([\d,]+(?:\.\d+)?)")
+# Phase 2, Step 7 (re-verification): the money pattern now matches £,
+# SEK and ¥ as well as €/$/HK$/US$, and amounts whose currency sign
+# is detached from the digits — the RTP table writes "($) 35,550",
+# i.e. the sign in parentheses before the number. Before this fix
+# the checker flagged "stipend missing" for Rhodes (£21,060),
+# Commonwealth Shared (£1,712/month), SI Pioneering Women
+# (SEK 12,000/month), Sweden SI (SEK 12,000/month) and MEXT
+# (¥117,000–¥242,000/month) although all five pages state amounts,
+# and missed RTP entirely although it states six rates. The value
+# group ends on a digit so "£4,000," in running text is recorded
+# as £4,000, not £4,000,. The pattern still only proves that a
+# money amount appears on the page, not that it is a stipend:
+# Gates Cambridge's "US$210m" founding donation still matches,
+# and is documented in its resolution.
+MONEY_RE = re.compile(
+    r"(€|\$|HK\$|US\$|£|SEK|¥)\s?([\d,]*\d(?:\.\d+)?)"
+    r"|\(\$\)\s?([\d,]*\d(?:\.\d+)?)")
 DATE_RE = re.compile(
     r"\b\d{1,2}\s+(January|February|March|April|May|June|July|August|"
     r"September|October|November|December)(\s+20\d\d)?\b")
@@ -106,12 +122,20 @@ RESOLUTIONS = {
                     "for information regarding the new harmonized program.",
     },
     ("hkpfs", "multiple_amounts"): {
-        "resolution": "Not two stipends. HK$344,400 and approximately US$44,150 "
-                      "are the same 2026/27 annual stipend expressed in two "
-                      "currencies. Quote both figures with the year, and keep "
-                      "the 'approximately' on the US dollar figure.",
+        "resolution": "Two fields, each in two currencies — not two "
+                      "stipends. HK$344,400 and approximately US$44,150 "
+                      "are the same 2026/27 annual stipend expressed in "
+                      "two currencies; HK$14,400 (approximately US$1,840) "
+                      "is a separate conference and research-related "
+                      "travel allowance per year. Quote both figures with "
+                      "the year, and keep the 'approximately' on the US "
+                      "dollar figures. (Step 7 correction: the original "
+                      "resolution mentioned only the stipend; the travel "
+                      "allowance is a second field on the same page.)",
         "evidence": "In the 2026/27 academic year, the Fellowship provides an "
-                    "annual stipend of HK$344,400 (approximately US$44,150).",
+                    "annual stipend of HK$344,400 (approximately US$44,150) "
+                    "and a conference and research-related travel allowance "
+                    "of HK$14,400 (approximately US$1,840) per year.",
     },
     ("daad", "database_page"): {
         "resolution": "The DAAD page is a scholarship database (147 options), "
@@ -128,6 +152,103 @@ RESOLUTIONS = {
                       "24 months). Quote each with its field.",
         "evidence": "Grant per project: up to €5 million. EU scholarship "
                     "for individuals: €1,400 per month (max. 24 months).",
+    },
+    # Phase 2, Step 7: these pages were flagged "multiple amounts"
+    # only once the checker learned £/SEK/¥ and detached "($)".
+    # Each resolution names the field each amount belongs to.
+    ("gates-cambridge", "multiple_amounts"): {
+        "resolution": "Different fields, plus a donation. £23,152 is the "
+                      "maintenance allowance for a single student (2026-27 "
+                      "rate, 12 months); £750–£4,000 is discretionary "
+                      "academic development funding; £12,793 / £18,244 "
+                      "per annum is the Dependent Children Allowance (one "
+                      "child / two or more); US$210m is the Trust's "
+                      "founding donation from 2000, not a stipend. The "
+                      "checker counts 'a money amount appears', not 'a "
+                      "stipend is stated' — the donation is why Gates was "
+                      "never flagged missing even before the £ fix.",
+        "evidence": "a maintenance allowance for a single student (£23,152 "
+                    "for 12 months at the 2026-27 rate). The Gates Cambridge "
+                    "Scholarship programme was established in October 2000 "
+                    "by an historic donation of US$210m from the Gates "
+                    "Foundation.",
+    },
+    ("rhodes", "multiple_amounts"): {
+        "resolution": "Not three stipends. £21,060 is the annual stipend "
+                      "for 2026-27; £1,755 is the same stipend paid in "
+                      "monthly instalments (£21,060 / 12); £6,950 is not a "
+                      "payment at all — it is 33% of the annual stipend, "
+                      "the threshold above which a secondary award must be "
+                      "declared to the Registrar.",
+        "evidence": "For the 2026-27 academic year, the stipend is £21,060 "
+                    "paid in monthly instalments of £1,755. If the value of "
+                    "such an award is more than 33% of the annual stipend, "
+                    "i.e. £6,950 pa, then you would need to declare the "
+                    "award.",
+    },
+    ("commonwealth-shared", "multiple_amounts"): {
+        "resolution": "Different fields. £1,712 per month (£2,000 in the "
+                      "London metropolitan area) is the stipend (living "
+                      "allowance); £622 / £154 per month are child "
+                      "allowances for a widowed, divorced or single-parent "
+                      "Scholar (first child / second and third child under "
+                      "16). Quote the stipend with the London uplift, and "
+                      "the child allowances only as child allowances.",
+        "evidence": "Stipend (living allowance) at the rate of £1,712 per "
+                    "month, or £2,000 per month for those at universities "
+                    "in the London metropolitan area. Child allowance of "
+                    "£622 per month for the first child, and £154 per month "
+                    "for the second and third child under the age of 16.",
+    },
+    ("rtp", "multiple_amounts"): {
+        "resolution": "One table, six rates: a base and a maximum rate for "
+                      "each year. Full-time base RTP stipend rate ($) "
+                      "35,550 (2027), 34,315 (2026), 33,511 (2025); "
+                      "maximum 55,537 (2027), 53,608 (2026), 52,352 "
+                      "(2025). The rates are indexed each 1 January and "
+                      "the next year's are announced by 1 October. Golden "
+                      "q29 quotes the 2026 base rate, $34,315 — quote any "
+                      "rate with its year and base/maximum label.",
+        "evidence": "Full-time base RTP stipend rate ($) 35,550 (2027). "
+                    "Full-time base RTP stipend rate ($) 34,315 (2026). "
+                    "The RTP base and maximum stipend rates are indexed "
+                    "each year, effective from 1 January.",
+    },
+    ("sweden-si", "multiple_amounts"): {
+        "resolution": "Different fields. SEK 12,000 per month is the "
+                      "monthly living allowance; SEK 15,000 is a one-time "
+                      "travel grant (SEK 10,000 for scholars from Armenia, "
+                      "Azerbaijan, Belarus, Georgia, Moldova and Ukraine), "
+                      "not a monthly payment. Both are stated on the page, "
+                      "which is why the checker no longer flags Sweden SI "
+                      "as missing a stipend after the Step 7 £/SEK fix.",
+        "evidence": "A monthly allowance of SEK 12,000 to cover your living "
+                    "expenses throughout the study period. A travel grant "
+                    "of SEK 15,000.",
+    },
+    ("si-pioneering-women", "multiple_amounts"): {
+        "resolution": "Different fields. SEK 12,000 per month is the "
+                      "monthly living allowance; SEK 15,000 is a one-time "
+                      "travel grant, not a monthly payment. Golden q32 "
+                      "quotes the SEK 12,000 allowance.",
+        "evidence": "A monthly allowance of SEK 12,000 to cover your living "
+                    "expenses throughout the study period. A travel grant "
+                    "of SEK 15,000.",
+    },
+    ("mext", "multiple_amounts"): {
+        "resolution": "Three per-category monthly scholarship amounts "
+                      "(¥117,000, ¥143,000–145,000 and ¥242,000 per month) "
+                      "in a table whose category column headings are lost "
+                      "in the extracted text, so no amount can be tied to "
+                      "a category from the stored text alone. The page "
+                      "states amounts, but there is no single 'MEXT "
+                      "stipend in yen' to quote — golden o02 (monthly "
+                      "stipend for the MEXT scholarship in yen) still "
+                      "correctly abstains.",
+        "evidence": "Â¥143,000ï½145,000 per month Â¥117,000 per month "
+                    "ï¿¥242,000 per month (amounts in a table whose category "
+                    "headings are lost in the extracted text; the yen sign "
+                    "is mojibake in the stored file).",
     },
 }
 
@@ -189,7 +310,11 @@ def check(chunks: list[dict], sources: list[dict]) -> dict:
         amounts: dict[str, dict] = {}
         for chunk in doc_chunks:
             for sent in segment_sentences(chunk["text"]):
-                for currency, value in MONEY_RE.findall(sent):
+                for currency, value, detached in MONEY_RE.findall(sent):
+                    # Two alternatives: a currency-prefixed amount, or
+                    # a detached "($) 35,550" amount (currency "$").
+                    if detached:
+                        currency, value = "$", detached
                     key = f"{currency}{value}"
                     amounts.setdefault(key, {"sentence": sent, "chunk_id": chunk["chunk_id"]})
         if len(amounts) >= 2:

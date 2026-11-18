@@ -90,10 +90,16 @@ def test_missing_fields_matrix():
     report = _report()
     missing = report["missing_fields"]
     assert missing["chevening"] == ["deadline", "stipend", "citizenship_rule"]
-    assert missing["sweden-si"] == ["stipend"]
+    # Phase 2, Step 7: Sweden SI no longer appears at all — the
+    # £/SEK fix finds its SEK 12,000/month allowance, so it states
+    # a stipend, and it already stated a deadline.
+    assert "sweden-si" not in missing
     assert missing["vanier"] == ["deadline"]
     assert "deadline" in missing["erasmus-mundus"]
-    assert "stipend" in missing["mext"]
+    # Phase 2, Step 7: MEXT states yen amounts (¥117,000–¥242,000
+    # per month, per category), so "stipend" is no longer missing —
+    # only the deadline and the (unauthored) citizenship rule are.
+    assert missing["mext"] == ["deadline", "citizenship_rule"]
     assert "degree_levels" in missing["fulbright"]
     assert "degree_levels" in missing["daad"]
     # Phase 2, Step 6: the 9 new documents. Two systematic reasons,
@@ -101,20 +107,23 @@ def test_missing_fields_matrix():
     # for the new docs yet, so "degree_levels" and "citizenship_rule"
     # are flagged for all nine by construction — several pages do
     # state them (e.g. si-pioneering-women lists its 10 eligible
-    # countries); (b) the checker's MONEY_RE matches €/$ only, not
-    # £/SEK, so "stipend" is flagged even where the page states an
-    # amount in pounds or kronor (Gates £23,152, Rhodes £21,060,
-    # Commonwealth £1,712, SI Pioneering SEK 12,000). See
-    # tests/test_corpus_growth.py::test_stipend_flag_is_a_currency_gap.
+    # countries); (b) before Step 7 the checker's MONEY_RE matched
+    # €/$ only, not £/SEK, so "stipend" was flagged even where the
+    # page stated an amount in pounds or kronor. Step 7 fixed (b):
+    # Rhodes, Commonwealth Shared, RTP and SI Pioneering no longer
+    # flag "stipend" (see
+    # tests/test_reverification.py::test_checker_matches_pound_sek_yen_and_detached_dollar).
+    # Gates was never flagged — before Step 7 because its "US$210m"
+    # donation matched, now also because its £23,152 stipend does.
     assert missing["gates-cambridge"] == ["deadline", "degree_levels", "citizenship_rule"]
-    assert missing["rhodes"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    assert missing["rhodes"] == ["deadline", "degree_levels", "citizenship_rule"]
     assert missing["knight-hennessy"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
     assert missing["schwarzman"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
-    assert missing["commonwealth-shared"] == ["stipend", "degree_levels", "citizenship_rule"]
-    assert missing["rtp"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    assert missing["commonwealth-shared"] == ["degree_levels", "citizenship_rule"]
+    assert missing["rtp"] == ["deadline", "degree_levels", "citizenship_rule"]
     assert missing["marshall"] == ["stipend", "degree_levels", "citizenship_rule"]
     assert missing["erasmus-mundus-org"] == ["deadline", "degree_levels", "citizenship_rule"]
-    assert missing["si-pioneering-women"] == ["stipend", "degree_levels", "citizenship_rule"]
+    assert missing["si-pioneering-women"] == ["degree_levels", "citizenship_rule"]
 
 
 def test_erasmus_org_two_amounts_are_different_fields():
@@ -132,6 +141,12 @@ def test_erasmus_org_two_amounts_are_different_fields():
 def test_report_files_are_written_and_valid():
     results = Path("benchmarks/results")
     data = json.loads((results / "data_quality.json").read_text())
-    assert len(data["findings"]) == 72  # Phase 2, Step 6: 36 + 36 new
+    # Phase 2, Step 7: 72 -> 73 findings (16 resolved, 57 open).
+    # Six false "missing stipend" flags are gone (Rhodes, Commonwealth
+    # Shared, RTP, SI Pioneering, Sweden SI, MEXT now match £/SEK/¥
+    # or detached "($)"), and seven new multiple-amounts findings
+    # appear, all resolved with their field named.
+    assert len(data["findings"]) == 73
+    assert sum(1 for f in data["findings"] if f["status"] == "resolved") == 16
     assert data["missing_fields"]["chevening"] == ["deadline", "stipend", "citizenship_rule"]
     assert (results / "data_quality.md").read_text().startswith("# Data quality report")

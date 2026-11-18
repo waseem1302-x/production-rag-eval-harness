@@ -188,24 +188,35 @@ def test_new_out_of_corpus_questions_abstain_with_reasons(retriever):
 
 # --- data-quality checker limitation ---------------------------------------
 
-def test_stipend_flag_is_a_currency_gap():
-    """The checker flags Rhodes, Commonwealth Shared and SI
-    Pioneering 'missing stipend' even though all three pages state
-    an amount — its MONEY_RE matches €/$ only, not £/SEK. Gates
-    Cambridge is the same gap in the other direction: it is NOT
-    flagged, because the page's "US$210m" founding donation
-    matches the pattern, while its real stipend (£23,152) is in
-    pounds. This test pins the limitation both ways so a future
-    checker fix (adding £/SEK/¥) shows up here as a changed count.
+def test_stipend_flag_currency_gap_is_fixed():
+    """Phase 2, Step 7: the Step 6 limitation is FIXED, not just
+    pinned. The checker used to flag Rhodes, Commonwealth Shared
+    and SI Pioneering 'missing stipend' even though all three pages
+    state an amount — its MONEY_RE matched €/$ only, not £/SEK —
+    and Gates Cambridge was the same gap in the other direction:
+    NOT flagged, because the page's "US$210m" founding donation
+    matched the pattern, while its real stipend (£23,152) is in
+    pounds. RTP was flagged although it states the rates as
+    "($) 35,550" (sign detached from digits), and Sweden SI and
+    MEXT were flagged although they state SEK 12,000/month and
+    ¥117,000–¥242,000/month. The pattern now matches £/SEK/¥ and
+    detached "($)", so none of the six is flagged — and Gates is
+    still not flagged, now also because its £23,152 stipend
+    matches. This test replaces the Step 6 pin of the limitation;
+    the history is in tests/test_reverification.py.
     """
     report = check(_chunks(), load_sources())
     missing = report["missing_fields"]
-    assert "stipend" in missing["rhodes"]
-    assert "stipend" in missing["commonwealth-shared"]
-    assert "stipend" in missing["si-pioneering-women"]
-    assert "stipend" not in missing["gates-cambridge"]
+    assert "stipend" not in missing.get("rhodes", [])
+    assert "stipend" not in missing.get("commonwealth-shared", [])
+    assert "stipend" not in missing.get("si-pioneering-women", [])
+    assert "stipend" not in missing.get("gates-cambridge", [])
+    assert "stipend" not in missing.get("rtp", [])
+    assert "stipend" not in missing.get("sweden-si", [])
+    assert "stipend" not in missing.get("mext", [])
     assert "£21,060" in (RAW_DIR / "rhodes.txt").read_text()
     assert "£1,712" in (RAW_DIR / "commonwealth-shared.txt").read_text()
     assert "SEK 12,000" in (RAW_DIR / "si-pioneering-women.txt").read_text()
     assert "£23,152" in (RAW_DIR / "gates-cambridge.txt").read_text()
     assert "US$210m" in (RAW_DIR / "gates-cambridge.txt").read_text()
+    assert "35,550" in (RAW_DIR / "rtp.txt").read_text()

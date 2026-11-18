@@ -205,6 +205,18 @@
       "resolution_evidence": null
     },
     {
+      "doc": "commonwealth-shared",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "Each scholarship provides: - Approved airfare from the Scholar's home country to the UK and return at the end of the award (the CSC will not reimburse the cost of fares for dependants, nor the cost of journeys made before the award is confirmed) \u2013 funded by the CSC. - Approved tuition fees: full fees are covered by agreement between the CSC and the UK university, and scholars are not liable to pay for any part of the tuition fee. - Stipend (living allowance) at the rate of \u00a31,712 per month, or \u00a32,000 per month for those at universities in the London metropolitan area (rates quoted at current levels) \u2013 paid and funded by the university. - Thesis grant towards the cost of preparing a thesis or dissertation, where applicable \u2013 paid by the university, funded by the CSC. - Study travel grant towards the cost of study-related travel within the UK or overseas \u2013 paid by the university, funded by the CSC. - Contribution towards the cost of a mandatory tuberculosis (TB) test, where required for a visa application (receipts must be supplied) \u2013 paid by the university, funded by the CSC. - If a Scholar has children and is widowed, divorced, or a single parent, child allowance of child allowance of \u00a3622 per month for the first child, and \u00a3154 per month for the second and third child under the age of 16, if their children are living with them at the same address in the UK.",
+      "chunk_id": "commonwealth-shared-7",
+      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+      "note": "Distinct amounts on one page: \u00a31,712 (commonwealth-shared-7); \u00a3154 (commonwealth-shared-7); \u00a32,000 (commonwealth-shared-7); \u00a3622 (commonwealth-shared-7).",
+      "resolution": "Different fields. \u00a31,712 per month (\u00a32,000 in the London metropolitan area) is the stipend (living allowance); \u00a3622 / \u00a3154 per month are child allowances for a widowed, divorced or single-parent Scholar (first child / second and third child under 16). Quote the stipend with the London uplift, and the child allowances only as child allowances.",
+      "resolution_evidence": "Stipend (living allowance) at the rate of \u00a31,712 per month, or \u00a32,000 per month for those at universities in the London metropolitan area. Child allowance of \u00a3622 per month for the first child, and \u00a3154 per month for the second and third child under the age of 16."
+    },
+    {
       "doc": "eiffel",
       "kind": "multiple_amounts",
       "severity": "medium",
@@ -229,6 +241,18 @@
       "resolution_evidence": "Grant per project: up to \u20ac5 million. EU scholarship for individuals: \u20ac1,400 per month (max. 24 months)."
     },
     {
+      "doc": "gates-cambridge",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "The Gates Cambridge Scholarship programme was established in October 2000 by an historic donation of US$210m from the Gates Foundation to the University of Cambridge.",
+      "chunk_id": "gates-cambridge-0",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "note": "Distinct amounts on one page: US$210 (gates-cambridge-0); \u00a312,793 (gates-cambridge-1); \u00a318,244 (gates-cambridge-1); \u00a323,152 (gates-cambridge-0); \u00a34,000 (gates-cambridge-1); \u00a3750 (gates-cambridge-1).",
+      "resolution": "Different fields, plus a donation. \u00a323,152 is the maintenance allowance for a single student (2026-27 rate, 12 months); \u00a3750\u2013\u00a34,000 is discretionary academic development funding; \u00a312,793 / \u00a318,244 per annum is the Dependent Children Allowance (one child / two or more); US$210m is the Trust's founding donation from 2000, not a stipend. The checker counts 'a money amount appears', not 'a stipend is stated' \u2014 the donation is why Gates was never flagged missing even before the \u00a3 fix.",
+      "resolution_evidence": "a maintenance allowance for a single student (\u00a323,152 for 12 months at the 2026-27 rate). The Gates Cambridge Scholarship programme was established in October 2000 by an historic donation of US$210m from the Gates Foundation."
+    },
+    {
       "doc": "hkpfs",
       "kind": "multiple_amounts",
       "severity": "medium",
@@ -237,8 +261,68 @@
       "chunk_id": "hkpfs-0",
       "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
       "note": "Distinct amounts on one page: HK$14,400 (hkpfs-0); HK$344,400 (hkpfs-0); US$1,840 (hkpfs-0); US$44,150 (hkpfs-0).",
-      "resolution": "Not two stipends. HK$344,400 and approximately US$44,150 are the same 2026/27 annual stipend expressed in two currencies. Quote both figures with the year, and keep the 'approximately' on the US dollar figure.",
-      "resolution_evidence": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150)."
+      "resolution": "Two fields, each in two currencies \u2014 not two stipends. HK$344,400 and approximately US$44,150 are the same 2026/27 annual stipend expressed in two currencies; HK$14,400 (approximately US$1,840) is a separate conference and research-related travel allowance per year. Quote both figures with the year, and keep the 'approximately' on the US dollar figures. (Step 7 correction: the original resolution mentioned only the stipend; the travel allowance is a second field on the same page.)",
+      "resolution_evidence": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year."
+    },
+    {
+      "doc": "mext",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "Scholarship. \u00c2\u00a5143,000\u00ef\u00bd\u009e145,000 per month. \u00c2\u00a5117,000 per month \u00ef\u00bf\u00a5242,000 per month.",
+      "chunk_id": "mext-1",
+      "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
+      "note": "Distinct amounts on one page: \u00a5117,000 (mext-1); \u00a5143,000 (mext-1); \u00a5242,000 (mext-1).",
+      "resolution": "Three per-category monthly scholarship amounts (\u00a5117,000, \u00a5143,000\u2013145,000 and \u00a5242,000 per month) in a table whose category column headings are lost in the extracted text, so no amount can be tied to a category from the stored text alone. The page states amounts, but there is no single 'MEXT stipend in yen' to quote \u2014 golden o02 (monthly stipend for the MEXT scholarship in yen) still correctly abstains.",
+      "resolution_evidence": "\u00c2\u00a5143,000\u00ef\u00bd\u009e145,000 per month \u00c2\u00a5117,000 per month \u00ef\u00bf\u00a5242,000 per month (amounts in a table whose category headings are lost in the extracted text; the yen sign is mojibake in the stored file)."
+    },
+    {
+      "doc": "rhodes",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "For the 2026-27 academic year, the stipend is \u00a321,060 paid in monthly instalments of \u00a31,755, from which Scholars pay all living expenses, including accommodation.",
+      "chunk_id": "rhodes-0",
+      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+      "note": "Distinct amounts on one page: \u00a31,755 (rhodes-0); \u00a321,060 (rhodes-0); \u00a36,950 (rhodes-11).",
+      "resolution": "Not three stipends. \u00a321,060 is the annual stipend for 2026-27; \u00a31,755 is the same stipend paid in monthly instalments (\u00a321,060 / 12); \u00a36,950 is not a payment at all \u2014 it is 33% of the annual stipend, the threshold above which a secondary award must be declared to the Registrar.",
+      "resolution_evidence": "For the 2026-27 academic year, the stipend is \u00a321,060 paid in monthly instalments of \u00a31,755. If the value of such an award is more than 33% of the annual stipend, i.e. \u00a36,950 pa, then you would need to declare the award."
+    },
+    {
+      "doc": "rtp",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "RTP stipend rates: Year 2027, Full-time base RTP stipend rate ($) 35,550, Full-time max RTP stipend rate ($) 55,537.",
+      "chunk_id": "rtp-2",
+      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+      "note": "Distinct amounts on one page: $33,511 (rtp-2); $34,315 (rtp-2); $35,550 (rtp-2); $52,352 (rtp-2); $53,608 (rtp-2); $55,537 (rtp-2).",
+      "resolution": "One table, six rates: a base and a maximum rate for each year. Full-time base RTP stipend rate ($) 35,550 (2027), 34,315 (2026), 33,511 (2025); maximum 55,537 (2027), 53,608 (2026), 52,352 (2025). The rates are indexed each 1 January and the next year's are announced by 1 October. Golden q29 quotes the 2026 base rate, $34,315 \u2014 quote any rate with its year and base/maximum label.",
+      "resolution_evidence": "Full-time base RTP stipend rate ($) 35,550 (2027). Full-time base RTP stipend rate ($) 34,315 (2026). The RTP base and maximum stipend rates are indexed each year, effective from 1 January."
+    },
+    {
+      "doc": "si-pioneering-women",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "The fee is paid directly by SI to your Swedish university each semester. - A monthly allowance of SEK 12,000 to cover your living expenses throughout the study period. - A travel grant of SEK 15,000.",
+      "chunk_id": "si-pioneering-women-1",
+      "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
+      "note": "Distinct amounts on one page: SEK12,000 (si-pioneering-women-1); SEK15,000 (si-pioneering-women-1).",
+      "resolution": "Different fields. SEK 12,000 per month is the monthly living allowance; SEK 15,000 is a one-time travel grant, not a monthly payment. Golden q32 quotes the SEK 12,000 allowance.",
+      "resolution_evidence": "A monthly allowance of SEK 12,000 to cover your living expenses throughout the study period. A travel grant of SEK 15,000."
+    },
+    {
+      "doc": "sweden-si",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "A monthly allowance of SEK 12,000 to cover your living expenses throughout the study period.",
+      "chunk_id": "sweden-si-1",
+      "source_url": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+      "note": "Distinct amounts on one page: SEK12,000 (sweden-si-1); SEK15,000 (sweden-si-1).",
+      "resolution": "Different fields. SEK 12,000 per month is the monthly living allowance; SEK 15,000 is a one-time travel grant (SEK 10,000 for scholars from Armenia, Azerbaijan, Belarus, Georgia, Moldova and Ukraine), not a monthly payment. Both are stated on the page, which is why the checker no longer flags Sweden SI as missing a stipend after the Step 7 \u00a3/SEK fix.",
+      "resolution_evidence": "A monthly allowance of SEK 12,000 to cover your living expenses throughout the study period. A travel grant of SEK 15,000."
     },
     {
       "doc": "chevening",
@@ -273,18 +357,6 @@
       "chunk_id": "chevening-0",
       "source_url": "https://www.chevening.org/scholarships/",
       "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "commonwealth-shared",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "commonwealth-shared-0",
-      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
-      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     },
@@ -644,18 +716,6 @@
       "sentence": "",
       "chunk_id": "mext-0",
       "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
-      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "mext",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "mext-0",
-      "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
       "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
@@ -669,18 +729,6 @@
       "chunk_id": "rhodes-0",
       "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
       "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "rhodes",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "rhodes-0",
-      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
-      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     },
@@ -717,18 +765,6 @@
       "chunk_id": "rtp-0",
       "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
       "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "rtp",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "rtp-0",
-      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
-      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     },
@@ -812,18 +848,6 @@
       "sentence": "",
       "chunk_id": "si-pioneering-women-0",
       "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
-      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "si-pioneering-women",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "si-pioneering-women-0",
-      "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
       "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
@@ -837,18 +861,6 @@
       "chunk_id": "si-pioneering-women-0",
       "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
       "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "sweden-si",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "sweden-si-0",
-      "source_url": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
-      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     },
@@ -872,7 +884,6 @@
       "citizenship_rule"
     ],
     "commonwealth-shared": [
-      "stipend",
       "degree_levels",
       "citizenship_rule"
     ],
@@ -924,18 +935,15 @@
     ],
     "mext": [
       "deadline",
-      "stipend",
       "citizenship_rule"
     ],
     "rhodes": [
       "deadline",
-      "stipend",
       "degree_levels",
       "citizenship_rule"
     ],
     "rtp": [
       "deadline",
-      "stipend",
       "degree_levels",
       "citizenship_rule"
     ],
@@ -946,12 +954,8 @@
       "citizenship_rule"
     ],
     "si-pioneering-women": [
-      "stipend",
       "degree_levels",
       "citizenship_rule"
-    ],
-    "sweden-si": [
-      "stipend"
     ],
     "vanier": [
       "deadline"

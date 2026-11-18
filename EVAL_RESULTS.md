@@ -1,8 +1,160 @@
-# Eval Results — Phase 2, Step 6
+# Eval Results — Phase 2, Step 7
 
 All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
+
+## Phase 2, Step 7 — re-verify stale pages, fix the checker currency gap
+
+Commands: `python -m scripts.check_data_quality` (writes
+`benchmarks/results/data_quality.json` + `.md`),
+`python -m scripts.build_index` (rebuilt index),
+`python -m scripts.run_eval` (writes
+`benchmarks/results/extractive_eval.json`) and
+`python -m scripts.ci_gate`. Before-run first: the pre-step eval
+saved as `benchmarks/results/extractive_eval_before_reverification.json`
+and the pre-step data-quality report saved as
+`benchmarks/results/data_quality_before_reverification.json`, so
+the before/after below is two generated files, not hand-typed
+numbers. Per-page record:
+`benchmarks/results/reverification_2026-11-18.json`; per-source
+date: `reverified_at` in `data/sources.json`.
+
+### Re-verification: all 19 pages live, 18 unchanged, 1 sidebar teaser
+
+Every source URL was re-fetched 18 Nov 2026 — direct HTTP with
+the repo's own extractor for all 19, plus a browser text fetch
+for the 11 pages originally saved that way and for RTP, whose
+direct fetch timed out. Seven pages are byte-identical to the
+stored text (Sweden SI, Fulbright, Erasmus Mundus student page,
+Vanier, Manaaki, HKPFS, MEXT). The other twelve differ only by
+extraction method (line-wrapping, punctuation spacing, nav
+duplication, table flattening, a duplicated FAQ section) or, for
+Eiffel, in one sidebar recommended-article teaser — **no
+scholarship fact changed on any page**, so no `data/raw/*.txt`
+or `*.json` was rewritten. The one real change: Eiffel's
+"Recommended items" teaser "MOPGA Research Themes" →
+"Co-financing of 12- to 24-month postdoctoral research contracts";
+its €1,200 / €2,000 amounts and October 2022 / December 2025
+markers are unchanged. The stale markers stand as recorded:
+Erasmus Mundus "Last updated: 26 June 2025", Eiffel "Mise à jour.
+October 2022". One marker is newly observed, not a verified
+change: the Erasmus Mundus organisations page footer, visible
+only in the direct-HTTP extraction, reads "Last updated:
+15 April 2026" — the 18 Nov fetch also lacked that footer, so it
+may have been there all along.
+
+| # | Scholarship | Status | Changed? | Re-verified |
+|---|---|---|---|---|
+| 1 | Chevening (UK) | live | Unchanged — no deadline, no stipend figure | 2026-11-18 |
+| 2 | Sweden SI Global Professionals | live | Unchanged — byte-identical | 2026-11-18 |
+| 3 | Fulbright Foreign Student Program (USA) | live | Unchanged — byte-identical | 2026-11-18 |
+| 4 | DAAD (Germany) | live | Unchanged — 147 options | 2026-11-18 |
+| 5 | Erasmus Mundus Joint Masters | live | Unchanged — byte-identical; marker 26 June 2025 | 2026-11-18 |
+| 6 | France Excellence Eiffel | live | Sidebar teaser only (see above) | 2026-11-18 |
+| 7 | Vanier Canada Graduate Scholarships | live | Unchanged — byte-identical; still closed | 2026-11-18 |
+| 8 | Manaaki New Zealand Scholarships | live | Unchanged — byte-identical | 2026-11-18 |
+| 9 | Hong Kong PhD Fellowship Scheme (HKPFS) | live | Unchanged — byte-identical | 2026-11-18 |
+| 10 | MEXT (Japan) | live | Unchanged — byte-identical | 2026-11-18 |
+| 11 | Gates Cambridge | live | Unchanged — around 70/year, £23,152 | 2026-11-18 |
+| 12 | Rhodes Scholarship (FAQs) | live | Unchanged — £21,060 for 2026-27 | 2026-11-18 |
+| 13 | Knight-Hennessy Scholars — Funding (Stanford) | live | Unchanged — up to three years | 2026-11-18 |
+| 14 | Schwarzman Scholars (FAQs) | live | Unchanged — not yet 29 on 1 Aug | 2026-11-18 |
+| 15 | Commonwealth Shared Scholarships | live | Unchanged — closing 8 December 2026, £1,712/month | 2026-11-18 |
+| 16 | Research Training Program (RTP, Australia) | live | Unchanged — 2027 base $35,550, 2026 base $34,315 | 2026-11-18 |
+| 17 | Marshall Scholarship | live | Unchanged — up to 50/year, closing 29 September 2026 | 2026-11-18 |
+| 18 | Erasmus Mundus Joint Masters (organisations page) | live | Unchanged — €1,400/month; footer marker 15 April 2026 newly observed | 2026-11-18 |
+| 19 | SI Scholarship Pioneering Women in STEM | live | Unchanged — SEK 12,000/month; 8–24 Feb 2027 | 2026-11-18 |
+
+### No golden question changed — and the eval proves it
+
+No expected answer changed, because no page fact changed (every
+golden expected answer was checked against its re-fetched page).
+No question was dropped. The rebuilt index is byte-identical to
+the pre-step one (101 chunks, same per-document counts), and the
+re-run eval file is **byte-identical** to the before-run file —
+not just the same headline numbers, the same per-question rows.
+
+| Metric | Before (Step 6, 19 docs, 101 chunks, 50 q) | After (Step 7) | Change |
+|---|---|---|---|
+| n_in_corpus / n_out_of_corpus | 43 / 7 | 43 / 7 | none |
+| n_eligibility | 11 | 11 | none |
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 | none |
+| answer_relevance_proxy | 1.0 | 1.0 | none |
+| answer_only_relevance | 0.907 (39/43) | 0.907 (39/43) | none — same 4 misses (q03, q10, q17, q32) |
+| faithfulness | 1.0 | 1.0 | none |
+| abstention_accuracy | 1.0 (7/7) | 1.0 (7/7) | none |
+| eligibility_accuracy | 1.0 (11/11) | 1.0 (11/11) | none |
+
+### Checker currency gap: fixed, with the count to prove it
+
+`MONEY_RE` in `scripts/check_data_quality.py` matched €/$ only.
+It now matches £, SEK and ¥ as well, plus detached "($) 35,550"
+table rates, and a value group that ends on a digit ("£4,000,"
+in running text records as £4,000). Measured by re-running the
+checker on the same corpus:
+
+| Checker output | Before (Step 6) | After (Step 7) | Change |
+|---|---|---|---|
+| Findings (resolved / open) | 72 (9 / 63) | 73 (16 / 57) | +1 total, +7 resolved, −6 open |
+| `missing_field` findings | 52 | 46 | −6 false "missing stipend" flags |
+| Pages flagged "stipend missing" | 14 of 19 | **8 of 19** | Rhodes, Commonwealth Shared, SI Pioneering, Sweden SI, MEXT, RTP no longer flagged |
+| Pages flagged "deadline missing" | 15 of 19 | 15 of 19 | none — no page gained a deadline |
+| `multiple_amounts` findings (resolved) | 3 | 10 | +7, each resolved with its field named |
+| Documents with any missing field | 19 | 18 | Sweden SI now has none |
+
+The six pages the checker used to mis-flag: Rhodes (£21,060),
+Commonwealth Shared (£1,712/month), SI Pioneering Women
+(SEK 12,000/month), Sweden SI (SEK 12,000/month + SEK 15,000
+travel grant), MEXT (¥117,000 / ¥143,000–145,000 / ¥242,000 per
+month, per category) and RTP ($35,550 base for 2027). The seven
+new `multiple_amounts` resolutions name the field for each amount:
+Gates (£23,152 maintenance vs £750–£4,000 development funding vs
+£12,793/£18,244 child allowance vs the US$210m donation),
+Rhodes (£21,060/year = £1,755/month; £6,950 is the 33% secondary-
+award declaration threshold, not a payment), Commonwealth
+(£1,712/£2,000 stipend vs £622/£154 child allowances), RTP (base
+vs maximum per year), Sweden SI and SI Pioneering (SEK 12,000
+monthly allowance vs SEK 15,000 one-time travel grant), MEXT
+(three per-category amounts whose category headings are lost in
+extraction — no single quotable MEXT stipend, so o02 still
+abstains). The HKPFS resolution was corrected in the same step:
+the page carries a travel allowance (HK$14,400, ~US$1,840) as
+well as the stipend, not only one figure in two currencies.
+
+**Remaining gaps (named, not hidden):** the pattern still only
+proves a money amount *appears* — Gates's "US$210m" donation
+still matches, documented in its resolution rather than
+distinguished by the pattern. MEXT's ¥ amounts cannot be tied to
+a category from the stored text. Amounts with no currency sign
+or code at all (a bare number under a "$" table header, a "kr"
+amount with no SEK prefix) would still be missed; none is in
+this corpus.
+
+### What Step 7 changed (read honestly)
+
+- **The re-verification found almost nothing — and that is the
+  result.** A launch claim needs the pages checked, not assumed
+  fresh. Seven pages are byte-identical after a day, eleven more
+  are unchanged once extraction noise is discounted, and the
+  twelfth differs in a sidebar teaser. The eval did not move by a
+  single row, which is what a no-change re-fetch should produce —
+  and the byte-identical eval files are the evidence, not the
+  claim.
+- **The checker fix is the real change, and it changed the
+  documentation, not the answers.** The corpus always stated
+  those six stipends; the checker could not see them. No golden
+  answer changed, because the answers were already right — the
+  system quoted £21,060 and SEK 12,000 from the text while the
+  checker claimed the pages stated no stipend. The fix aligns the
+  checker with the corpus; the "14 of 19" count in the Step 6
+  documentation was the checker's count, not the truth, and it is
+  corrected to 8 of 19 wherever it appeared.
+- **Generative eval not re-run in this step.**
+  `benchmarks/results/generative_eval.json` still holds the Step 2
+  run on the 38-question set. Step 7 is extractive-path and
+  checker-only; no `.txt` changed, so no generative answer could
+  change either.
 
 ## Phase 2, Step 6 — corpus growth: 10 → 19 documents, 31 → 101 chunks
 
@@ -113,7 +265,9 @@ Awards deadline — the scholarship is not in the corpus) and o07
   founding donation matches while its real stipend (£23,152) is in
   pounds. It also flags RTP missing although the page states the
   rates as "($) 35,550" (sign detached from digits). Pinned by
-  `tests/test_corpus_growth.py::test_stipend_flag_is_a_currency_gap`.
+  `tests/test_corpus_growth.py::test_stipend_flag_is_a_currency_gap`
+  (renamed in Step 7 to `test_stipend_flag_currency_gap_is_fixed`
+  when the gap was fixed).
   Findings went 36 → 72 (9 resolved, 63 open), including the
   resolved EMJM two-amounts finding (€5 million per project vs
   €1,400/month per individual — different fields).
@@ -570,7 +724,21 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**174 passed, 0 failed** (18 Nov 2026, 957.51 s). Step 5's 158 plus
+**179 passed, 0 failed** (18 Nov 2026, 958.09 s). Step 6's 174 plus
+5 new Step 7 re-verification tests in `tests/test_reverification.py`:
+every source records a `reverified_at` date and the per-page record
+covers all 19 pages, all live, with Eiffel the only change (sidebar
+teaser); the checker matches £/SEK/¥ and detached "($)" amounts and
+no longer flags Rhodes / Commonwealth / SI Pioneering / Sweden SI /
+MEXT / RTP as missing a stipend; the seven new two-amounts findings
+are resolved with their field named (and the HKPFS resolution now
+also names the travel allowance); the re-run eval is identical to
+the saved before-run file question by question; and no secret
+pattern appears in the stored text. Step 6's stipend-gap pin
+(`test_stipend_flag_is_a_currency_gap`) was rewritten as
+`test_stipend_flag_currency_gap_is_fixed`, and the data-quality
+missing-fields matrix and report-count tests were updated to the
+new measured counts (73 findings, 16 resolved). Step 5's 158 plus
 9 new Step 6 corpus-growth tests in `tests/test_corpus_growth.py`:
 19 documents, 101 chunks, per-document chunk counts, the 9 new
 sources in `data/sources.json`, the golden set at 50 questions
@@ -622,7 +790,8 @@ Coverage by area:
 | `test_data_quality.py` | messy data | All known findings, no false positives, report files valid |
 | `test_ablation.py` | retrieval modes | `bm25` / `dense` / `hybrid` modes, invalid mode, config coverage |
 | `test_chunk_ablation.py` | chunk-size ablation | 13 tests: chunks within budget + overlap preserved at 256/512/1,024 tokens, index builder accepts a chunk-size parameter (256 → 212 chunks / 212 vectors, invalid size rejected), eval runs against a non-default chunk size without crashing |
-| `test_corpus_growth.py` | corpus growth | 9 tests: 19 documents / 101 chunks, per-document chunk counts, new sources in `data/sources.json`, golden set 50 questions, o06/o07 abstaining with reasons, stipend flag as a currency gap |
+| `test_corpus_growth.py` | corpus growth | 9 tests: 19 documents / 101 chunks, per-document chunk counts, new sources in `data/sources.json`, golden set 50 questions, o06/o07 abstaining with reasons, stipend flag currency gap **fixed in Step 7** (was pinned as a limitation in Step 6) |
+| `test_reverification.py` | re-verification (Step 7) | 5 tests: `reverified_at` per source + 19-page record, £/SEK/¥ and detached "($)" matching, seven new two-amounts resolutions, eval identical to the before-run file, no secret pattern in stored text |
 | `test_before_after.py` | report integrity | Generated report matches the measured results files |
 | `test_generative.py` | generative + verification + judge | 25 tests, fake model only (see above) |
 | `test_dense_verification.py` | dense scoring + answer verification | 22 tests, real embedder for scoring, fake model for the generative o04 test (see above) |
@@ -631,8 +800,10 @@ Coverage by area:
 
 Command: `python -m scripts.check_data_quality`
 
-**72 findings (9 resolved, 63 open)**, each citing sentence + chunk
-+ source URL. Full report: `benchmarks/results/data_quality.json`,
+**73 findings (16 resolved, 57 open)** after the Phase 2, Step 7
+re-verification and checker fix (was 72 / 9 / 63 in Step 6), each
+citing sentence + chunk + source URL. Full report:
+`benchmarks/results/data_quality.json`,
 `benchmarks/results/data_quality.md`. Curated documentation:
 `DATA_QUALITY.md`.
 
@@ -643,16 +814,21 @@ for it (Phase 2, Step 4); Eiffel €1,200 is the Master's allowance and
 organisations page's €5 million (max grant per project) and
 €1,400/month (scholarship per individual) are different fields, not
 a contradiction (resolved in Step 6); HKPFS HK$344,400 ≈ US$44,150
-is one 2026/27 stipend in two currencies; DAAD is a 147-option
-database, not one award; 15 of 19 pages state no deadline and 14 of
-19 state no stipend by the checker's rules — with the known checker
-gaps (its money pattern matches €/$ only, so Rhodes £21,060,
-Commonwealth £1,712/month and SI Pioneering SEK 12,000/month are
-flagged missing although stated, Gates is not flagged although its
-stipend is in £ because its "US$210m" donation matches, and RTP's
-"($) 35,550" does not match because the sign is detached from the
-digits); no eligibility rules are authored for the 9 new documents
-yet.
+is one 2026/27 stipend in two currencies, plus a HK$14,400 travel
+allowance (resolution corrected in Step 7); DAAD is a 147-option
+database, not one award; 15 of 19 pages state no deadline and
+**8 of 19 state no stipend by the checker's rules** (was 14 of 19
+before the Step 7 fix — the checker now matches £, SEK, ¥ and
+detached "($)" rates, so Rhodes £21,060, Commonwealth £1,712/month,
+SI Pioneering SEK 12,000/month, Sweden SI SEK 12,000/month, MEXT
+¥117,000–¥242,000/month and RTP $35,550 are no longer falsely
+flagged; Gates is now matched on its real £23,152 stipend as well
+as its "US$210m" donation); no eligibility rules are authored for
+the 9 new documents yet. All 19 pages were re-fetched and
+re-verified 18 Nov 2026 (Step 7): all live, 18 substantively
+unchanged, Eiffel changed only in a sidebar teaser — full table in
+`DATA_QUALITY.md` §11 and
+`benchmarks/results/reverification_2026-11-18.json`.
 
 ## Retrieval audit
 
@@ -683,7 +859,7 @@ Command: `python -m scripts.ci_gate`
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured (Phase 2, Step 6): 1.0, 0.907, 1.0, 1.0, 1.0 — **gate passes**.
+Measured (Phase 2, Step 7, re-run after re-verification): 1.0, 0.907, 1.0, 1.0, 1.0 — **gate passes** (identical to Step 6: no `.txt` changed, so no metric could move).
 Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly
 fails on answer-only relevance (0.907), proving the gate can fail.
 Workflow: `.github/workflows/eval.yml`
@@ -703,7 +879,7 @@ python -m benchmarks.before_after   # before/after report + failure tables
 python -m scripts.check_data_quality # corpus mess report
 python -m scripts.ci_gate           # quality gate
 python -m scripts.run_chunk_ablation # chunk-size ablation, 256/512/1,024 tokens (~7 min)
-python -m pytest tests/ -q          # 158 tests
+python -m pytest tests/ -q          # 179 tests
 ```
 
 Note: the dense model (`all-MiniLM-L6-v2`, ~90 MB) downloads on
