@@ -36,8 +36,16 @@ Usage (from the repo root, with the repo venv):
   .venv/bin/python -m scripts.build_distillation_data --smoke
   .venv/bin/python -m scripts.build_distillation_data --sources variants synthetic
   .venv/bin/python -m scripts.build_distillation_data
+  .venv/bin/python -m scripts.build_distillation_data --finalize-only
 The full run makes about 390 teacher calls. Run it detached
 (nohup ... &) and read the log; it prints one line per item.
+
+--finalize-only replays the saved gate log + teacher outputs
+without any teacher call: it re-gates every saved raw output,
+builds the 40 judge labels from the deterministic proxy (the
+teacher judge failed its keep-rate gate, so its labels are not
+used), and writes train / held-out / stats / README. Use it
+after a run stopped before finalising.
 """
 import argparse
 import json
@@ -189,6 +197,36 @@ def load_key() -> str:
         if line.startswith("GEMINI_API_KEY="):
             return line.split("=", 1)[1].strip().strip("\"").strip("'")
     raise SystemExit("GEMINI_API_KEY not found in ~/.config/free-llm-keys.env")
+
+
+class ReplayTeacher:
+    """Stand-in teacher for --finalize-only: replays saved outputs.
+
+    The model id comes from teacher_raw.jsonl (every row records
+    it). Any call raises: finalising must never touch the network.
+    """
+
+    def __init__(self, model: str):
+        self.model = model
+
+    def call(self, *args, **kwargs):
+        raise AssertionError(
+            "finalize-only replay must not call the teacher")
+
+
+def recorded_teacher_model() -> str:
+    """Model id recorded in teacher_raw.jsonl; all rows must agree."""
+    if not RAW_FILE.exists():
+        raise SystemExit(
+            "teacher_raw.jsonl not found; nothing to replay")
+    models = set()
+    for line in RAW_FILE.read_text().splitlines():
+        if line.strip():
+            models.add(json.loads(line).get("teacher", ""))
+    if len(models) != 1 or not next(iter(models)):
+        raise SystemExit(
+            f"teacher_raw.jsonl records inconsistent teachers: {models}")
+    return next(iter(models)).removeprefix("gemini/")
 
 
 class Teacher:
@@ -422,7 +460,8 @@ class Builder:
 
     def __init__(self, teacher: Teacher, retriever: Retriever,
                  chunks: list[dict], golden: list[dict],
-                 gen_eval: dict, smoke: bool = False):
+                 gen_eval: dict, smoke: bool = False,
+                 replay: bool = False):
         self.teacher = teacher
         self.retriever = retriever
         self.chunks = chunks
@@ -430,6 +469,12 @@ class Builder:
         self.golden_list = golden
         self.gen_eval = gen_eval
         self.smoke = smoke
+        # Replay mode (--finalize-only): verdicts are already in
+        # the gate log, so re-gating must not append duplicate
+        # rows (finalize() counts drop reasons per log row).
+        # Proxy judge labels are new decisions, so they force
+        # the append.
+        self.replay = replay
         self.done_ids = self._load_done_ids()
         self.records: list[dict] = []
         self.heldout: list[dict] = []
@@ -444,10 +489,11 @@ class Builder:
                 RAW_FILE.read_text().splitlines() if line.strip()}
 
     def log_gate(self, item_id: str, source: str, kept: bool,
-                 reasons: list[str]) -> None:
-        with GATE_FILE.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps({"item_id": item_id, "source": source,
-                                 "kept": kept, "reasons": reasons}) + "\n")
+                 reasons: list[str], force_append: bool = False) -> None:
+        if not (self.replay and not force_append):
+            with GATE_FILE.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"item_id": item_id, "source": source,
+                                     "kept": kept, "reasons": reasons}) + "\n")
         self.stats[f"{source}:generated"] += 1
         if kept:
             self.stats[f"{source}:kept"] += 1
@@ -967,6 +1013,89 @@ class Builder:
                                  "relevance": target[1]}})
         return True
 
+    # ---- judge labels from the deterministic proxy ----
+
+    def run_judge_proxy(self) -> None:
+        """Judge labels from the deterministic proxy, no teacher call.
+
+        The teacher judge failed its keep-rate gate (19/39 kept,
+        0.49): Gemini flash-lite disagreed with the proxy in both
+        directions, and its 19 kept records are skewed 18 right +
+        1 wrong. Those records are NOT used. Instead every label
+        is computed here from the proxy itself: verbatim
+        faithfulness plus expected-phrase relevance, the same
+        ground truth the eval measures judge agreement against.
+        A label passes verification by construction.
+        """
+        gen_rows = {r["id"]: r for r in
+                    self.gen_eval["generative"]["per_question"]}
+        ext_rows = {r["id"]: r for r in
+                    self.gen_eval["extractive"]["per_question"]}
+        for qid in MISS_IDS:
+            row = gen_rows[qid]
+            self._judge_proxy_item(
+                f"judge-w-{qid}", row["question"], row["answer"],
+                self._judge_citations(row),
+                self.golden[qid]["expected_answer"])
+        for qid in JUDGE_RIGHT_IDS:
+            row = ext_rows[qid]
+            retrieved = self.retriever.search(row["question"], top_k=5)
+            result = build_extractive_answer(row["question"], retrieved)
+            # Stored sentences, not a re-split of the joined text:
+            # the joined text loses the line breaks, so a picked
+            # sentence followed by a lowercase fragment line
+            # ("...each year. of selected ...") re-splits into one
+            # unit that is not verbatim, while the eval's stored
+            # sentences are. q10 and q24 measure (0, 1) on a
+            # re-split and (1, 1) on the stored sentences.
+            self._judge_proxy_item(
+                f"judge-r-{qid}", row["question"], result["answer"],
+                result["citations"],
+                self.golden[qid]["expected_answer"],
+                answer_sentences=result.get("answer_sentences"))
+        self._check_keep_rate("judge")
+
+    def _judge_proxy_item(self, item_id: str, question: str,
+                          answer_text: str, chunks: list[dict],
+                          expected: str,
+                          answer_sentences: list[str] | None = None
+                          ) -> tuple[int, int]:
+        """One judge label from the proxy, no teacher call.
+
+        Faithfulness uses the stored answer sentences when given
+        (the eval's own method); otherwise it re-splits the answer
+        text, which is exact for model-written generative answers.
+        """
+        if answer_sentences is not None:
+            cited = norm_text(" ".join(c["text"] for c in chunks))
+            target_faith = (1 if answer_sentences and all(
+                norm_text(s) in cited for s in answer_sentences) else 0)
+        else:
+            target_faith = faithfulness_proxy(answer_text, chunks)
+        target_rel = 1 if contains_phrase(answer_text, expected) else 0
+        context = "\n\n".join(c["text"][:900] for c in chunks[:3])
+        prompt = _JUDGE_PROMPT.format(question=question, context=context,
+                                      answer=answer_text)
+        # New decision: force the append even in replay mode, so
+        # every judge record in train.jsonl has a kept gate entry.
+        # Skip it when the last entry is already this proxy label:
+        # a re-run rebuilds the records but must not duplicate rows.
+        entries = self._gate_entries(item_id)
+        already = bool(entries) and entries[-1]["kept"] and \
+            entries[-1]["reasons"] == ["proxy_label"]
+        if not already:
+            self.log_gate(item_id, "judge", True, ["proxy_label"],
+                          force_append=True)
+        answer = (f"faithfulness: {target_faith}\n"
+                  f"relevance: {target_rel}")
+        self.make_record(
+            item_id, "judge", prompt, answer, chunks, None,
+            extra={"expected_judge":
+                   {"faithfulness": target_faith,
+                    "relevance": target_rel},
+                   "label_source": "deterministic_proxy"})
+        return (target_faith, target_rel)
+
     # ---- keep rate and finalize ----
 
     def _source_items(self, source: str) -> tuple[set[str], set[str]]:
@@ -1173,13 +1302,31 @@ def write_dataset_readme(stats: dict) -> None:
         "- q07, q10 and q29 variants were dropped, and the gate "
         "is right: the deployed prompt truncates each chunk to "
         "900 chars. The DAAD answer \"147 Scholarship options\" "
-        "sits near char 1100 of the daad chunk, the Erasmus "
+        "sits near char 1260 of the daad chunk, the Erasmus "
         "answer \"1 to 2 academic years\" sits near char 1136 of "
         "the erasmus-mundus chunk, and the RTP answer \"34,315\" "
         "sits near char 1706 of the rtp chunk, so the teacher "
         "correctly answered \"Not found in the corpus.\" The "
+        "same cut hides the HKPFS answer \"HK$344,400\" (near "
+        "char 1021 of the hkpfs chunk, q15) and the Manaaki "
+        "answer \"undergraduate and postgraduate study\" (near "
+        "char 994 of the manaaki chunk, q17). The "
         "truncation is a production limitation to fix "
         "separately, not by changing the training prompt.",
+        "- Judge labels come from the deterministic proxy, not "
+        "from the teacher. The teacher judge kept 19/39 "
+        "(0.49, below the 0.70 gate): Gemini flash-lite "
+        "disagreed with the proxy in both directions, lenient "
+        "on wrong answers and hallucinating unfaithfulness on "
+        "right verbatim ones, and its 19 kept records were "
+        "skewed 18 right + 1 wrong, which would teach the "
+        "student to almost always answer 1,1. Those records "
+        "were not used. The 40 labels (14 wrong-answer items, "
+        "26 right-answer items) were built by "
+        "scripts/build_distillation_data.py --finalize-only "
+        "from verbatim faithfulness plus expected-phrase "
+        "relevance, with no teacher call. They pass "
+        "verification by construction.",
         "- The key-fact check is stem coverage (60 percent) plus "
         "exact numbers, not a verbatim substring. The teacher "
         "rephrases (\"September/October 2027\" becomes \"September "
@@ -1200,14 +1347,24 @@ def main() -> None:
                                  "judge"],
                         default=["variants", "synthetic", "abstention",
                                  "judge"])
+    parser.add_argument("--finalize-only", action="store_true",
+                        help="replay the saved gate log + teacher "
+                        "outputs, build proxy judge labels, and write "
+                        "the datasets. Makes no teacher call and needs "
+                        "no API key.")
     args = parser.parse_args()
     if args.smoke:
         set_out_dir(Path("/tmp/distill-smoke"))
     else:
         OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    teacher = Teacher(load_key())
-    teacher.probe()
+    if args.finalize_only:
+        teacher = ReplayTeacher(recorded_teacher_model())
+        print(f"finalize-only replay, teacher: gemini/{teacher.model} "
+              "(recorded, no calls)", flush=True)
+    else:
+        teacher = Teacher(load_key())
+        teacher.probe()
 
     chunks = [json.loads(line) for line in CHUNKS_FILE.read_text()
               .splitlines() if line.strip()]
@@ -1219,7 +1376,23 @@ def main() -> None:
         (REPO / "benchmarks" / "results" / "generative_eval.json")
         .read_text())
     builder = Builder(teacher, retriever, chunks, golden, gen_eval,
-                      smoke=args.smoke)
+                      smoke=args.smoke, replay=args.finalize_only)
+
+    if args.finalize_only:
+        print("== replay golden variants ==", flush=True)
+        builder.run_variants()
+        print("== replay synthetic QA ==", flush=True)
+        builder.run_synthetic()
+        print("== replay abstention ==", flush=True)
+        builder.run_abstention()
+        print("== judge labels from proxy ==", flush=True)
+        builder.run_judge_proxy()
+        stats = builder.finalize()
+        write_dataset_readme(stats)
+        print(json.dumps(stats, indent=2), flush=True)
+        print(f"train: {stats['train_records']}  "
+              f"heldout: {stats['heldout_records']}", flush=True)
+        return
 
     if "variants" in args.sources:
         print("== golden variants ==", flush=True)

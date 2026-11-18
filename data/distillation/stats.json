@@ -1,0 +1,60 @@
+{
+  "teacher": "gemini/gemini-3.5-flash-lite",
+  "teacher_date": "2026-11-18",
+  "teacher_calls": 435,
+  "teacher_prompt_tokens": 109687,
+  "teacher_completion_tokens": 23628,
+  "generated_kept_dropped": {
+    "golden-variant": {
+      "generated": 60,
+      "kept": 44,
+      "dropped": 16
+    },
+    "golden-variant-heldout": {
+      "generated": 10,
+      "kept": 4,
+      "dropped": 6
+    },
+    "synthetic-qa": {
+      "generated": 250,
+      "kept": 188,
+      "dropped": 62
+    },
+    "abstention": {
+      "generated": 40,
+      "kept": 38,
+      "dropped": 2
+    },
+    "judge": {
+      "generated": 40,
+      "kept": 40,
+      "dropped": 0
+    }
+  },
+  "drop_reasons": {
+    "golden-variant:missing_expected_phrase": 14,
+    "golden-variant:verification_dropped": 22,
+    "golden-variant-heldout:verification_dropped": 12,
+    "synthetic-qa:verification_dropped": 34,
+    "synthetic-qa:new_number": 11,
+    "synthetic-qa:key_fact_not_in_answer": 10,
+    "synthetic-qa:key_fact_not_in_sentence": 3,
+    "synthetic-qa:golden_verbatim": 1,
+    "synthetic-qa:unparseable": 1,
+    "synthetic-qa:too_close_to_golden": 2,
+    "abstention:phrase_in_corpus": 2,
+    "judge:disagrees_with_proxy": 41
+  },
+  "train_records": 273,
+  "train_by_source": {
+    "golden-variant": 44,
+    "synthetic-qa": 151,
+    "abstention": 38,
+    "judge": 40
+  },
+  "heldout_records": 41,
+  "heldout_by_source": {
+    "golden-variant-heldout": 4,
+    "synthetic-qa": 37
+  }
+}
