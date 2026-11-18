@@ -48,7 +48,7 @@ Final state after the Phase 2 improvement (bullet-list splitting + IDF sentence 
 | Eligibility accuracy | 1.0 (29/29) |
 | Tests | 207 passed, 0 failed |
 | Cost per query | $0.00 (local CPU, no API calls) |
-| Data-quality findings | 58 (16 resolved, 42 open) |
+| Data-quality findings | 56 (16 resolved, 40 open) |
 | CI gate | Pass (1.0, 0.967, 1.0, 1.0, 1.0) |
 
 ## Tech stack
@@ -188,6 +188,7 @@ Each step is one branch, merged with `--no-ff`, measured on the golden set befor
 - **Phase 2 improvement, bullet-list splitting.** `segment_sentences` now splits dash-led bullet items into their own sentences (after terminal punctuation or a colon intro). Measured on the 50-question golden set: answer-only 0.907 (39/43) to 0.930 (40/43), q03 fixed, zero other regressions, faithfulness still 1.0. q32 still misses: the SEK 12,000 sentence is pickable now but still loses on lexical score to the page intro. Side effect, recorded not hidden: dense-only abstention 1.0 to 0.857 (o06 answered in dense-only mode only; the shipped improved-hybrid still abstains 1.0).
 - **Phase 2 improvement, IDF sentence scoring.** Shared stems in `_pick_sentences` now count by inverse document frequency over the candidate sentences instead of 1 each, so rare content stems ("monthly", "allowance") outweigh stopwords and doc-name stems ("the", "pioneering", "women", "stem"). Measured on the 50-question golden set: answer-only 0.930 (40/43) to 0.953 (41/43), q32 fixed, zero regressions. Sixteen answers changed text (different sentences picked) and all stayed correct. Only q10 and q17 remain open, both paraphrase gaps: their correct sentences share almost nothing with the question, so no weighting can surface them. Side effect, recorded not hidden: in the ablation, the BM25-only config's abstention fell 1.0 to 0.857 (o06 answered there, as in dense-only); the shipped improved-hybrid still abstains 1.0 (7/7).
 - **Phase 2 improvement, eligibility rules for the 9 Step 6 documents.** Rules authored only where the corpus states one with a verbatim evidence sentence: Gates Cambridge (postgraduate, outside the UK), Rhodes (postgraduate only), Knight-Hennessy (graduate degrees), Commonwealth Shared (Master's only, 43-country list), RTP (research masters/doctorate, domestic and overseas), Marshall (graduate level, US citizens only), Erasmus Mundus organisations page (master level, worldwide), SI Pioneering Women (master's, 10-country list). Schwarzman states no level and no citizenship rule, so its verdict stays unknown by design. 18 new golden eligibility questions (e12-e29) added. Measured before/after: eligibility accuracy 0.379 (11/29) to 1.0 (29/29), answer-only 0.689 (42/61) to 0.967 (59/61), recall 0.984 to 1.0. Known limits, documented in the rules: the checker models degree level and citizenship only, so a male applicant from a listed country would be reported eligible for SI Pioneering Women (gender is not modelled), and Rhodes' exceptional second-BA path is not modelled (standard postgraduate-only position). Data-quality findings fell 73 to 58 as the 14 missing-field flags for the ruled docs disappeared.
+- **Phase 2 improvement, data-quality checker gaps.** Two false "missing deadline" flags fixed in `scripts/check_data_quality.py`: `DATE_RE` now matches US-format dates ("May 20"), so Schwarzman's China-track deadline is found; and closed programmes skip the deadline check (via validated `load_closures()`), so Vanier no longer gets a missing-deadline flag. Measured by re-running the checker: findings 58 (16 resolved, 42 open) to 56 (16 resolved, 40 open). Everything else open was verified true, not fixed: the 8 stipend-missing pages state no amount, the hedges and year-tied figures are real, the stale markers are the pages' own dates, and Rhodes states worded windows but no exact date.
 
 ## Quickstart (local)
 
@@ -438,7 +439,7 @@ No regressions in the improved pipeline: no question it got right is lost. The f
 python -m scripts.check_data_quality
 ```
 
-58 findings (16 resolved, 42 open), each citing sentence + chunk + source URL. Headline findings:
+56 findings (16 resolved, 40 open), each citing sentence + chunk + source URL. Headline findings:
 
 - Vanier is **closed** and replaced by a harmonized doctoral programme, and eligibility now returns verdict `closed` for it (Step 4).
 - Eiffel EUR 1,200 is the Master's allowance and EUR 2,000 the Doctorate stipend (not a contradiction).

@@ -28,7 +28,7 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 - Abstention rose because the gates exist: the baseline answers everything (abstention 0.0). The score threshold, doc-name consistency, shared-stem and specific-term gates refuse questions the corpus cannot answer, and each refusal records its reason.
 - Recall did not change, because it was already saturated: recall@5 is 1.0 for every configuration, including BM25-only. On a 101-chunk corpus the right document is always in the top 5 by keyword alone. Dense retrieval buys no measured recall here at ~50x the latency — that is a finding about this corpus size, not a failure of dense retrieval in general.
 - Faithfulness stayed at 1.0 because both pipelines are extractive: every answer sentence is copied verbatim from a cited chunk. Faithfulness measures copying, not correctness — it cannot catch an answer that quotes the right words for the wrong question.
-- Eligibility and data quality are new capabilities, not improvements on the baseline: the baseline had no profile, no rules and no record of the corpus's problems. Measured now: eligibility accuracy 1.0 (29/29 golden questions); data-quality checker finds 58 findings (16 resolved, 42 open).
+- Eligibility and data quality are new capabilities, not improvements on the baseline: the baseline had no profile, no rules and no record of the corpus's problems. Measured now: eligibility accuracy 1.0 (29/29 golden questions); data-quality checker finds 56 findings (16 resolved, 40 open).
 
 ## Failure table — in-corpus questions
 

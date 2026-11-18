@@ -9,8 +9,8 @@ messy. This document records every mess found, the exact evidence
 for it, what it means for the system, and how it is handled. Nothing
 here is hidden: the checker that produced these findings is
 `scripts/check_data_quality.py`, and its machine-readable
-report is `benchmarks/results/data_quality.json` (58 findings:
-16 resolved, 42 open). Re-run the checker after any re-ingest;
+report is `benchmarks/results/data_quality.json` (56 findings:
+16 resolved, 40 open). Re-run the checker after any re-ingest;
 `DATA_QUALITY.md` must be updated from its output, not from memory.
 
 ## Summary of findings
@@ -22,7 +22,7 @@ report is `benchmarks/results/data_quality.json` (58 findings:
 | 3 | Page is a database, not one award | DAAD | Resolved (documented) |
 | 4 | Approximate figures | Fulbright, HKPFS, Gates Cambridge, Schwarzman | Open — quote with hedge |
 | 5 | Year-specific figures | HKPFS, Commonwealth Shared | Open — quote with year |
-| 6 | Deadline not stated on fetched page | 15 of 19 docs | Open — must abstain |
+| 6 | Deadline not stated on fetched page | 13 of 19 docs (was 15 before the Step 5 checker fix) | Open — must abstain |
 | 7 | Stipend not stated on fetched page | **8 of 19 docs** (was 14 before the Step 7 checker fix) | Open — must abstain |
 | 8 | Degree levels / citizenship not stated | 3 docs missing degree levels (DAAD, Fulbright, Schwarzman), 6 missing a citizenship rule (Chevening, Fulbright, Knight-Hennessy, MEXT, Rhodes, Schwarzman); the 9 new docs now have rules except Schwarzman (no rule stated) — see §8 and §12 | Open — verdict `unknown` |
 | 9 | Stale page markers | Erasmus (26 June 2025), Eiffel (Oct 2022); EMJM organisations page footer "Last updated: 15 April 2026" newly observed in Step 7 | Open — re-fetch before launch (done 18 Nov 2026, §11) |
@@ -139,14 +139,16 @@ both correctly abstain).
   closing date the system answers with (8 December 2026, golden q28)
   belongs to that intake.
 
-## 6. Deadline not stated on the fetched page (15 of 19)
+## 6. Deadline not stated on the fetched page (13 of 19)
 
 The checker counts a deadline as stated only when a sentence carries
 both a date and a deadline word ("deadline", "apply", "application",
-"admission", "portal closes", …). By that rule, 4 of the 19 pages
+"admission", "portal closes", …). By that rule, 5 of the 19 pages
 state one — SI Global Professionals, Commonwealth Shared (closing
-date 8 December 2026, golden q28), Marshall, and SI Pioneering
-Women — and 15 do not:
+date 8 December 2026, golden q28), Marshall, SI Pioneering Women,
+and since the Step 5 checker fix Schwarzman (China track: "apply
+online from January to May 20") — and Vanier is closed, so no
+deadline applies to it. 13 do not:
 
 | Document | Deadline on fetched page? |
 |---|---|
@@ -154,20 +156,20 @@ Women — and 15 do not:
 | commonwealth-shared | Yes — 8 December 2026 (2027/28 intake) |
 | marshall | Yes (per the checker: a date-bearing sentence with a deadline word) |
 | si-pioneering-women | Yes (per the checker: a date-bearing sentence with a deadline word) |
+| schwarzman | Yes since Step 5 — China track "apply online from January to May 20" (international track: "between April and September", no day stated) |
 | chevening | No |
 | fulbright | No — mentions "university deadline" but no date (country-specific) |
 | daad | No — database, see §3 |
 | erasmus-mundus | No — the only date is "Last updated: 26 June 2025", a page marker, not a deadline |
 | erasmus-mundus-org | No |
 | eiffel | No — "contact the international relations department" for deadlines |
-| vanier | No — and the programme is closed, see §1 |
+| vanier | No deadline applies — the programme is closed, see §1 (the checker skips the deadline check for closed programmes since Step 5) |
 | manaaki | No |
 | hkpfs | No |
 | mext | No |
 | gates-cambridge | No |
-| rhodes | No |
+| rhodes | No — states worded windows ("mid-October deadline", "first week of December") but no exact date |
 | knight-hennessy | No |
-| schwarzman | No |
 | rtp | No |
 
 The system must answer "not found in the corpus" for these, never
@@ -435,3 +437,36 @@ sentences, same status and note.
 | Marshall | levels masters/phd, citizenship list (United States) | "study at graduate level" + "Open only to United States citizens". |
 | Erasmus Mundus (orgs page) | levels masters, citizenship any | "at master level" + "scholarships to the best students worldwide". |
 | SI Pioneering Women | levels masters, citizenship list (10 countries) | "awarded for master's studies in Sweden" + the 10-country list sentence. Known limit: the checker models degree level and citizenship only, not gender. |
+
+## 13. Checker gaps fixed (Phase 2 improvement, Step 5)
+
+Two false "missing deadline" flags, both fixable from the
+extracted text, both verified before fixing (fail-first tests in
+`tests/test_data_quality.py::test_missing_fields_matrix`):
+
+1. **US-format dates.** `DATE_RE` matched only day-first dates
+   ("8 December 2026"), so Schwarzman's China-track deadline
+   ("apply online from January to May 20") was missed and the page
+   was flagged "deadline missing". The pattern now also matches
+   month-first dates ("May 20", "August 1"); a month followed by
+   a 4-digit year ("September 2027") still does not match, and
+   "may apply" does not match either. Only Schwarzman changed.
+2. **Closed programmes.** Vanier was flagged "deadline missing"
+   although it is closed — there is no deadline to state, and the
+   closure finding already records that nobody can apply. The
+   checker now skips the deadline check for docs in
+   `data/closures.json`, via `load_closures()`, which validates
+   each entry's evidence verbatim — so a stale or unvalidated
+   closure cannot hide a real missing deadline.
+
+Measured by re-running the checker: findings 58 (16 resolved, 42
+open) to 56 (16 resolved, 40 open); docs with any missing field
+16 to 15. Everything else open is true missing data or a real
+flag, verified by scanning the corpus in this step: the 8
+stipend-missing pages state no amount in any currency or wording
+the money pattern could miss; the 4 approximate-figure and 3
+year-specific-figure findings are true hedges and true
+year-tied figures; the 3 stale markers are the pages' own dates;
+Rhodes states worded deadline windows ("mid-October",
+"first week of December") but no exact date, so its flag stands
+as "no exact deadline stated".
