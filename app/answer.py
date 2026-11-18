@@ -52,6 +52,7 @@ scholarship's *name terms* in the picked sentences, not for the
 scholarship as an entity, and it only fires when no known document
 is named (a known name is already owned by the doc-name gate).
 """
+import math
 import re
 
 from . import embeddings
@@ -278,6 +279,24 @@ def verify_answer_relevance(question: str, sentences: list[str],
     return {"answers": True, "reason": None, "best_sim": best_sim}
 
 
+def _idf_weights(sentences: list[str]) -> dict[str, float]:
+    """Inverse document frequency of each stem over the given
+    sentences: ln((N+1)/(df+1)) + 1, where N is the sentence count
+    and df the number of sentences containing the stem. A stem in
+    every sentence weighs 1.0; a stem in exactly one sentence weighs
+    ln((N+1)/2) + 1. The population is the candidate sentences of
+    one _pick_sentences call, so the weights describe the sentences
+    actually competing for the answer, not the whole corpus.
+    """
+    n = len(sentences)
+    df: dict[str, int] = {}
+    for stems in (_stems(s) for s in sentences):
+        for stem in stems:
+            df[stem] = df.get(stem, 0) + 1
+    return {stem: math.log((n + 1) / (count + 1)) + 1.0
+            for stem, count in df.items()}
+
+
 def _pick_sentences(chunks: list[dict], query_stems: set[str],
                     question: str | None = None,
                     specific_stems: set[str] | None = None,
@@ -315,6 +334,15 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
     14th (0.527). A sentence still needs at least one shared query
     stem to be pickable (unchanged), and when the embedder is
     unavailable the scores are lexical-only.
+
+    IDF weighting (Phase 2 improvement, Step 2): the lexical part
+    of the score is no longer a stem count. Each shared stem counts
+    its IDF weight over the candidate sentences (see _idf_weights),
+    so a stem that appears in nearly every competing sentence
+    ("the", "pioneering", "women") counts about 1 while a stem in
+    one sentence ("monthly", "allowance") counts about ln((N+1)/2)
+    + 1. Measured on the 50-question golden set: answer-only
+    0.930 (40/43) to 0.953 (41/43), q32 fixed, zero regressions.
     """
     specific_stems = specific_stems or set()
     if not scored:
@@ -349,11 +377,21 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
     if dense and question is not None:
         sims = dense_sentence_scores(
             question, [sent for _, sent in candidates]) or {}
+    # IDF weighting (Phase 2 improvement, Step 2): each shared stem
+    # counts by its rarity among the competing sentences, not 1.
+    # Plain counts let stopwords ("the", "for", "in") and doc-name
+    # stems ("pioneering", "women", "stem") outvote the rare content
+    # stems that actually identify the answer ("monthly",
+    # "allowance" for q32). The specific-stem bonus still doubles
+    # the weight, it doubles the IDF weight instead of the count.
+    weights = _idf_weights([sent for _, sent in candidates])
     scored_list: list[tuple[float, int, str]] = []
     for order, sent in candidates:
         stems = _stems(sent)
         shared = query_stems & stems
-        score = len(shared) + 2 * len(specific_stems & stems)
+        score = sum(weights.get(t, 1.0) for t in shared)
+        score += 2 * sum(weights.get(t, 1.0)
+                         for t in specific_stems & stems)
         # Short fragments are usually headers ("Scholarships |
         # Chevening.", "Home Page - Vanier..."). They share the
         # document name and little else, so they outscore real

@@ -1,8 +1,47 @@
-# Eval Results — Phase 2 improvement (bullet-list splitting)
+# Eval Results — Phase 2 improvement (bullet-list splitting + IDF scoring)
 
 All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
+
+## Phase 2 improvement — IDF-weighted sentence scoring
+
+`app/answer.py:_pick_sentences` scored a sentence by counting
+shared query stems (1 point each, +2 per specific stem). That let
+stopwords ("the", "for", "in") and doc-name stems ("pioneering",
+"women", "stem") outvote the rare content stems that identify the
+answer. For q32 the competing eligibility sentence shares 7 stems
+and scores 11, while the correct SEK 12,000 sentence shares only
+"monthly" and "allowance" and scores 8 — and dense similarity
+cannot close it either (0.504 vs 0.664). The fix, in
+`app/answer.py:_idf_weights`: each shared stem counts its inverse
+document frequency over the candidate sentences of the call,
+ln((N+1)/(df+1)) + 1, so a stem in every candidate weighs 1.0 and
+a stem in one candidate weighs ln((N+1)/2) + 1. The specific-stem
+bonus still doubles the weight, it doubles the IDF weight instead
+of the count. On q32's real top-3 chunks (50 candidates:
+"the" in 35, "stem" in 10, "monthly" / "allowance" in 1 each) the
+SEK sentence scores 28.88 + 2 x 0.504 = 29.89 against the
+eligibility sentence's 26.79 + 2 x 0.664 = 28.12. Tests:
+`tests/test_idf_scoring.py` (2 tests, fail-first: the function did
+not exist before the fix).
+
+| Metric | Before (bullet-list split) | After (IDF scoring) | Change |
+|---|---|---|---|
+| answer_only_relevance | 0.930 (40/43) | 0.953 (41/43) | +1 correct (q32) |
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 | none |
+| answer_relevance_proxy | 1.0 | 1.0 | none |
+| faithfulness | 1.0 | 1.0 | none |
+| abstention_accuracy | 1.0 (7/7) | 1.0 (7/7) | none |
+| eligibility_accuracy | 1.0 (11/11) | 1.0 (11/11) | none |
+
+Zero regressions: no question flipped from correct to wrong.
+Sixteen answers changed text (different sentences picked) and all
+stayed correct. Only q10 and q17 remain open, both paraphrase
+gaps: q10's correct sentence shares only "master" with the
+question, q17's only "study" / "scholarship", so no re-weighting
+of shared stems can surface them — that needs query expansion
+(synonyms), a different approach, not tried here.
 
 ## Phase 2 improvement — split dash-led bullet items into pickable sentences
 
@@ -593,14 +632,15 @@ Command: `python -m scripts.run_eval`
 | recall@3 | 1.0 | Expected document in top 3 for all 43 |
 | recall@5 | 1.0 | Expected document in top 5 for all 43 |
 | answer_relevance_proxy | 1.0 | Expected phrase in answer or citations for all 43 |
-| answer_only_relevance | 0.930 | Expected phrase in the answer text alone: 40/43 |
+| answer_only_relevance | 0.953 | Expected phrase in the answer text alone: 41/43 |
 | faithfulness | 1.0 | Every answer sentence verbatim in a cited chunk |
 | abstention_accuracy | 1.0 | 7/7 out-of-corpus questions correctly refused |
 | eligibility_accuracy | 1.0 | 11/11 verdicts correct |
 
-The 3 answer-only misses are q10, q17 (paraphrase gap) and
-q32 (bullet-list scoring) — see "Failures". q03 was fixed by the
-Phase 2 improvement (bullet-list splitting). No abstention misses:
+The 2 answer-only misses are q10, q17 (paraphrase gap) — see
+"Failures". q03 was fixed by the Phase 2 improvement (bullet-list
+splitting) and q32 by the Phase 2 improvement (IDF sentence
+scoring). No abstention misses:
 o06 and o07 abstain after the Step 6 fix (they were answered
 mid-step, when abstention dipped to 0.714).
 
@@ -768,14 +808,19 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**183 passed, 0 failed** (18 Nov 2026, 939.73 s, full run after the bullet-list
-split; the re-verification eval-unchanged test now pins exactly one
-deliberate change, q03 fixed, 0.907 to 0.930). Step 7's 179 plus
+**185 passed, 0 failed** (18 Nov 2026, 570.21 s, full run after IDF
+sentence scoring; the re-verification eval-unchanged test now pins
+exactly two deliberate changes, q03 and q32 fixed, 0.907 to 0.953).
+Step 7's 179 plus
 4 new bullet-sentence tests in `tests/test_bullet_sentences.py`:
 dash-led items split into their own sentences after terminal
 punctuation or a colon intro, inline dashes untouched, and the q32
 SEK 12,000 sentence is its own pickable sentence and verbatim in
-chunk `si-pioneering-women-1`. Step 6's 174 plus
+chunk `si-pioneering-women-1`; plus 2 new IDF-scoring tests in
+`tests/test_idf_scoring.py`: the SEK sentence ranks first on the
+real top-3 chunks for q32, and the IDF weights are population
+relative (a stem in every candidate weighs 1.0, a stem in one
+weighs ln((N+1)/2) + 1). Step 6's 174 plus
 5 new Step 7 re-verification tests in `tests/test_reverification.py`:
 every source records a `reverified_at` date and the per-page record
 covers all 19 pages, all live, with Eiffel the only change (sidebar
@@ -900,7 +945,7 @@ and term coverage, in reranked order):
 | q10 (Erasmus duration) | Generative answer says "one academic year" (expected "1 to 2 academic years"); judge scored it 1/1 | Paraphrase gap + weak 0.5B judge | As above; judge needs a larger model. Correct sentence ranks 8th by dense sim (0.438) |
 | q17 (Manaaki levels) | Generative draft copied the SI field list into a Manaaki answer; verification dropped it and fell back to extractive | Cross-document contamination, caught by verification | Named-doc filter added (Step 1); answer still misses the expected phrase. Correct sentence ranks 14th by dense sim (0.527) |
 | o04 (Vanier ranked university) | **Fixed in Step 2:** system now abstains with reason `unanswered_ranking`, in both the extractive and generative paths (abstention 1.0, 7/7) | Lexical gates + grounding verification check overlap/grounding, not whether the sentences answer the question; dense similarity alone cannot separate it (0.667, above several answerable questions) | Answer-verification step (dense floor + ranking-focus check); the check is ranking-only and looks for a ranking term, not a ranked entity |
-| q32 (SI Pioneering allowance) | Answer misses the "SEK 12,000" sentence; the evidence is in the top retrieved chunk (`si-pioneering-women-1`) | Bullet-list scoring: the sentence is now its own pickable sentence (the Phase 2 improvement splits dash-led bullet items), but it shares only "monthly" and "allowance" with the question while the page intro shares pioneering, women, stem and scholar, so the intro still outscores it; dense sim ranks it 10th (0.504) vs the intro's 0.668 | IDF-weighted sentence scoring (Phase 2 improvement, Step 2 — tried next, kept only if it improves with zero regressions) |
+| q32 (SI Pioneering allowance) | **Fixed in the Phase 2 improvement (IDF sentence scoring):** the SEK 12,000 sentence is now picked first (IDF 28.88 + 2 x 0.504 dense = 29.89 vs the eligibility sentence's 26.79 + 2 x 0.664 = 28.12). Was a documented miss from Step 6: bullet-list merging, then bullet-list scoring after the split made it pickable. | Bullet-list scoring: the sentence is now its own pickable sentence (the Phase 2 improvement splits dash-led bullet items), but it shares only "monthly" and "allowance" with the question while the eligibility sentence shares 7 stems, so plain counts rank the wrong sentence first; dense sim ranks it 10th (0.504) vs 0.664 | IDF-weighted sentence scoring (Phase 2 improvement, Step 2 — kept: answer-only 0.930 to 0.953, zero regressions) |
 | o06 (Australia Awards deadline) | **Fixed in Step 6:** system now abstains with reason `unanswered_scholarship_subject` | Corpus growth gave the lexical gates other scholarships' deadline sentences to quote; the doc-name gate only fires for known documents, and "Australia Awards" is not in the corpus at all | Scholarship-subject focus check in the answer verification (Step 6); the check looks for name terms, not the scholarship as an entity |
 | o07 (KHS acceptance rate) | **Fixed in Step 6:** system now abstains with reason `missing_specific_term` | The specific-term gate passed on the word "scholar" alone — every KHS sentence contains "scholars" — while the real ask ("acceptance", "rate") appears nowhere in the corpus | "Scholar" joined the generic terms (Step 6) |
 | Eligibility vs Vanier closure | **Fixed in Step 4:** verdict is now `closed` with the closure evidence and replacement (e02, e05, e11; eligibility 1.0, 11/11) | Closure is a property of the programme, not the profile | `data/closures.json` + `app/eligibility.py:load_closures` / `check()` |
@@ -911,10 +956,10 @@ Command: `python -m scripts.ci_gate`
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured (Phase 2 improvement, re-run after the bullet-list
-split): 1.0, 0.93, 1.0, 1.0, 1.0 — **gate passes**.
+Measured (Phase 2 improvement, re-run after IDF sentence
+scoring): 1.0, 0.953, 1.0, 1.0, 1.0 — **gate passes**.
 Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly
-fails on answer-only relevance (0.93), proving the gate can fail.
+fails on answer-only relevance (0.953), proving the gate can fail.
 Workflow: `.github/workflows/eval.yml`
 (build index → tests → gate on every push/PR).
 

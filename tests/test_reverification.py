@@ -130,10 +130,11 @@ def test_eval_unchanged_after_reverification():
     """No .txt changed in Step 7, so the re-run eval matched the saved
     before-run file question by question — no golden question was
     silently changed, dropped or lost. The Phase 2 improvement then
-    changed exactly one row on purpose (q03, fixed by the bullet-list
-    split), so this test now pins that: every other row is identical
-    to the Step 7 before-run file, and answer-only relevance is 0.930
-    (40/43), not 0.907 (39/43)."""
+    changed exactly two rows on purpose (q03, fixed by the
+    bullet-list split; q32, fixed by IDF sentence scoring), so this
+    test now pins that: every other row is identical to the Step 7
+    before-run file, and answer-only relevance is 0.953 (41/43),
+    not 0.907 (39/43)."""
     before = json.loads(
         (RESULTS_DIR / "extractive_eval_before_reverification.json").read_text())
     after = json.loads((RESULTS_DIR / "extractive_eval.json").read_text())
@@ -145,13 +146,14 @@ def test_eval_unchanged_after_reverification():
                    "abstention_accuracy", "eligibility_accuracy"):
         assert after[metric] == before[metric], metric
     assert before["answer_only_relevance"] == 0.907
-    assert after["answer_only_relevance"] == 0.93
+    assert after["answer_only_relevance"] == 0.953
     before_rows = {r["id"]: r for r in before["per_question"]}
     after_rows = {r["id"]: r for r in after["per_question"]}
     assert set(after_rows) == set(before_rows)
     for qid, row in before_rows.items():
-        if qid == "q03":
-            # Fixed by the Phase 2 improvement (bullet-list split).
+        if qid in ("q03", "q32"):
+            # Fixed by the Phase 2 improvement (bullet-list split
+            # for q03, IDF sentence scoring for q32).
             assert row["answer_only_relevant"] is False
             assert after_rows[qid]["answer_only_relevant"] is True
             assert row["found"] is True

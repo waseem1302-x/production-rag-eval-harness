@@ -131,23 +131,19 @@ def test_new_documents_have_no_eligibility_rules_yet():
 
 # --- new golden questions ---------------------------------------------------
 
-def test_new_golden_questions_pass_except_documented_q32(retriever):
+def test_new_golden_questions_pass(retriever):
     result = run_eval(retriever, load_golden())
     rows = {r["id"]: r for r in result["per_question"]}
-    for qid in ("q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31"):
+    for qid in ("q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31", "q32"):
         assert rows[qid]["answer_only_relevant"] is True, qid
-    # q32 is a documented miss, not a regression to hide: the
-    # "SEK 12,000" sentence is in the top retrieved chunk
-    # (si-pioneering-women-1) and is now its own pickable sentence
-    # (the Phase 2 improvement splits dash-led bullet items), but
-    # it still shares only "monthly" and "allowance" with the
-    # question while the page intro shares pioneering, women, stem
-    # and scholar, so the intro still outscores it and the sentence
-    # is never picked.
+    # q32 was a documented miss until the Phase 2 improvement
+    # (IDF sentence scoring) fixed it: the "SEK 12,000" sentence
+    # is in the top retrieved chunk (si-pioneering-women-1) and is
+    # now picked first, because the rare "monthly" / "allowance"
+    # stems outweigh the ubiquitous doc-name stems.
     q32 = rows["q32"]
-    assert q32["answer_only_relevant"] is False
     assert q32["found"] is True
-    assert "sek 12,000" not in q32["answer"].lower()
+    assert "sek 12,000" in q32["answer"].lower()
     retrieved = retriever.search(
         _golden_by_id()["q32"]["question"], top_k=5)
     assert retrieved[0]["chunk_id"] == "si-pioneering-women-1"

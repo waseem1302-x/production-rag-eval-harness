@@ -55,6 +55,13 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # 0.907 -> 0.930 (40/43). q32 still misses: the SEK 12,000
 # sentence is pickable now but still loses on lexical score to
 # the page intro (see tests/test_bullet_sentences.py).
+# Phase 2 improvement (IDF sentence scoring): shared stems now
+# count by their inverse document frequency over the candidate
+# sentences, so the rare "monthly" / "allowance" stems outweigh
+# the ubiquitous doc-name stems, which fixes q32 and moves
+# answer-only relevance 0.930 -> 0.953 (41/43), zero regressions
+# (see tests/test_idf_scoring.py). Only q10 and q17 remain open,
+# both paraphrase gaps.
 BASELINE_CORRECT = [
     "e01", "e02", "e03", "e04", "e05", "e06", "e07", "e08", "e09",
     "e10", "e11", "q01", "q02", "q04", "q05", "q06", "q07", "q08", "q09",
@@ -64,6 +71,8 @@ BASELINE_CORRECT = [
 STEP6_CORRECT = ["q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31"]
 # Phase 2 improvement (bullet-list splitting) fixes q03.
 IMPROVEMENT_CORRECT = ["q03"]
+# Phase 2 improvement (IDF sentence scoring) fixes q32.
+IDF_CORRECT = ["q32"]
 
 
 @pytest.fixture(scope="module")
@@ -380,12 +389,17 @@ def test_no_baseline_correct_answer_lost(retriever):
     answer-only relevance 0.907 -> 0.930 (40/43); q32 still misses
     (the SEK sentence is pickable now but still loses on lexical
     score to the page intro).
+    Phase 2 improvement (IDF sentence scoring): shared stems now
+    count by IDF over the candidate sentences, which fixes q32
+    and moves answer-only relevance 0.930 -> 0.953 (41/43), zero
+    regressions. Only q10 and q17 remain open, both paraphrase
+    gaps.
     Abstention is 1.0 (7/7): o06 and o07 abstain again after the
     Step 6 fix (see test_corpus_growth.py) — the 0.714 dip measured
     mid-step, when corpus growth first broke both, is recorded in
     that file's history, not hidden."""
     result = run_eval(retriever, load_golden())
-    assert result["answer_only_relevance"] == 0.930
+    assert result["answer_only_relevance"] == 0.953
     assert result["answer_relevance_proxy"] == 1.0
     assert result["faithfulness"] == 1.0
     assert result["abstention_accuracy"] == 1.0
@@ -393,14 +407,14 @@ def test_no_baseline_correct_answer_lost(retriever):
     correct = {r["id"] for r in result["per_question"]
                if r["answer_only_relevant"]}
     expected = (set(BASELINE_CORRECT) | set(STEP6_CORRECT)
-                | set(IMPROVEMENT_CORRECT))
+                | set(IMPROVEMENT_CORRECT) | set(IDF_CORRECT))
     assert expected <= correct, (
         "lost baseline-correct questions: "
         f"{sorted(expected - correct)}")
     assert correct == expected, (
         f"unexpected changes vs baseline: added={sorted(correct - expected)} "
         f"lost={sorted(expected - correct)}")
-    for qid in ("q10", "q17", "q32"):
+    for qid in ("q10", "q17"):
         row = next(r for r in result["per_question"] if r["id"] == qid)
         assert row["answer_only_relevant"] is False, qid
         assert row["found"] is True, qid

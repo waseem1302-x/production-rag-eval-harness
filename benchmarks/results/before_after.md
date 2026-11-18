@@ -15,16 +15,16 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 | recall@3 | 1.0 | 1.0 | +0.000 |
 | recall@5 | 1.0 | 1.0 | +0.000 |
 | Evidence relevance (proxy) | 1.0 | 1.0 | +0.000 |
-| Answer-only relevance | 0.625 | 0.906 | +0.281 |
+| Answer-only relevance | 0.625 | 0.938 | +0.313 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
 | Abstention accuracy | 0.0 | 1.0 | +1.000 |
-| Retrieval latency (mean) | 0.4 ms | 87.0 ms | +86.6 ms |
-| Total latency (mean) | 0.9 ms | 1207.5 ms | +1206.6 ms |
+| Retrieval latency (mean) | 0.3 ms | 35.5 ms | +35.2 ms |
+| Total latency (mean) | 0.7 ms | 890.0 ms | +889.3 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 (local CPU, no API calls) |
 
 ## Why it changed
 
-- Answer-only relevance rose because scored picking replaced first-sentence picking: the baseline returned whatever sentences came first in the top chunk — usually headers, navigation or a marketing intro. Scored picking ranks sentences by shared query stems, and the short-fragment penalty demotes header fragments. The retrieval signal did not drive this: hybrid-plain (hybrid retrieval, naive answering) scores only 0.656 on answer-only, barely above the baseline.
+- Answer-only relevance rose because scored picking replaced first-sentence picking: the baseline returned whatever sentences came first in the top chunk — usually headers, navigation or a marketing intro. Scored picking ranks sentences by shared query stems weighted by IDF over the candidate sentences (Phase 2 improvement, Step 2), and the short-fragment penalty demotes header fragments. The retrieval signal did not drive this: hybrid-plain (hybrid retrieval, naive answering) scores only 0.656 on answer-only, barely above the baseline.
 - Abstention rose because the gates exist: the baseline answers everything (abstention 0.0). The score threshold, doc-name consistency, shared-stem and specific-term gates refuse questions the corpus cannot answer, and each refusal records its reason.
 - Recall did not change, because it was already saturated: recall@5 is 1.0 for every configuration, including BM25-only. On a 101-chunk corpus the right document is always in the top 5 by keyword alone. Dense retrieval buys no measured recall here at ~50x the latency — that is a finding about this corpus size, not a failure of dense retrieval in general.
 - Faithfulness stayed at 1.0 because both pipelines are extractive: every answer sentence is copied verbatim from a cited chunk. Faithfulness measures copying, not correctness — it cannot catch an answer that quotes the right words for the wrong question.
@@ -65,7 +65,7 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 | q29 | What is the full-time base RTP stipend rate for 2026? | ✗ | ✓ | wrong sentence from the right chunk — first-sentence picking returned an intro or unrelated sentence |
 | q30 | How many Marshall Scholarships are awarded each year? | ✓ | ✓ | — |
 | q31 | How much is the monthly EMJM scholarship for individuals? | ✓ | ✓ | — |
-| q32 | What is the monthly allowance for a Pioneering Women in STEM scholar? | ✓ | ✗ | REGRESSION — the improved pipeline lost a question the baseline got |
+| q32 | What is the monthly allowance for a Pioneering Women in STEM scholar? | ✓ | ✓ | — |
 
 ## Failure table — out-of-corpus questions (abstention)
 
@@ -81,9 +81,8 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 
 ## What still fails, and why
 
-- q10, q17 (paraphrase gap): the expected answer's key terms do not appear in the question, so lexical picking cannot rank the right sentence first. Dense sentence scoring shipped in Phase 2 Step 2 and did not fix these two; what remains is a generative answer with a verification step. q03 was in this group until the Phase 2 improvement (bullet-list splitting) fixed it: answer-only 0.907 -> 0.930.
-- q32 (bullet-list scoring): the SEK 12,000 allowance sentence is now its own pickable sentence (the Phase 2 improvement splits dash-led bullet items), but it still shares only 'monthly' and 'allowance' with the question while the page intro shares pioneering, women, stem and scholar, so the intro still outscores it. The evidence is in the top retrieved chunk; the picker still does not surface it.
-- q32 (baseline gained, improved unchanged): on the grown corpus the naive baseline's BM25 top chunk changed, so its first-sentence picking now lands on the right sentence for q32, while the improved pipeline still misses it (q32 bullet-list scoring). The failure table labels it REGRESSION, but the improved column is unchanged since Step 5 — no question the improved pipeline got right was lost; the baseline got luckier. The no-regression test pins exactly this one row, so a second one fails the build. q03 was the other pinned row until the Phase 2 improvement fixed it.
+- q10, q17 (paraphrase gap): the expected answer's key terms do not appear in the question, so lexical picking cannot rank the right sentence first. Dense sentence scoring shipped in Phase 2 Step 2 and did not fix these two; what remains is a generative answer with a verification step. q03 was in this group until the Phase 2 improvement (bullet-list splitting) fixed it: answer-only 0.907 -> 0.930. q32 was in this group until the Phase 2 improvement (IDF sentence scoring) fixed it: answer-only 0.930 -> 0.953.
+- q32 (fixed by IDF sentence scoring): the SEK 12,000 allowance sentence shares only 'monthly' and 'allowance' with the question while the competing eligibility sentence shares 7 stems, so plain stem counts ranked the wrong sentence first. IDF weighting over the candidate sentences makes the rare stems outweigh the ubiquitous doc-name stems, and the SEK sentence is now picked first. The failure table used to label it REGRESSION (the baseline got luckier on corpus growth while the improved pipeline still missed it); both columns pass now.
 - o06, o07 (abstention lost on corpus growth, then fixed in Step 6): the grown corpus gave the lexical gates other scholarships' deadline and rate-adjacent sentences to quote, and the doc-name gate only fires when a known document is named — o06 (Australia Awards deadline, a scholarship not in the corpus) was answered with SI + Commonwealth dates and o07 (KHS acceptance rate, a fact not on the fetched page) with KHS funding sentences, so abstention fell 1.0 -> 0.714 (5/7) mid-step. Fixed in this step, two ways: the specific-term gate no longer counts "scholar" as specific (o07's only specific terms are now "acceptance" and "rate", neither in any KHS sentence — reason "missing_specific_term"), and the answer verification gained a scholarship-subject focus check (o06 — reason "unanswered_scholarship_subject"). Abstention is 1.0 (7/7) again; the dip is recorded in tests/test_corpus_growth.py, not hidden.
-- The reranker adds no measured value on this corpus (answer-only 0.906 without it vs 0.906 with it). It is kept because the mechanism is sound and the corpus is small; on a larger corpus it must be re-measured before it is claimed to help.
-- Dense retrieval adds no measured recall and slightly hurts answer-only relevance (dense-only 0.875 vs BM25-only 0.875) at ~50x the latency. On this corpus BM25-only is the better engineering choice; dense is kept in the hybrid because it is expected to matter as the corpus grows, and the ablation will tell us when.
+- The reranker adds no measured value on this corpus (answer-only 0.938 without it vs 0.938 with it). It is kept because the mechanism is sound and the corpus is small; on a larger corpus it must be re-measured before it is claimed to help.
+- Dense retrieval adds no measured recall and slightly hurts answer-only relevance (dense-only 0.906 vs BM25-only 0.938) at ~50x the latency. On this corpus BM25-only is the better engineering choice; dense is kept in the hybrid because it is expected to matter as the corpus grows, and the ablation will tell us when.

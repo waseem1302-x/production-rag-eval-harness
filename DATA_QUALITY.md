@@ -332,12 +332,13 @@ What the fix did **not** do (remaining gaps, pinned by
 - **Golden set**: q21 (Vanier closure), q22/q23 (Eiffel amounts by
   level) were added for this step and all pass; e11 (Vanier doctoral
   applicant, verdict `closed`) was added in Phase 2, Step 4 and passes.
-  Step 6 added q24–q32 (one per new document); q24–q31 pass, q32 is
-  a documented miss. The Phase 2 improvement split the dash-led
-  bullet items into separate sentences (q03 fixed by the same
-  change), but q32 still misses on scoring: the SEK 12,000 sentence
-  shares only "monthly" and "allowance" with the question, while the
-  page intro shares pioneering, women, stem and scholar.
+  Step 6 added q24–q32 (one per new document); q24–q31 pass, and
+  q32 now passes too: the Phase 2 improvement split the dash-led
+  bullet items into separate sentences (fixing q03), and the IDF
+  sentence scoring then fixed q32 (answer-only 0.930 to 0.953),
+  because the rare "monthly" / "allowance" stems now outweigh the
+  doc-name stems. Only q10 and q17 remain open, both paraphrase
+  gaps.
 - **Re-ingest rule**: after any re-fetch, run
   `python -m scripts.check_data_quality` and update this document
   from its report before claiming the numbers still hold.

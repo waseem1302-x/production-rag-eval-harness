@@ -285,8 +285,10 @@ def build_summary(results_dir: Path = RESULTS_DIR) -> Path:
              "and the 39-question golden set, so this table is a fresh "
              "re-run of all configurations with the current code on the "
              "grown corpus.\n",
-             "Latency varies run to run by tens of milliseconds on this VM "
-             "(shared CPU, 1.5 cores). The order of magnitude — BM25 ~1 ms, "
+             "Latency varies run to run by hundreds of milliseconds on this VM "
+             "(shared CPU, 1.5 cores; the dense configs embed every "
+             "candidate sentence per question, so their totals move the "
+             "most). The order of magnitude — BM25 ~1 ms, "
              "dense ~50–150 ms, cross-encoder rerank ~seconds per query — "
              "is stable across runs; the exact figures are one measured "
              "run, not a guarantee.\n",
