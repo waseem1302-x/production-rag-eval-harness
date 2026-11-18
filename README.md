@@ -497,14 +497,14 @@ docker run -p 8000:8000 production-rag-eval-harness
 
 The Dockerfile builds the index at image build time from the committed `data/` so the container starts without re-fetching the corpus. **Note (verified 18 Nov 2026):** Docker 29.1.3 is installed in this development VM and the daemon runs (vfs storage driver, `--iptables=false --bridge=none`, data-root under the home directory; `python:3.12-slim` pulls fine), but **no container can start here**: the VM's seccomp policy blocks `setns` into any mount or network namespace, so `docker run hello-world` and the `RUN` steps of `docker build` both fail (`operation not permitted`). The image has therefore **not been built or run in Docker here**. Build it on a machine whose Docker can start containers before trusting it. (The Dockerfile itself parses and its base image resolves; only container execution is blocked.)
 
-## Distillation: teacher data finalized, training next
+## Distillation: teacher data finalized, training run done, negative result
 
 The generative path is the weak side of this system: 0.651
 factual-only against extractive 0.953, and the 0.5B model cannot
 learn from its own answers. The fix is distillation: a stronger
 teacher writes answers, the small student trains on them. The
-dataset is finalized (18 Nov 2026); the training run has not
-happened yet. Plan: [docs/DISTILLATION_PLAN.md](docs/DISTILLATION_PLAN.md).
+dataset is finalized (18 Nov 2026), and the Colab LoRA training
+run has happened, with a negative result. Plan: [docs/DISTILLATION_PLAN.md](docs/DISTILLATION_PLAN.md).
 Dataset: [data/distillation/README.md](data/distillation/README.md).
 
 Teacher: Gemini `gemini-3.5-flash-lite` (Groq was not used, its
@@ -532,22 +532,43 @@ directions, so its records were not used. The 40 proxy labels are
 One production limitation the gate found: `app/generative.py`
 truncates each chunk to 900 characters, so five golden questions
 are unanswerable by the generative path because the answer sits
-past char 900 (q07, q10, q15, q17, q29). Fixed separately in
-production, not by changing the training prompt.
+past char 900 (q07, q10, q15, q17, q29). Raising the limit to
+3000 chars was tried in the distillation closeout and reverted:
+generative rose 0.77 (47/61) to 0.852 (52/61), factual-only
+18/32 to 23/32, with 8 questions fixed, but 3 previously
+correct questions regressed (q08, q09, q17) and the verbatim
+faithfulness proxy fell 0.793 to 0.758, so the keep rule (zero
+regressions) failed and the 900 limit stays. Full numbers in
+EVAL_RESULTS.md.
 
-Next: LoRA training on Colab (T4, free), notebook
-`notebooks/train_lora_colab.ipynb`, Qwen2.5-0.5B-Instruct, rank
-16, alpha 32, dropout 0.05, lr 2e-4, 3 epochs max. The plan's
-keep rule decides after training: ship only if generative
-improves with zero regressions on the 68-question golden set and
-the held-out set.
+Training (free Colab T4, 18 Nov 2026): baseline held-out
+generation 13/41 (0.3171), epoch 1 adapter 11/41 (0.2683), so
+the run stopped early after epoch 1 as designed and epochs 2
+and 3 never ran. Training loss was still falling (step 5: 0.92,
+step 10: 0.81, step 15: 0.68). The judge metric was 0/0 both
+times because the held-out set has no judge records. The keep
+rule failed, so the adapter was NOT shipped: it sits on Drive at
+`MyDrive/rag-distillation/adapters/qwen2.5-0.5b-distilled-v1/`
+and was never copied into this repo. The base model stays the
+default. The 68-question golden eval with the adapter was NOT
+run. Four setup fixes from the Colab run are now in the repo
+notebook `notebooks/train_lora_colab.ipynb` (still 18 cells):
+`rank_bm25` added to the pip install list, `torchao`
+uninstalled (peft 0.21.2 needs torchao above 0.16, Colab
+shipped 0.10, torchao unused here), `warmup_ratio=0.05`
+changed to `warmup_steps=3` (transformers 5.22 and trl 1.18
+removed `warmup_ratio`; 3 steps is 5 percent of 54 total
+optimizer steps), and `bfloat16`/`bf16` changed to
+`float16`/`fp16` (T4 is compute capability 7.5, bf16 gemm needs
+8.0 or higher; baseline re-measured in fp16 was identical at
+13/41). Full numbers in EVAL_RESULTS.md.
 
 ## What is not done yet
 
 - No query rewriting, no multi-hop retrieval.
 - No deployment (local + Docker only; not deployed anywhere).
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually, then re-run the eval and the data-quality checker).
-- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (18/32, 0.5625, vs extractive 32/32), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.77 vs 1.0, and the gap is the generator's, not the eligibility answers (all 29 are checker-resolved, not generated). The distillation dataset for the 0.5B student is finalized (273 train + 41 held-out, teacher Gemini flash-lite, $0); the Colab LoRA training run has not happened yet.
+- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (18/32, 0.5625, vs extractive 32/32), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.77 vs 1.0, and the gap is the generator's, not the eligibility answers (all 29 are checker-resolved, not generated). The distillation dataset for the 0.5B student is finalized (273 train + 41 held-out, teacher Gemini flash-lite, $0); the Colab LoRA training run is done and was negative (epoch 1 adapter 11/41 vs baseline 13/41 on held-out), so the adapter was not shipped.
 
 Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as an ablation config, LLM-as-judge, dense sentence scoring, answer-verification step, Vanier closure verdict, chunk-size ablation, corpus growth, and stale-page re-verification. Done in the Phase 2 improvement: bullet-list splitting, IDF-weighted sentence scoring, eligibility rules for the 9 new Step 6 documents (eligibility 0.379 to 1.0), data-quality checker gap fixes, and query expansion (q10/q17 fixed, answer-only 1.0).
 
