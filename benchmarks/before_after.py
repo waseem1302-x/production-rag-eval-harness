@@ -82,6 +82,8 @@ def main() -> None:
     dense = _load("dense-only.json")
     audit = _load("retrieval_audit.json")
     quality = _load("data_quality.json")
+    eval_result = _load("extractive_eval.json")
+    no_rerank = _load("hybrid-no-rerank.json")
     golden = load_golden(GOLDEN_FILE)
     factual = [q for q in golden if not q.get("profile") and not q.get("out_of_corpus")]
     out_corpus = [q for q in golden if q.get("out_of_corpus")]
@@ -154,7 +156,8 @@ def main() -> None:
         "the corpus cannot answer, and each refusal records its reason.")
     lines.append(
         "- Recall did not change, because it was already saturated: recall@5 "
-        "is 1.0 for every configuration, including BM25-only. On a 31-chunk "
+        "is 1.0 for every configuration, including BM25-only. On a "
+        f"{improved['n_chunks']}-chunk "
         "corpus the right document is always in the top 5 by keyword alone. "
         "Dense retrieval buys no measured recall here at ~50x the latency — "
         "that is a finding about this corpus size, not a failure of dense "
@@ -168,7 +171,9 @@ def main() -> None:
         "- Eligibility and data quality are new capabilities, not "
         "improvements on the baseline: the baseline had no profile, no "
         "rules and no record of the corpus's problems. Measured now: "
-        "eligibility accuracy 1.0 (10/10 golden questions); data-quality "
+        f"eligibility accuracy {eval_result['eligibility_accuracy']} "
+        f"({int(round(eval_result['eligibility_accuracy'] * eval_result['n_eligibility']))}/"
+        f"{eval_result['n_eligibility']} golden questions); data-quality "
         f"checker finds {len(quality['findings'])} findings "
         f"({sum(1 for f in quality['findings'] if f['status'] == 'resolved')} resolved, "
         f"{sum(1 for f in quality['findings'] if f['status'] == 'open')} open).")
@@ -212,17 +217,49 @@ def main() -> None:
     lines.append(
         "- q03, q10, q17 (paraphrase gap): the expected answer's key terms "
         "do not appear in the question, so lexical picking cannot rank the "
-        "right sentence first. Fix planned for Phase 2: dense sentence "
-        "scoring, or a generative answer with a verification step.")
+        "right sentence first. Dense sentence scoring shipped in Phase 2 "
+        "Step 2 and did not fix these three; what remains is a generative "
+        "answer with a verification step.")
     lines.append(
-        "- o04 (Vanier ranked university): the system answers with Vanier "
-        "sentences that never name a ranked university. The lexical gates "
-        "check word overlap, not whether the sentences actually answer the "
-        "question. Fix planned for Phase 2: an answer-verification step that "
-        "checks the picked sentences contain the question's object.")
+        "- q32 (bullet-list merging): the SEK 12,000 allowance sentence sits "
+        "in a dash-led bullet list, and the sentence splitter merges the "
+        "whole list into one long sentence, so it shares fewer query stems "
+        "than the page intro and is not picked. The evidence is in the top "
+        "retrieved chunk; the picker did not surface it.")
+    lines.append(
+        "- q03, q32 (baseline gained, improved unchanged): on the "
+        "grown corpus the naive baseline's BM25 top chunk changed, "
+        "so its first-sentence picking now lands on the right "
+        "sentence for q03 and q32, while the improved pipeline "
+        "still misses both (q03 paraphrase gap, q32 bullet-list "
+        "merging). The failure table labels both REGRESSION, but "
+        "the improved column is unchanged since Step 5 — no "
+        "question the improved pipeline got right was lost; the "
+        "baseline got luckier. The no-regression test pins exactly "
+        "these two rows, so a third one fails the build.")
+    lines.append(
+        "- o06, o07 (abstention lost on corpus growth, then fixed "
+        "in Step 6): the grown corpus gave the lexical gates other "
+        "scholarships' deadline and rate-adjacent sentences to "
+        "quote, and the doc-name gate only fires when a known "
+        "document is named — o06 (Australia Awards deadline, a "
+        "scholarship not in the corpus) was answered with SI + "
+        "Commonwealth dates and o07 (KHS acceptance rate, a fact "
+        "not on the fetched page) with KHS funding sentences, so "
+        "abstention fell 1.0 -> 0.714 (5/7) mid-step. Fixed in "
+        "this step, two ways: the specific-term gate no longer "
+        "counts \"scholar\" as specific (o07's only specific terms "
+        "are now \"acceptance\" and \"rate\", neither in any KHS "
+        "sentence — reason \"missing_specific_term\"), and the "
+        "answer verification gained a scholarship-subject focus "
+        "check (o06 — reason "
+        "\"unanswered_scholarship_subject\"). Abstention is 1.0 "
+        "(7/7) again; the dip is recorded in "
+        "tests/test_corpus_growth.py, not hidden.")
     lines.append(
         "- The reranker adds no measured value on this corpus (answer-only "
-        "0.87 with and without it). It is kept because the mechanism is "
+        f"{no_rerank['quality']['answer_only_relevance']} without it vs "
+        f"{improved['quality']['answer_only_relevance']} with it). It is kept because the mechanism is "
         "sound and the corpus is small; on a larger corpus it must be "
         "re-measured before it is claimed to help.")
     lines.append(

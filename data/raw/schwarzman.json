@@ -1,0 +1,10 @@
+{
+  "slug": "schwarzman",
+  "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+  "title": "Schwarzman Scholars (FAQs)",
+  "fetched_at": "2026-11-18T07:18:00+08:00",
+  "http_status": 200,
+  "fetch_method": "browser-text-fetch",
+  "chars": 20018,
+  "note": "Direct HTTP fetch returned 200 but a thin JS-rendered page; text fetched with a text fetcher from the same official URL on 2026-11-18; saved verbatim, no paraphrase added."
+}

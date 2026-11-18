@@ -1,0 +1,109 @@
+Research Training Program - Department of Education, Australian Government
+
+Research Training Program (RTP) scholarship applications
+
+If you are a prospective higher degree by research (HDR) student interested in applying for an RTP scholarship, you will need to contact your chosen eligible higher education provider (HEP) directly. RTP scholarship applications cannot be made through the Department of Education.
+
+For further information regarding RTP scholarship applications, see the RTP – Frequently asked questions for students, in particular FAQs 3, 5, and, if applicable 28-30.
+
+Overview
+
+The Australian Government provides funding to eligible HEPs through the RTP to support their training of domestic and overseas students undertaking research doctorate and research masters degrees.
+
+The objectives of the RTP are to:
+
+- provide flexible funding to support training domestic students and overseas students undertaking HDRs at Australian HEPs
+
+- deliver graduates with the skills required to build careers in academia and other sectors of the labour market
+
+- support collaboration between HEPs and industry and other research end-users.
+
+Students can be offered RTP scholarships for one or more of the following:
+
+- tuition fees offset
+
+- a stipend for general living costs
+
+- allowances related to the ancillary cost of HDRs.
+
+From 1 January 2017, the RTP replaced the Australian Postgraduate Award (APA), International Postgraduate Research Scholarship (IPRS), and the Research Training Scheme (RTS).
+
+RTP scholarship periods of support
+
+RTP scholarships are available for a minimum of 3 years and up to a maximum of 4 years at the discretion of the HEP for students undertaking a research doctorate at a full-time student load, and for a minimum of 6 years up to a maximum of 8 years for research doctorate students studying at a part-time student load.
+
+For students undertaking a research masters, RTP scholarships are available for up to 2 years for students studying at a full-time student load, and for up to 4 years for those studying at a part-time student load.
+
+A student's period of support:
+
+- will not be increased for periods of paid recreation leave or personal leave approved by their HEP
+
+- will be increased by the length of any RTP scholarship suspension approved by the HEP, or any additional paid personal leave, paid parental leave, paid partner leave, or paid family and domestic violence leave that is approved by HEP.
+
+For further details, see the Higher Education Support (Commonwealth Scholarships) Guidelines 2025.
+
+RTP scholarship applications
+
+RTP scholarships are administered by individual HEPs who each have their own application and selection processes. Students need to contact HEPs directly to discuss how to apply for an RTP scholarship. Prospective students may choose to apply for an RTP scholarship at more than one HEP.
+
+Acknowledgement of RTP funding
+
+The RTP now has a digital object identifier (DOI): doi.org/10.82133/C42F-K220.
+
+From 3 December 2025, the Higher Education Support (Commonwealth Scholarships) Guidelines 2025 require that the Commonwealth's contribution must be acknowledged by RTP scholarship supported students, their supervisor or other parties that produce material relating to the student's HDR project are encouraged to include the RTP DOI in their acknowledgment of RTP funding for any material produced through their RTP supported HDR study by including the following form of words:
+
+This research was supported by the Commonwealth through an Australian Government Research Training Program Scholarship [DOI: https://doi.org/10.82133/C42F-K220].
+
+RTP scholarship supported students that have an Open Researcher and Contributor ID (ORCID) profile are also now required to include the RTP DOI in their profile. There is no requirement for RTP scholarship supported students who do not already have an ORCID profile to create one.
+
+In accordance with the Higher Education Support (Commonwealth Scholarships) Guidelines 2025, RTP Scholarships include RTP Fees Offset, RTP Stipends and RTP Allowances provided to a HDR student through the RTP.
+
+HEPs and HDR students are not prevented from also using other relevant persistent identifiers, including DOIs.
+
+Further information
+
+Please see the RTP Frequently Asked Questions (FAQs) for students and administrators for additional information.
+
+Guidelines, conditions and calculations
+
+Australian Government funding is provided through annual block grants to eligible Australian HEPs in accordance with section 46–20 of the Higher Education Support Act 2003 (HESA) and the Higher Education Support (Commonwealth Scholarships) Guidelines 2025.
+
+2026 RTP grant amounts allocated to eligible HEPs are based on a formula that reflects the relative performance of each HEP in attracting research income and supporting students to complete HDRs.
+
+A detailed guide to calculating RTP grant amounts is available.
+
+RTP stipend rates
+
+The RTP base and maximum stipend rates are indexed each year, effective from 1 January. The base and maximum RTP stipend rates for the following year are announced by 1 October each year. The table below details RTP stipend rates for recent years, the current year and, where applicable, published future rates.
+
+RTP stipend rates: Year 2027, Full-time base RTP stipend rate ($) 35,550, Full-time max RTP stipend rate ($) 55,537. Year 2026, Full-time base RTP stipend rate ($) 34,315, Full-time max RTP stipend rate ($) 53,608. Year 2025, Full-time base RTP stipend rate ($) 33,511, Full-time max RTP stipend rate ($) 52,352.
+
+A time series of historical stipend rates for postgraduate research students is available.
+
+RTP industry internship weighting
+
+The Government introduced the RTP industry internship weighting through the 2021–22 Budget to incentivise early engagement between industry, HEPs and research doctorate students, and strengthen links between the latest research and industry innovation. It will also open a pipeline of highly skilled research doctorate students for employment in industry based, non-academic roles.
+
+An additional weighting of 2.0 within the RTP funding allocation formula is applied to each research doctorate student reported from 2022 as completing their course having undertaken an eligible industry internship.
+
+Eligible industry internships must be at least 3 months long, consist of 60 full-time equivalent days of engagement, and agreed in written form between the student, HEP and research end-user within 18 months of course commencement for a full-time student, or within 36 months for a part-time student. To be eligible for the RTP industry internship additional weighting, the research end-user must be an eligible research end-user at the time of the making of an internship agreement. The timeframe for making the written agreement is extended by any HDR period of suspension within the first 18 months of the student's enrolment, or any increase to the period of support.
+
+HEPs, research doctorate students, and research end-users have the flexibility to decide on optimal arrangements for each industry internship within the eligibility criteria, including the timing of their commencement.
+
+Further information is available on the RTP industry internship weighting FAQs page.
+
+HDR grievance factsheet
+
+The HDR grievance factsheet provides information for HDR students, including RTP scholarship recipients, on the avenues available to pursue a grievance in regard to issues with their HEP.
+
+Enquiries
+
+For more information, refer to:
+
+- RTP FAQs for students
+
+- RTP FAQs for administrators
+
+- RTP industry internship weighting FAQs
+
+- or email RBGrants@education.gov.au

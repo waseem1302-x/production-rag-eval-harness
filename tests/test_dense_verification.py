@@ -15,6 +15,8 @@ from app.answer import (
     answer as build_answer,
     dense_sentence_scores,
     verify_answer_relevance,
+    _named_scholarship_stems,
+    _specific_terms,
 )
 from app.config import CHUNKS_FILE
 from app.eval import load_golden, run_eval
@@ -34,12 +36,25 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # "closed"), which is answer-only correct, so the pinned set is 31
 # and answer-only relevance is 0.912 (31/34) — the 30 originals are
 # still all required, below.
+# Phase 2, Step 6 adds golden q24-q32 (one per new document) and
+# o06-o07. Eight of the nine new factual questions are answer-only
+# correct (q24-q31); q32 is a documented miss (bullet-list merging,
+# see the regression test below), so the pinned set is 39 and
+# answer-only relevance is 0.907 (39/43). Abstention first fell
+# 1.0 -> 0.714 (5/7) on corpus growth — o06 and o07 were answered
+# instead of abstained, because the grown corpus gave the lexical
+# gates other scholarships' deadline and rate-adjacent sentences to
+# quote — and Step 6 then fixed both (see
+# tests/test_corpus_growth.py): "scholar" joined the generic terms
+# (o07) and a scholarship-subject focus check was added to the
+# answer verification (o06), so abstention is 1.0 (7/7) again.
 BASELINE_CORRECT = [
     "e01", "e02", "e03", "e04", "e05", "e06", "e07", "e08", "e09",
     "e10", "e11", "q01", "q02", "q04", "q05", "q06", "q07", "q08", "q09",
     "q11", "q12", "q13", "q14", "q15", "q16", "q18", "q19", "q20",
     "q21", "q22", "q23",
 ]
+STEP6_CORRECT = ["q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31"]
 
 
 @pytest.fixture(scope="module")
@@ -128,6 +143,67 @@ def test_verification_abstains_on_low_dense_similarity():
     assert check["reason"] == "low_answer_similarity"
 
 
+# --- answer verification: scholarship-subject focus (Phase 2, Step 6) ---
+
+O06 = "What is the deadline for the Australia Awards Scholarship 2027?"
+O07 = ("What is the acceptance rate for the Knight-Hennessy Scholars "
+       "programme?")
+
+
+def test_scholar_is_a_generic_term():
+    # "scholar(s)" is as generic as "scholarship" in this corpus,
+    # so it must not count as a specific term: o07's ask
+    # ("acceptance", "rate") is then the whole specific set, and no
+    # KHS sentence contains either, so the specific-term gate fires.
+    assert "scholar" not in _specific_terms(O07)
+    assert _specific_terms(O07) == {"acceptanc", "rat"}
+
+
+def test_named_scholarship_stems_walk_back_from_scholarship():
+    assert _named_scholarship_stems(O06) == {"australia", "award"}
+    # A known document's name drops out: its doc-alias stems are
+    # excluded, and the doc-name gate owns it anyway.
+    assert _named_scholarship_stems(
+        "What is the deadline for the Chevening Scholarship 2027?") == set()
+    assert _named_scholarship_stems(
+        "How do I bake sourdough bread at home?") == set()
+
+
+def test_verification_abstains_on_unknown_scholarship_subject():
+    # The o06 shape in miniature: deadline + year sentences from
+    # other scholarships, none naming Australia Awards.
+    check = verify_answer_relevance(
+        O06,
+        ["Each recipient will receive an official scholarship offer "
+         "by email by the end of April 2027.",
+         "The scholarship must then be accepted or declined within "
+         "the deadline stated in the offer."],
+        dense_sims={"x": 0.64})
+    assert check["answers"] is False
+    assert check["reason"] == "unanswered_scholarship_subject"
+
+
+def test_verification_passes_when_subject_sentence_names_it():
+    check = verify_answer_relevance(
+        O06,
+        ["The Australia Awards Scholarship deadline is 30 April 2027."],
+        dense_sims={"x": 0.64})
+    assert check["answers"] is True
+    assert check["reason"] is None
+
+
+def test_verification_subject_check_skipped_for_known_document():
+    # A known name is owned by the doc-name gate: Chevening
+    # sentences that never repeat the word "Chevening" must still
+    # pass verification (the gate already restricted candidates to
+    # the Chevening page).
+    check = verify_answer_relevance(
+        "What is the deadline for the Chevening Scholarship 2027?",
+        ["The deadline stated in the offer is 30 April 2027."],
+        dense_sims={"x": 0.64})
+    assert check["answers"] is True
+
+
 def test_verification_passes_answerable_question():
     check = verify_answer_relevance(
         Q01,
@@ -181,6 +257,28 @@ def test_verification_does_not_abstain_on_answerable(retriever):
     # q03's answer-only status is asserted by the regression test
     # below (it is a known remaining miss for the extractive path);
     # this test pins only that verification does not refuse it.
+
+
+def test_verification_abstains_on_o06_and_o07(retriever):
+    # Phase 2, Step 6: corpus growth first broke both (abstention
+    # 1.0 -> 0.714), then the fix restored them. o06 names a
+    # scholarship the corpus does not hold ("Australia Awards"
+    # appears nowhere in it) and is refused by the
+    # scholarship-subject focus check; o07 asks for a fact the
+    # fetched KHS page does not state (no "acceptance" anywhere in
+    # the corpus) and is refused by the specific-term gate, which
+    # no longer counts "scholar" as specific.
+    cases = [
+        (O06, "unanswered_scholarship_subject"),
+        (O07, "missing_specific_term"),
+    ]
+    for question, reason in cases:
+        retrieved = retriever.search(question, top_k=5)
+        result = build_answer(question, retrieved)
+        assert result["found"] is False, question
+        assert result["answer"] == "Not found in the corpus."
+        assert result["abstention_reason"] == reason, (question, result)
+        assert result["citations"] == []
 
 
 def test_other_out_of_corpus_reasons_unchanged(retriever):
@@ -260,22 +358,32 @@ def test_no_baseline_correct_answer_lost(retriever):
     Phase 2, Step 4: the pinned set grows by exactly e11 (new
     golden question, answer-only correct) and answer-only relevance
     moves 0.909 -> 0.912 (31/34); e02 and e05 stay in the set with
-    their verdicts changed to "closed"."""
+    their verdicts changed to "closed".
+    Phase 2, Step 6: the pinned set grows by exactly q24-q31 (new
+    golden questions, answer-only correct) and answer-only relevance
+    moves 0.912 -> 0.907 (39/43); q32 is a documented miss (the SEK
+    12,000 sentence is merged into one long bullet-list sentence by
+    the splitter, so it loses to the page intro on shared stems).
+    Abstention is 1.0 (7/7): o06 and o07 abstain again after the
+    Step 6 fix (see test_corpus_growth.py) — the 0.714 dip measured
+    mid-step, when corpus growth first broke both, is recorded in
+    that file's history, not hidden."""
     result = run_eval(retriever, load_golden())
-    assert result["answer_only_relevance"] == 0.912
+    assert result["answer_only_relevance"] == 0.907
     assert result["answer_relevance_proxy"] == 1.0
     assert result["faithfulness"] == 1.0
     assert result["abstention_accuracy"] == 1.0
     assert result["eligibility_accuracy"] == 1.0
     correct = {r["id"] for r in result["per_question"]
                if r["answer_only_relevant"]}
-    assert set(BASELINE_CORRECT) <= correct, (
+    expected = set(BASELINE_CORRECT) | set(STEP6_CORRECT)
+    assert expected <= correct, (
         "lost baseline-correct questions: "
-        f"{sorted(set(BASELINE_CORRECT) - correct)}")
-    assert correct == set(BASELINE_CORRECT), (
-        f"unexpected changes vs baseline: added={sorted(correct - set(BASELINE_CORRECT))} "
-        f"lost={sorted(set(BASELINE_CORRECT) - correct)}")
-    for qid in ("q03", "q10", "q17"):
+        f"{sorted(expected - correct)}")
+    assert correct == expected, (
+        f"unexpected changes vs baseline: added={sorted(correct - expected)} "
+        f"lost={sorted(expected - correct)}")
+    for qid in ("q03", "q10", "q17", "q32"):
         row = next(r for r in result["per_question"] if r["id"] == qid)
         assert row["answer_only_relevant"] is False, qid
         assert row["found"] is True, qid

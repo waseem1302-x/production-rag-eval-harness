@@ -276,14 +276,15 @@ def build_summary(results_dir: Path = RESULTS_DIR) -> Path:
         raise FileNotFoundError(f"no benchmark result files in {results_dir}")
     n_in = results[0]["quality"]["n_in_corpus"]
     n_out = results[0]["quality"]["n_out_of_corpus"]
-    lines = ["# Benchmark results (Phase 2, Step 3 — re-run with current code)\n",
+    lines = ["# Benchmark results (Phase 2, Step 6 — re-run with current code)\n",
              f"Same golden set for every configuration: {n_in} in-corpus + "
              f"{n_out} out-of-corpus questions. Latency is measured after "
              "warm-up with the embedding model already loaded. Cost is $0.00: "
-             "everything runs locally on CPU, no API calls. The Step 1 "
-             "numbers in the docs were stale after Step 2 changed the "
-             "answer() defaults, so this table is a fresh re-run of all "
-             "configurations with the current code.\n",
+             "everything runs locally on CPU, no API calls. The Step 3 "
+             "numbers in the docs were measured on the 31-chunk corpus "
+             "and the 39-question golden set, so this table is a fresh "
+             "re-run of all configurations with the current code on the "
+             "grown corpus.\n",
              "Latency varies run to run by tens of milliseconds on this VM "
              "(shared CPU, 1.5 cores). The order of magnitude — BM25 ~1 ms, "
              "dense ~50–150 ms, cross-encoder rerank ~seconds per query — "

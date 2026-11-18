@@ -1,0 +1,10 @@
+{
+  "slug": "commonwealth-shared",
+  "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+  "title": "Commonwealth Shared Scholarships",
+  "fetched_at": "2026-11-18T07:18:00+08:00",
+  "http_status": 200,
+  "fetch_method": "browser-text-fetch",
+  "chars": 22643,
+  "note": "Direct HTTP fetch returned 200 but unrelated thin content; text fetched with a text fetcher from the same official URL on 2026-11-18; saved verbatim, no paraphrase added."
+}

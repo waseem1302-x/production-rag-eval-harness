@@ -2,7 +2,7 @@
 
 ## What was before
 
-The naive baseline is the tutorial chatbot: BM25 retrieval, no reranker, first-sentence picking, no abstention gates — it answers every question with the first sentences of the top chunk and never says "I don't know". It also has no notion of eligibility and no record of the corpus's messy data. Every number below is measured on the same golden set (23 in-corpus + 5 out-of-corpus factual questions).
+The naive baseline is the tutorial chatbot: BM25 retrieval, no reranker, first-sentence picking, no abstention gates — it answers every question with the first sentences of the top chunk and never says "I don't know". It also has no notion of eligibility and no record of the corpus's messy data. Every number below is measured on the same golden set (32 in-corpus + 7 out-of-corpus factual questions).
 
 ## What happened after
 
@@ -15,20 +15,20 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 | recall@3 | 1.0 | 1.0 | +0.000 |
 | recall@5 | 1.0 | 1.0 | +0.000 |
 | Evidence relevance (proxy) | 1.0 | 1.0 | +0.000 |
-| Answer-only relevance | 0.522 | 0.87 | +0.348 |
+| Answer-only relevance | 0.625 | 0.875 | +0.250 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
 | Abstention accuracy | 0.0 | 1.0 | +1.000 |
-| Retrieval latency (mean) | 0.2 ms | 123.7 ms | +123.5 ms |
-| Total latency (mean) | 0.5 ms | 1490.6 ms | +1490.1 ms |
+| Retrieval latency (mean) | 0.3 ms | 185.9 ms | +185.6 ms |
+| Total latency (mean) | 0.7 ms | 2566.1 ms | +2565.4 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 (local CPU, no API calls) |
 
 ## Why it changed
 
-- Answer-only relevance rose because scored picking replaced first-sentence picking: the baseline returned whatever sentences came first in the top chunk — usually headers, navigation or a marketing intro. Scored picking ranks sentences by shared query stems, and the short-fragment penalty demotes header fragments. The retrieval signal did not drive this: hybrid-plain (hybrid retrieval, naive answering) scores only 0.565 on answer-only, barely above the baseline.
+- Answer-only relevance rose because scored picking replaced first-sentence picking: the baseline returned whatever sentences came first in the top chunk — usually headers, navigation or a marketing intro. Scored picking ranks sentences by shared query stems, and the short-fragment penalty demotes header fragments. The retrieval signal did not drive this: hybrid-plain (hybrid retrieval, naive answering) scores only 0.656 on answer-only, barely above the baseline.
 - Abstention rose because the gates exist: the baseline answers everything (abstention 0.0). The score threshold, doc-name consistency, shared-stem and specific-term gates refuse questions the corpus cannot answer, and each refusal records its reason.
-- Recall did not change, because it was already saturated: recall@5 is 1.0 for every configuration, including BM25-only. On a 31-chunk corpus the right document is always in the top 5 by keyword alone. Dense retrieval buys no measured recall here at ~50x the latency — that is a finding about this corpus size, not a failure of dense retrieval in general.
+- Recall did not change, because it was already saturated: recall@5 is 1.0 for every configuration, including BM25-only. On a 101-chunk corpus the right document is always in the top 5 by keyword alone. Dense retrieval buys no measured recall here at ~50x the latency — that is a finding about this corpus size, not a failure of dense retrieval in general.
 - Faithfulness stayed at 1.0 because both pipelines are extractive: every answer sentence is copied verbatim from a cited chunk. Faithfulness measures copying, not correctness — it cannot catch an answer that quotes the right words for the wrong question.
-- Eligibility and data quality are new capabilities, not improvements on the baseline: the baseline had no profile, no rules and no record of the corpus's problems. Measured now: eligibility accuracy 1.0 (10/10 golden questions); data-quality checker finds 36 findings (8 resolved, 28 open).
+- Eligibility and data quality are new capabilities, not improvements on the baseline: the baseline had no profile, no rules and no record of the corpus's problems. Measured now: eligibility accuracy 1.0 (11/11 golden questions); data-quality checker finds 72 findings (9 resolved, 63 open).
 
 ## Failure table — in-corpus questions
 
@@ -36,13 +36,13 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 |---|---|---|---|---|
 | q01 | What does the Chevening Scholarship fund? | ✓ | ✓ | — |
 | q02 | Is the Chevening Scholarship fully funded? | ✓ | ✓ | — |
-| q03 | How long are the master's studies supported by the SI Scholarship for Global Professionals? | ✗ | ✗ | paraphrase gap — most of the expected answer's content words (one, two, year) do not appear in the question, so lexical sentence picking cannot find the sentence; needs dense sentence scoring or a generative answer (Phase 2) |
+| q03 | How long are the master's studies supported by the SI Scholarship for Global Professionals? | ✓ | ✗ | REGRESSION — the improved pipeline lost a question the baseline got |
 | q04 | How many countries are eligible for the SI Scholarship for Global Professionals? | ✗ | ✓ | wrong sentence from the right chunk — first-sentence picking returned an intro or unrelated sentence |
 | q05 | How many countries does the Fulbright Foreign Student Program operate in? | ✗ | ✓ | header/nav text picked first — the first sentences of the top chunk are page furniture, not content |
 | q06 | How many foreign students receive Fulbright scholarships each year? | ✗ | ✓ | header/nav text picked first — the first sentences of the top chunk are page furniture, not content |
 | q07 | How many scholarship options does the DAAD database list for selection? | ✗ | ✓ | header/nav text picked first — the first sentences of the top chunk are page furniture, not content |
 | q08 | Who are DAAD Programmes for Graduates aimed at? | ✓ | ✓ | — |
-| q09 | How many institutions from how many countries are involved in an Erasmus Mundus Joint Master? | ✓ | ✓ | — |
+| q09 | How many institutions from how many countries are involved in an Erasmus Mundus Joint Master? | ✗ | ✓ | wrong sentence from the right chunk — first-sentence picking returned an intro or unrelated sentence |
 | q10 | How long does an Erasmus Mundus Joint Master last? | ✗ | ✗ | paraphrase gap — most of the expected answer's content words (academic, years) do not appear in the question, so lexical sentence picking cannot find the sentence; needs dense sentence scoring or a generative answer (Phase 2) |
 | q11 | At which degree levels does the France Excellence Eiffel Scholarship fund study? | ✓ | ✓ | — |
 | q12 | Who submits applications for the Eiffel Scholarship? | ✗ | ✓ | wrong sentence from the right chunk — first-sentence picking returned an intro or unrelated sentence |
@@ -57,6 +57,15 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 | q21 | Is the Vanier Canada Graduate Scholarship still accepting applications? | ✓ | ✓ | — |
 | q22 | How much is the monthly allowance for a master's student on the Eiffel Scholarship? | ✓ | ✓ | — |
 | q23 | How much is the monthly stipend for a doctoral student on the Eiffel Scholarship? | ✓ | ✓ | — |
+| q24 | How many full-cost Gates Cambridge Scholarships are offered each year? | ✓ | ✓ | — |
+| q25 | What is the annual stipend for a Rhodes Scholar in 2026-27? | ✓ | ✓ | — |
+| q26 | How many years of funding do Knight-Hennessy Scholars receive at Stanford? | ✓ | ✓ | — |
+| q27 | What is the maximum age for Schwarzman Scholars as of August 1 of their enrollment year? | ✓ | ✓ | — |
+| q28 | When is the closing date for Commonwealth Shared Scholarship applications for 2027/28? | ✓ | ✓ | — |
+| q29 | What is the full-time base RTP stipend rate for 2026? | ✗ | ✓ | wrong sentence from the right chunk — first-sentence picking returned an intro or unrelated sentence |
+| q30 | How many Marshall Scholarships are awarded each year? | ✓ | ✓ | — |
+| q31 | How much is the monthly EMJM scholarship for individuals? | ✓ | ✓ | — |
+| q32 | What is the monthly allowance for a Pioneering Women in STEM scholar? | ✓ | ✗ | REGRESSION — the improved pipeline lost a question the baseline got |
 
 ## Failure table — out-of-corpus questions (abstention)
 
@@ -65,12 +74,16 @@ The full Phase 1 pipeline: hybrid dense+BM25 retrieval, lexical reranker, scored
 | o01 | What is the deadline for the Chevening Scholarship 2027? | ✗ answered | ✓ abstained | abstained (missing_specific_term) |
 | o02 | What is the monthly stipend for the MEXT scholarship in yen? | ✗ answered | ✓ abstained | abstained (missing_specific_term) |
 | o03 | What is the acceptance rate for the Erasmus Mundus programme? | ✗ answered | ✓ abstained | abstained (missing_specific_term) |
-| o04 | Which university in Canada is ranked number one for Vanier scholars? | ✗ answered | ✗ answered | lexical gates pass: the answer sentences share stems with the question, but no sentence actually names what the question asks for — needs a verification step (Phase 2) |
+| o04 | Which university in Canada is ranked number one for Vanier scholars? | ✗ answered | ✓ abstained | abstained (unanswered_ranking) |
 | o05 | What is the GPA requirement for the DAAD scholarship? | ✗ answered | ✓ abstained | abstained (missing_specific_term) |
+| o06 | What is the deadline for the Australia Awards Scholarship 2027? | ✗ answered | ✓ abstained | abstained (unanswered_scholarship_subject) |
+| o07 | What is the acceptance rate for the Knight-Hennessy Scholars programme? | ✗ answered | ✓ abstained | abstained (missing_specific_term) |
 
 ## What still fails, and why
 
-- q03, q10, q17 (paraphrase gap): the expected answer's key terms do not appear in the question, so lexical picking cannot rank the right sentence first. Fix planned for Phase 2: dense sentence scoring, or a generative answer with a verification step.
-- o04 (Vanier ranked university): the system answers with Vanier sentences that never name a ranked university. The lexical gates check word overlap, not whether the sentences actually answer the question. Fix planned for Phase 2: an answer-verification step that checks the picked sentences contain the question's object.
-- The reranker adds no measured value on this corpus (answer-only 0.87 with and without it). It is kept because the mechanism is sound and the corpus is small; on a larger corpus it must be re-measured before it is claimed to help.
-- Dense retrieval adds no measured recall and slightly hurts answer-only relevance (dense-only 0.826 vs BM25-only 0.87) at ~50x the latency. On this corpus BM25-only is the better engineering choice; dense is kept in the hybrid because it is expected to matter as the corpus grows, and the ablation will tell us when.
+- q03, q10, q17 (paraphrase gap): the expected answer's key terms do not appear in the question, so lexical picking cannot rank the right sentence first. Dense sentence scoring shipped in Phase 2 Step 2 and did not fix these three; what remains is a generative answer with a verification step.
+- q32 (bullet-list merging): the SEK 12,000 allowance sentence sits in a dash-led bullet list, and the sentence splitter merges the whole list into one long sentence, so it shares fewer query stems than the page intro and is not picked. The evidence is in the top retrieved chunk; the picker did not surface it.
+- q03, q32 (baseline gained, improved unchanged): on the grown corpus the naive baseline's BM25 top chunk changed, so its first-sentence picking now lands on the right sentence for q03 and q32, while the improved pipeline still misses both (q03 paraphrase gap, q32 bullet-list merging). The failure table labels both REGRESSION, but the improved column is unchanged since Step 5 — no question the improved pipeline got right was lost; the baseline got luckier. The no-regression test pins exactly these two rows, so a third one fails the build.
+- o06, o07 (abstention lost on corpus growth, then fixed in Step 6): the grown corpus gave the lexical gates other scholarships' deadline and rate-adjacent sentences to quote, and the doc-name gate only fires when a known document is named — o06 (Australia Awards deadline, a scholarship not in the corpus) was answered with SI + Commonwealth dates and o07 (KHS acceptance rate, a fact not on the fetched page) with KHS funding sentences, so abstention fell 1.0 -> 0.714 (5/7) mid-step. Fixed in this step, two ways: the specific-term gate no longer counts "scholar" as specific (o07's only specific terms are now "acceptance" and "rate", neither in any KHS sentence — reason "missing_specific_term"), and the answer verification gained a scholarship-subject focus check (o06 — reason "unanswered_scholarship_subject"). Abstention is 1.0 (7/7) again; the dip is recorded in tests/test_corpus_growth.py, not hidden.
+- The reranker adds no measured value on this corpus (answer-only 0.875 without it vs 0.875 with it). It is kept because the mechanism is sound and the corpus is small; on a larger corpus it must be re-measured before it is claimed to help.
+- Dense retrieval adds no measured recall and slightly hurts answer-only relevance (dense-only 0.844 vs BM25-only 0.875) at ~50x the latency. On this corpus BM25-only is the better engineering choice; dense is kept in the hybrid because it is expected to matter as the corpus grows, and the ablation will tell us when.

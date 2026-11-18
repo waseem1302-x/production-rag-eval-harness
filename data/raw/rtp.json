@@ -1,0 +1,10 @@
+{
+  "slug": "rtp",
+  "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+  "title": "Research Training Program (RTP, Australia)",
+  "fetched_at": "2026-11-18T07:18:00+08:00",
+  "http_status": null,
+  "fetch_method": "browser-text-fetch",
+  "chars": 7674,
+  "note": "Text fetched with a text fetcher from the official URL on 2026-11-18; saved verbatim, no paraphrase added. Direct HTTP fetch timed out."
+}

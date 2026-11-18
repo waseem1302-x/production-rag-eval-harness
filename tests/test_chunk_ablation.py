@@ -69,13 +69,15 @@ def test_build_index_accepts_chunk_size_parameter(tmp_path):
     assert stats["chunk_tokens"] == 256
     assert stats["chunk_chars"] == 1024
     assert stats["overlap_chars"] == 200
-    assert stats["n_chunks"] == 60  # same corpus, 256-token chunks
-    assert stats["n_vectors"] == 60
+    # Phase 2, Step 6: 212 chunks at 256 tokens on the grown
+    # 19-document corpus (was 60 on the 10-document corpus).
+    assert stats["n_chunks"] == 212
+    assert stats["n_vectors"] == 212
     chunks_file = tmp_path / "chunks.jsonl"
     assert chunks_file.exists()
     assert (tmp_path / "faiss.index").exists()
     chunks = [json.loads(line) for line in chunks_file.read_text().splitlines() if line.strip()]
-    assert len(chunks) == 60
+    assert len(chunks) == 212
     assert max(len(c["text"]) for c in chunks) <= 1024 + CHUNK_OVERLAP_CHARS
 
 
@@ -88,7 +90,9 @@ def test_eval_runs_against_non_default_chunk_size():
     chunks = []
     for doc in docs:
         chunks.extend(chunk_document(doc["doc"], doc["text"], chunk_chars=1024))
-    assert len(chunks) == 60
+    # Phase 2, Step 6: 212 chunks at 256 tokens on the grown
+    # 19-document corpus (was 60 on the 10-document corpus).
+    assert len(chunks) == 212
     retriever = Retriever(chunks)
     golden = [q for q in load_golden() if q["id"] in ("q01", "q02", "e01", "o01")]
     result = run_eval(retriever, golden)
