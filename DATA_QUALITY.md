@@ -333,8 +333,11 @@ What the fix did **not** do (remaining gaps, pinned by
   level) were added for this step and all pass; e11 (Vanier doctoral
   applicant, verdict `closed`) was added in Phase 2, Step 4 and passes.
   Step 6 added q24–q32 (one per new document); q24–q31 pass, q32 is
-  a documented miss (bullet-list merging — the SEK 12,000 sentence
-  is merged into one long list sentence by the splitter).
+  a documented miss. The Phase 2 improvement split the dash-led
+  bullet items into separate sentences (q03 fixed by the same
+  change), but q32 still misses on scoring: the SEK 12,000 sentence
+  shares only "monthly" and "allowance" with the question, while the
+  page intro shares pioneering, women, stem and scholar.
 - **Re-ingest rule**: after any re-fetch, run
   `python -m scripts.check_data_quality` and update this document
   from its report before claiming the numbers still hold.

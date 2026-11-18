@@ -20,16 +20,16 @@
   "latency": {
     "n_queries": 39,
     "retrieval": {
-      "mean_ms": 2.0,
-      "p50_ms": 2.0,
-      "p95_ms": 2.7,
-      "max_ms": 4.1
+      "mean_ms": 6.6,
+      "p50_ms": 2.4,
+      "p95_ms": 17.3,
+      "max_ms": 79.9
     },
     "search_plus_answer": {
-      "mean_ms": 1179.2,
-      "p50_ms": 1107.7,
-      "p95_ms": 2990.5,
-      "max_ms": 3973.4
+      "mean_ms": 3248.7,
+      "p50_ms": 3094.3,
+      "p95_ms": 5312.4,
+      "max_ms": 8195.6
     }
   },
   "cost_per_query_usd": 0.0,
@@ -523,7 +523,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. During each of the first three years of graduate study, Knight-Hennessy scholars receive several types of funding: - A fellowship applied directly to cover tuition and associated fees. - A stipend for living and academic expenses (such as room and board, books, academic supplies, instructional materials, local transportation, and reasonable personal expenses). - A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. Additional funding specific to certain years: - Newly enrolling scholars receive a one-time relocation stipend intended to offset some of the costs associated with relocation to the area and/or technology purchases. - Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel). If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment.",
+      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment. Funding | Knight-Hennessy Scholars at Stanford University. Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel).",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -637,7 +637,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. You must be able to prove certification for your work experience by using our template forms which can be found under the section 'How to Apply \u2013 Apply for a Pioneering Women in STEM Scholarship' on 13 November. The SI scholarship Pioneering women in STEM is a competitive fully-funded scholarship that includes: - Full tuition fee coverage. You are not eligible for Pioneering Women in STEM if you\u2026. - are not a female citizen of the eligible countries. To apply, you must: - Be a female citizen of one of the 10 eligible countries in Africa and Asia. - Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship.",
+      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. 13 November 2026: Pioneering Women in STEM application documents and eligible master's programmes are published on this page. You must be able to prove certification for your work experience by using our template forms which can be found under the section 'How to Apply \u2013 Apply for a Pioneering Women in STEM Scholarship' on 13 November. You are not eligible for Pioneering Women in STEM if you\u2026. - are not a female citizen of the eligible countries.",
       "answer_relevant": true,
       "answer_only_relevant": false,
       "eligibility_verdict": null

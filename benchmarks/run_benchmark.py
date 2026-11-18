@@ -276,7 +276,7 @@ def build_summary(results_dir: Path = RESULTS_DIR) -> Path:
         raise FileNotFoundError(f"no benchmark result files in {results_dir}")
     n_in = results[0]["quality"]["n_in_corpus"]
     n_out = results[0]["quality"]["n_out_of_corpus"]
-    lines = ["# Benchmark results (Phase 2, Step 6 — re-run with current code)\n",
+    lines = ["# Benchmark results (Phase 2 improvement — re-run with current code)\n",
              f"Same golden set for every configuration: {n_in} in-corpus + "
              f"{n_out} out-of-corpus questions. Latency is measured after "
              "warm-up with the embedding model already loaded. Cost is $0.00: "

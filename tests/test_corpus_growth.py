@@ -138,9 +138,12 @@ def test_new_golden_questions_pass_except_documented_q32(retriever):
         assert rows[qid]["answer_only_relevant"] is True, qid
     # q32 is a documented miss, not a regression to hide: the
     # "SEK 12,000" sentence is in the top retrieved chunk
-    # (si-pioneering-women-1), but the sentence splitter merges the
-    # whole dash-led bullet list into one long sentence, so it shares
-    # fewer query stems than the page intro and is never picked.
+    # (si-pioneering-women-1) and is now its own pickable sentence
+    # (the Phase 2 improvement splits dash-led bullet items), but
+    # it still shares only "monthly" and "allowance" with the
+    # question while the page intro shares pioneering, women, stem
+    # and scholar, so the intro still outscores it and the sentence
+    # is never picked.
     q32 = rows["q32"]
     assert q32["answer_only_relevant"] is False
     assert q32["found"] is True

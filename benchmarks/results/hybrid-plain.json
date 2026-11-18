@@ -20,16 +20,16 @@
   "latency": {
     "n_queries": 39,
     "retrieval": {
-      "mean_ms": 84.1,
-      "p50_ms": 88.7,
-      "p95_ms": 186.2,
-      "max_ms": 221.8
+      "mean_ms": 172.3,
+      "p50_ms": 103.2,
+      "p95_ms": 685.8,
+      "max_ms": 874.5
     },
     "search_plus_answer": {
-      "mean_ms": 84.6,
-      "p50_ms": 89.1,
-      "p95_ms": 187.2,
-      "max_ms": 222.1
+      "mean_ms": 176.3,
+      "p50_ms": 104.7,
+      "p95_ms": 686.5,
+      "max_ms": 875.1
     }
   },
   "cost_per_query_usd": 0.0,
@@ -523,7 +523,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Funding | Knight-Hennessy Scholars at Stanford University. Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. This funding applies to the degree(s) to which scholars are preparing to enroll at the time of scholar selection. During each of the first three years of graduate study, Knight-Hennessy scholars receive several types of funding: - A fellowship applied directly to cover tuition and associated fees. - A stipend for living and academic expenses (such as room and board, books, academic supplies, instructional materials, local transportation, and reasonable personal expenses). - A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. Additional funding specific to certain years: - Newly enrolling scholars receive a one-time relocation stipend intended to offset some of the costs associated with relocation to the area and/or technology purchases. - Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel).",
+      "answer": "Funding | Knight-Hennessy Scholars at Stanford University. Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. This funding applies to the degree(s) to which scholars are preparing to enroll at the time of scholar selection. A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. Newly enrolling scholars receive a one-time relocation stipend intended to offset some of the costs associated with relocation to the area and/or technology purchases.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -637,7 +637,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "To apply, you must: - Be a female citizen of one of the 10 eligible countries in Africa and Asia. - Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. - Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship); - Have documented work and leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. - Not have previously received an SI scholarship for studies or hold a Swedish degree. Key dates. - 16 October 2026 \u2013 15 January 2027: Apply to Swedish master's programmes through University Admissions. - 13 November 2026: Pioneering Women in STEM application documents and eligible master's programmes are published on this page. - 8-24 February 2027: The application portal for SI Scholarships is open for two weeks. The SI scholarship Pioneering women in STEM is a competitive fully-funded scholarship that includes: - Full tuition fee coverage. The fee is paid directly by SI to your Swedish university each semester. - A monthly allowance of SEK 12,000 to cover your living expenses throughout the study period. - A travel grant of SEK 15,000. Pioneering Women in STEM - Svenska institutet.",
+      "answer": "Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. 13 November 2026: Pioneering Women in STEM application documents and eligible master's programmes are published on this page. A monthly allowance of SEK 12,000 to cover your living expenses throughout the study period. Pioneering Women in STEM - Svenska institutet. Are you ready to use your STEM expertise to drive societal change?",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null

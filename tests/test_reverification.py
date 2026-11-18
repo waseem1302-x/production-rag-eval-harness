@@ -127,9 +127,13 @@ def test_new_multiple_amounts_findings_are_resolved_with_fields():
 # --- eval still passes after the re-fetch updates --------------------------
 
 def test_eval_unchanged_after_reverification():
-    """No .txt changed, so the re-run eval must match the saved
+    """No .txt changed in Step 7, so the re-run eval matched the saved
     before-run file question by question — no golden question was
-    silently changed, dropped or lost."""
+    silently changed, dropped or lost. The Phase 2 improvement then
+    changed exactly one row on purpose (q03, fixed by the bullet-list
+    split), so this test now pins that: every other row is identical
+    to the Step 7 before-run file, and answer-only relevance is 0.930
+    (40/43), not 0.907 (39/43)."""
     before = json.loads(
         (RESULTS_DIR / "extractive_eval_before_reverification.json").read_text())
     after = json.loads((RESULTS_DIR / "extractive_eval.json").read_text())
@@ -137,12 +141,21 @@ def test_eval_unchanged_after_reverification():
     assert after["n_out_of_corpus"] == before["n_out_of_corpus"] == 7
     assert after["n_eligibility"] == before["n_eligibility"] == 11
     for metric in ("recall@3", "recall@5", "answer_relevance_proxy",
-                   "answer_only_relevance", "faithfulness",
+                   "faithfulness",
                    "abstention_accuracy", "eligibility_accuracy"):
         assert after[metric] == before[metric], metric
+    assert before["answer_only_relevance"] == 0.907
+    assert after["answer_only_relevance"] == 0.93
     before_rows = {r["id"]: r for r in before["per_question"]}
     after_rows = {r["id"]: r for r in after["per_question"]}
     assert set(after_rows) == set(before_rows)
     for qid, row in before_rows.items():
+        if qid == "q03":
+            # Fixed by the Phase 2 improvement (bullet-list split).
+            assert row["answer_only_relevant"] is False
+            assert after_rows[qid]["answer_only_relevant"] is True
+            assert row["found"] is True
+            assert after_rows[qid]["found"] is True
+            continue
         assert after_rows[qid]["answer_only_relevant"] == row["answer_only_relevant"], qid
         assert after_rows[qid]["found"] == row["found"], qid

@@ -38,7 +38,7 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # still all required, below.
 # Phase 2, Step 6 adds golden q24-q32 (one per new document) and
 # o06-o07. Eight of the nine new factual questions are answer-only
-# correct (q24-q31); q32 is a documented miss (bullet-list merging,
+# correct (q24-q31); q32 is a documented miss (bullet-list scoring,
 # see the regression test below), so the pinned set is 39 and
 # answer-only relevance is 0.907 (39/43). Abstention first fell
 # 1.0 -> 0.714 (5/7) on corpus growth — o06 and o07 were answered
@@ -48,6 +48,13 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # tests/test_corpus_growth.py): "scholar" joined the generic terms
 # (o07) and a scholarship-subject focus check was added to the
 # answer verification (o06), so abstention is 1.0 (7/7) again.
+# Phase 2 improvement (bullet-list splitting): the splitter now
+# splits dash-led bullet items into their own sentences, which
+# fixes q03 (its duration sentence is picked once the SI list
+# items stop gluing together) and moves answer-only relevance
+# 0.907 -> 0.930 (40/43). q32 still misses: the SEK 12,000
+# sentence is pickable now but still loses on lexical score to
+# the page intro (see tests/test_bullet_sentences.py).
 BASELINE_CORRECT = [
     "e01", "e02", "e03", "e04", "e05", "e06", "e07", "e08", "e09",
     "e10", "e11", "q01", "q02", "q04", "q05", "q06", "q07", "q08", "q09",
@@ -55,6 +62,8 @@ BASELINE_CORRECT = [
     "q21", "q22", "q23",
 ]
 STEP6_CORRECT = ["q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31"]
+# Phase 2 improvement (bullet-list splitting) fixes q03.
+IMPROVEMENT_CORRECT = ["q03"]
 
 
 @pytest.fixture(scope="module")
@@ -353,8 +362,10 @@ def test_no_baseline_correct_answer_lost(retriever):
     """Step 2 must not lose any question Step 1 got right, and must
     fix the o04 abstention. Dense scoring is measured to change no
     golden answer at the shipped weight (2.0), so the correct set
-    is exactly the Step 1 set; q03, q10 and q17 remain extractive
-    misses (documented remaining failures, not regressions).
+    is exactly the Step 1 set; q10 and q17 remain extractive
+    misses (documented remaining failures, not regressions), and
+    q03 was fixed by the Phase 2 improvement (bullet-list
+    splitting).
     Phase 2, Step 4: the pinned set grows by exactly e11 (new
     golden question, answer-only correct) and answer-only relevance
     moves 0.909 -> 0.912 (31/34); e02 and e05 stay in the set with
@@ -364,26 +375,32 @@ def test_no_baseline_correct_answer_lost(retriever):
     moves 0.912 -> 0.907 (39/43); q32 is a documented miss (the SEK
     12,000 sentence is merged into one long bullet-list sentence by
     the splitter, so it loses to the page intro on shared stems).
+    Phase 2 improvement (bullet-list splitting): the splitter now
+    splits dash-led bullet items, which fixes q03 and moves
+    answer-only relevance 0.907 -> 0.930 (40/43); q32 still misses
+    (the SEK sentence is pickable now but still loses on lexical
+    score to the page intro).
     Abstention is 1.0 (7/7): o06 and o07 abstain again after the
     Step 6 fix (see test_corpus_growth.py) — the 0.714 dip measured
     mid-step, when corpus growth first broke both, is recorded in
     that file's history, not hidden."""
     result = run_eval(retriever, load_golden())
-    assert result["answer_only_relevance"] == 0.907
+    assert result["answer_only_relevance"] == 0.930
     assert result["answer_relevance_proxy"] == 1.0
     assert result["faithfulness"] == 1.0
     assert result["abstention_accuracy"] == 1.0
     assert result["eligibility_accuracy"] == 1.0
     correct = {r["id"] for r in result["per_question"]
                if r["answer_only_relevant"]}
-    expected = set(BASELINE_CORRECT) | set(STEP6_CORRECT)
+    expected = (set(BASELINE_CORRECT) | set(STEP6_CORRECT)
+                | set(IMPROVEMENT_CORRECT))
     assert expected <= correct, (
         "lost baseline-correct questions: "
         f"{sorted(expected - correct)}")
     assert correct == expected, (
         f"unexpected changes vs baseline: added={sorted(correct - expected)} "
         f"lost={sorted(expected - correct)}")
-    for qid in ("q03", "q10", "q17", "q32"):
+    for qid in ("q10", "q17", "q32"):
         row = next(r for r in result["per_question"] if r["id"] == qid)
         assert row["answer_only_relevant"] is False, qid
         assert row["found"] is True, qid
