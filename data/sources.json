@@ -1,1 +1,106 @@
-[{"slug":"chevening","source_url":"https://www.chevening.org/scholarships/","title":"Chevening Scholarship (UK)"},{"slug":"sweden-si","source_url":"https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/","title":"SI Scholarship for Global Professionals (Sweden)"},{"slug":"fulbright","source_url":"https://foreign.fulbrightonline.org/about/foreign-student-program","title":"Fulbright Foreign Student Program (USA)"},{"slug":"daad","source_url":"https://www.daad.de/en/study-and-research-in-germany/scholarships/","title":"DAAD Scholarships (Germany)"},{"slug":"erasmus-mundus","source_url":"https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters","title":"Erasmus Mundus Joint Masters"},{"slug":"eiffel","source_url":"https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program","title":"France Excellence Eiffel Scholarship"},{"slug":"vanier","source_url":"https://vanier.gc.ca/en/home-accueil.html","title":"Vanier Canada Graduate Scholarships"},{"slug":"manaaki","source_url":"https://www.nzscholarships.govt.nz/","title":"Manaaki New Zealand Scholarships"},{"slug":"hkpfs","source_url":"https://cerg1.ugc.edu.hk/hkpfs/index.html","title":"Hong Kong PhD Fellowship Scheme"},{"slug":"mext","source_url":"https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/","title":"MEXT Scholarship (Japan)"}]
+[
+  {
+    "slug": "chevening",
+    "source_url": "https://www.chevening.org/scholarships/",
+    "title": "Chevening Scholarship (UK)"
+  },
+  {
+    "slug": "sweden-si",
+    "source_url": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+    "title": "SI Scholarship for Global Professionals (Sweden)"
+  },
+  {
+    "slug": "fulbright",
+    "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+    "title": "Fulbright Foreign Student Program (USA)"
+  },
+  {
+    "slug": "daad",
+    "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+    "title": "DAAD Scholarships (Germany)"
+  },
+  {
+    "slug": "erasmus-mundus",
+    "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters",
+    "title": "Erasmus Mundus Joint Masters"
+  },
+  {
+    "slug": "eiffel",
+    "source_url": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+    "title": "France Excellence Eiffel Scholarship"
+  },
+  {
+    "slug": "vanier",
+    "source_url": "https://vanier.gc.ca/en/home-accueil.html",
+    "title": "Vanier Canada Graduate Scholarships"
+  },
+  {
+    "slug": "manaaki",
+    "source_url": "https://www.nzscholarships.govt.nz/",
+    "title": "Manaaki New Zealand Scholarships"
+  },
+  {
+    "slug": "hkpfs",
+    "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+    "title": "Hong Kong PhD Fellowship Scheme"
+  },
+  {
+    "slug": "mext",
+    "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
+    "title": "MEXT Scholarship (Japan)"
+  },
+  {
+    "slug": "gates-cambridge",
+    "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+    "title": "Gates Cambridge Scholarship",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "rhodes",
+    "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+    "title": "Rhodes Scholarship (FAQs)",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "knight-hennessy",
+    "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+    "title": "Knight-Hennessy Scholars \u2014 Funding (Stanford)",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "schwarzman",
+    "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+    "title": "Schwarzman Scholars (FAQs)",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "commonwealth-shared",
+    "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+    "title": "Commonwealth Shared Scholarships",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "rtp",
+    "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+    "title": "Research Training Program (RTP, Australia)",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "marshall",
+    "source_url": "https://marshallscholarship.org/about/",
+    "title": "Marshall Scholarship",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "erasmus-mundus-org",
+    "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters",
+    "title": "Erasmus Mundus Joint Masters (organisations page)",
+    "fetched_at": "2026-11-18"
+  },
+  {
+    "slug": "si-pioneering-women",
+    "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
+    "title": "SI Scholarship Pioneering Women in STEM",
+    "fetched_at": "2026-11-18"
+  }
+]

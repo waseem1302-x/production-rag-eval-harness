@@ -96,11 +96,42 @@ def test_missing_fields_matrix():
     assert "stipend" in missing["mext"]
     assert "degree_levels" in missing["fulbright"]
     assert "degree_levels" in missing["daad"]
+    # Phase 2, Step 6: the 9 new documents. Two systematic reasons,
+    # not nine missing facts: (a) no eligibility RULES are authored
+    # for the new docs yet, so "degree_levels" and "citizenship_rule"
+    # are flagged for all nine by construction — several pages do
+    # state them (e.g. si-pioneering-women lists its 10 eligible
+    # countries); (b) the checker's MONEY_RE matches €/$ only, not
+    # £/SEK, so "stipend" is flagged even where the page states an
+    # amount in pounds or kronor (Gates £23,152, Rhodes £21,060,
+    # Commonwealth £1,712, SI Pioneering SEK 12,000). See
+    # tests/test_corpus_growth.py::test_stipend_flag_is_a_currency_gap.
+    assert missing["gates-cambridge"] == ["deadline", "degree_levels", "citizenship_rule"]
+    assert missing["rhodes"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    assert missing["knight-hennessy"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    assert missing["schwarzman"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    assert missing["commonwealth-shared"] == ["stipend", "degree_levels", "citizenship_rule"]
+    assert missing["rtp"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    assert missing["marshall"] == ["stipend", "degree_levels", "citizenship_rule"]
+    assert missing["erasmus-mundus-org"] == ["deadline", "degree_levels", "citizenship_rule"]
+    assert missing["si-pioneering-women"] == ["stipend", "degree_levels", "citizenship_rule"]
+
+
+def test_erasmus_org_two_amounts_are_different_fields():
+    """Phase 2, Step 6: the EMJM organisations page lists €5 million
+    (max grant per project) and €1,400/month (scholarship per
+    individual) — different fields, not a contradiction."""
+    report = _report()
+    found = _findings(report, "multiple_amounts", "erasmus-mundus-org")
+    assert len(found) == 1
+    assert found[0]["status"] == "resolved"
+    assert "different fields" in found[0]["resolution"]
+    assert "€1,400 per month" in found[0]["resolution_evidence"]
 
 
 def test_report_files_are_written_and_valid():
     results = Path("benchmarks/results")
     data = json.loads((results / "data_quality.json").read_text())
-    assert len(data["findings"]) == 36
+    assert len(data["findings"]) == 72  # Phase 2, Step 6: 36 + 36 new
     assert data["missing_fields"]["chevening"] == ["deadline", "stipend", "citizenship_rule"]
     assert (results / "data_quality.md").read_text().startswith("# Data quality report")

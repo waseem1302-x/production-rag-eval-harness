@@ -1,0 +1,10 @@
+{
+  "slug": "knight-hennessy",
+  "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+  "title": "Knight-Hennessy Scholars \u2014 Funding (Stanford)",
+  "fetched_at": "2026-11-18T07:18:00+08:00",
+  "http_status": 200,
+  "fetch_method": "browser-text-fetch",
+  "chars": 3552,
+  "note": "Direct HTTP fetch returned 200 but a thin JS-rendered page; text fetched with a text fetcher from the same official URL on 2026-11-18; saved verbatim, no paraphrase added."
+}

@@ -30,6 +30,27 @@ answerable questions (q19: 0.562, q14: 0.591, q12: 0.615), so the
 focus check does the work there and the dense floor only catches
 unrelated questions. The same verification runs on the generative
 path's kept sentences (see app/generative.py).
+
+Phase 2, Step 6 (corpus growth) found the same shape twice more
+and added a second focus check, same pattern: a question that names
+a scholarship the corpus does not hold must be answered by a
+sentence that mentions that scholarship's name, or the answer is
+refused ("unanswered_scholarship_subject"). Growing the corpus from
+10 to 19 documents gave the lexical gates other scholarships'
+sentences to quote: o06 ("deadline for the Australia Awards
+Scholarship 2027") was answered with SI + Commonwealth dates, and
+o07 ("acceptance rate for the Knight-Hennessy Scholars programme")
+was answered with KHS funding sentences. The o07 half was the
+specific-term gate passing on the word "scholar" alone — every KHS
+sentence contains "scholars" — so "scholar" joined the generic
+terms (in a scholarship corpus it is as generic as "scholarship"
+or "student"); after that, o07's only specific terms are
+"acceptance" and "rate", neither of which any KHS sentence
+contains, so it abstains with "missing_specific_term". The check is
+narrow, like the ranking check: it looks for the named
+scholarship's *name terms* in the picked sentences, not for the
+scholarship as an entity, and it only fires when no known document
+is named (a known name is already owned by the doc-name gate).
 """
 import re
 
@@ -48,6 +69,12 @@ GENERIC_TERMS = {
     "students", "university", "universities", "application",
     "applications", "eligible", "eligibility", "funded", "funding",
     "degree", "degrees", "master", "masters", "level", "levels",
+    # Phase 2, Step 6: "scholar(s)" is generic in a scholarship
+    # corpus — every document is about scholars. Without this, the
+    # specific-term gate passes on "scholar" alone, so a question
+    # whose real ask ("acceptance", "rate") appears nowhere is
+    # answered with funding sentences (golden o07).
+    "scholar", "scholars",
 }
 
 # Stemmed doc-name token -> doc slug. "si" covers "SI Scholarship".
@@ -58,6 +85,21 @@ DOC_ALIASES = {
     "hkpfs": "hkpfs", "manaaki": "manaaki", "zealand": "manaaki",
     "sweden": "sweden-si", "si": "sweden-si", "hong": "hkpfs",
     "kong": "hkpfs",
+    # Phase 2, Step 6 (corpus growth): aliases for the 9 new
+    # documents. "emjm" names the organisations-side Erasmus page
+    # (erasmus-mundus-org), whose distinct fact is the EU
+    # scholarship amount; "erasmus"/"mundus" still name the
+    # student-side page. "pioneering" names the SI Pioneering
+    # Women in STEM page; "si" still names Global Professionals.
+    "gates": "gates-cambridge", "cambridge": "gates-cambridge",
+    "rhodes": "rhodes", "oxford": "rhodes",
+    "knight": "knight-hennessy", "hennessy": "knight-hennessy",
+    "stanford": "knight-hennessy",
+    "schwarzman": "schwarzman", "tsinghua": "schwarzman",
+    "commonwealth": "commonwealth-shared",
+    "rtp": "rtp", "marshall": "marshall",
+    "emjm": "erasmus-mundus-org",
+    "pioneering": "si-pioneering-women",
 }
 
 
@@ -150,12 +192,40 @@ def _mentions_ranking(sentences: list[str]) -> bool:
             or "number one" in joined or "number 1" in joined)
 
 
+def _named_scholarship_stems(question: str) -> set[str]:
+    """Stemmed name terms of the scholarship a question names, if
+    any: the capitalised words immediately before "Scholarship(s)".
+    Walks backwards from that word while words are capitalised, so
+    "the Australia Awards Scholarship" yields {australia, award}
+    and "the Chevening Scholarship" yields {chevening}; a lowercase
+    word ("the", "for") stops the walk, and a lowercase-spelled
+    name yields nothing. Generic stems and doc-alias stems are
+    dropped: a known document's name is owned by the doc-name gate,
+    not by this check.
+    """
+    words = re.findall(r"[A-Za-z][A-Za-z\-]*", question or "")
+    idx = next((i for i, w in enumerate(words)
+                if w.lower() in ("scholarship", "scholarships")), None)
+    if idx is None:
+        return set()
+    generic = {_stem(g) for g in GENERIC_TERMS}
+    doc_tokens = {_stem(k) for k in DOC_ALIASES}
+    stems = set()
+    for j in range(idx - 1, -1, -1):
+        if not words[j][0].isupper():
+            break
+        stem = _stem(words[j])
+        if stem not in generic and stem not in doc_tokens:
+            stems.add(stem)
+    return stems
+
+
 def verify_answer_relevance(question: str, sentences: list[str],
                             dense_sims: dict[str, float] | None = None) -> dict:
     """Answer-verification step (Phase 2, Step 2): do the chosen
     sentences actually answer the question?
 
-    Two checks, both deterministic and explainable:
+    Three checks, all deterministic and explainable:
     1. Dense floor: the best picked sentence must reach
        DENSE_VERIFY_MIN_SIM cosine similarity to the question, or
        the answer is refused ("low_answer_similarity"). This is a
@@ -167,6 +237,19 @@ def verify_answer_relevance(question: str, sentences: list[str],
        similarity (above several answerable questions), so no dense
        threshold can separate them — but none of them mentions a
        ranking at all.
+    3. Scholarship-subject focus (Phase 2, Step 6): a question
+       that names a scholarship no known document covers must be
+       answered by a sentence that mentions that scholarship's
+       name, or the answer is refused
+       ("unanswered_scholarship_subject"). This is the check that
+       catches o06: "Australia Awards" is not in the corpus, the
+       doc-name gate only fires for known documents, and the
+       picked SI + Commonwealth sentences share the question's
+       "deadline" and "2027" but never name Australia Awards.
+       The check is skipped when a known document is named — the
+       doc-name gate already restricts the candidates to it — and
+       it looks for name *terms*, not the scholarship as an entity:
+       a sentence mentioning only "Awards" would pass it.
 
     `dense_sims`, when given, is a sentence -> cosine map (tests
     inject it so they need no model); otherwise the sims are
@@ -186,6 +269,12 @@ def verify_answer_relevance(question: str, sentences: list[str],
     if _ranking_question(question) and not _mentions_ranking(sentences):
         return {"answers": False, "reason": "unanswered_ranking",
                 "best_sim": best_sim}
+    if not _named_docs(question):
+        name_stems = _named_scholarship_stems(question)
+        if name_stems and not (name_stems & _stems(" ".join(sentences))):
+            return {"answers": False,
+                    "reason": "unanswered_scholarship_subject",
+                    "best_sim": best_sim}
     return {"answers": True, "reason": None, "best_sim": best_sim}
 
 

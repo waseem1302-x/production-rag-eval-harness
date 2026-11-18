@@ -2,7 +2,7 @@
 
 ## What this system is
 
-A small, honest, production-shaped RAG system over 10 public official
+A small, honest, production-shaped RAG system over 19 public official
 scholarship pages. It answers questions **only from the fetched
 corpus**, cites the exact chunks it used, checks eligibility before
 answering when a profile is given, and says **"Not found in the
@@ -23,7 +23,7 @@ measured result, not a failure of the step — see `EVAL_RESULTS.md`.
 ```
                         build time (scripts/)
 official pages ──► ingest.py ──► data/raw/*.txt + *.json (verbatim + metadata)
-                              ──► chunking.py ──► data/processed/chunks.jsonl (31 chunks)
+                              ──► chunking.py ──► data/processed/chunks.jsonl (101 chunks)
                                               ──► embeddings.py ──► FAISS IndexFlatIP (384-dim)
                                                               └─► BM25Okapi (rank-bm25)
 
@@ -35,7 +35,7 @@ POST /ask ──► retrieval.py ──► top-10 candidates (hybrid 0.5 dense +
           ──► response: answer, score, citations, eligibility, retrieval_trace
 
                         quality (eval/, benchmarks/, scripts/)
-eval/golden.json (38 questions) ──► eval.py ──► metrics
+eval/golden.json (50 questions) ──► eval.py ──► metrics
 benchmarks/run_benchmark.py ──► 8 configurations, same golden set
 benchmarks/audit_retrieval.py ──► per-question retrieval trace
 scripts/check_data_quality.py ──► corpus mess report
@@ -46,13 +46,13 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 
 | File | Purpose | Why it exists |
 |---|---|---|
-| `scripts/ingest.py` | Fetch the 10 official pages, extract text, save raw text + metadata (URL, fetch method, HTTP status, date) | Provenance. Every answer can be traced to a fetched page and a fetch date. Raw text is never edited after fetching. |
+| `scripts/ingest.py` | Fetch the 19 official pages, extract text, save raw text + metadata (URL, fetch method, HTTP status, date) | Provenance. Every answer can be traced to a fetched page and a fetch date. Raw text is never edited after fetching. The 9 Step 6 pages were saved via a text fetcher (thin/JS-rendered pages, or a timed-out direct fetch for RTP) from the same official URLs; no raw HTML is stored. |
 | `app/textnorm.py` | Normalise document text before chunking: unwrap hard line breaks inside sentences, keep headers separate, add terminal punctuation to fragments | Official pages put line breaks in the middle of sentences and mix headers with content. Without this, chunks contain broken sentences and answers quote fragments. Normalisation happens at chunking time, so `data/raw/` stays verbatim. |
 | `app/chunking.py` | Recursive, sentence-aware chunking: ~512 tokens (~2,048 chars), 200-char overlap | One chunk should hold one complete idea. Overlap keeps facts that straddle a boundary. See "Chunking" below. Phase 2, Step 5: `chunk_document()` takes `chunk_chars` / `overlap_chars` parameters, and the size was ablated (256/512/1,024 tokens, measured — 512 kept); `app/config.py:chunk_chars_for_tokens` maps tokens to chars (1 token ~ 4 chars). |
 | `app/embeddings.py` | `sentence-transformers` `all-MiniLM-L6-v2`, 384-dim, L2-normalised | The dense signal. Falls back to BM25-only and reports `"embedder": "bm25-only"` if the model cannot load — never silently pretends dense ran. |
 | `app/retrieval.py` | FAISS `IndexFlatIP` (cosine) + BM25, min-max normalised, combined 0.5/0.5, then a reranker. `mode` selects `bm25` / `dense` / `hybrid`; `reranker` selects `lexical` (query-term coverage bonus +0.1, the default) or `cross-encoder` (ms-marco MiniLM-L6, joint pair scoring, sigmoid-mapped to 0-1; falls back to lexical if the model cannot load, and the trace says which ran) | Hybrid retrieval + an auditable rerank step. The `mode` parameter exists for the ablation: each signal's contribution is measured, not assumed. |
 | `app/cross_encoder.py` | Cross-encoder reranker (Phase 2, Step 3): `sentence-transformers` `CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")`, 22.7M params, ~91 MB, CPU-only, $0. Lazy-loaded like the embedder; `score_pairs` returns raw logits or `None` when the model is unavailable | The reranker the lexical bonus is measured against. Same lazy-load / honest-fallback pattern as `app/embeddings.py`: a missing model degrades the reranker, never crashes a search. |
-| `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates + answer verification | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. Phase 2, Step 2: sentence scores add `2.0 ×` dense cosine similarity to the question (local MiniLM, $0), and after the lexical gates `verify_answer_relevance` checks the picked sentences actually answer the question (dense floor 0.45 + ranking-focus check). Measured: dense scoring buys nothing on this corpus (see §4), verification fixes o04. |
+| `app/answer.py` | Extractive answers: up to 5 scored sentences from the top 3 chunks, with abstention gates + answer verification | The answer is verbatim sentences from cited chunks, so faithfulness is measurable. The gates (score threshold, doc-name consistency, shared-stem, specific-term) are what stop the system answering questions the corpus cannot answer. Every refusal records its reason. Phase 2, Step 2: sentence scores add `2.0 ×` dense cosine similarity to the question (local MiniLM, $0), and after the lexical gates `verify_answer_relevance` checks the picked sentences actually answer the question (dense floor 0.45 + ranking-focus check). Measured: dense scoring buys nothing on this corpus (see §4), verification fixes o04. Phase 2, Step 6: "scholar" joined the generic terms (the specific-term gate passed on that word alone — golden o07), and the verification gained a scholarship-subject focus check (a question naming a scholarship no known document covers must be answered by a sentence that mentions its name — golden o06). Abstention is 1.0 (7/7) on the grown corpus; the mid-step dip to 0.714 is recorded in `tests/test_corpus_growth.py`. |
 | `app/generative.py` | Generative answers (Phase 2, Step 1): local Qwen2.5-0.5B-Instruct, greedy, + LLM-as-judge | The opt-in generator. Loads the 0.5B model lazily (bf16, CPU, 2 torch threads — measured faster than 4 on this VM), prompts it with the top-3 chunks of the *named* scholarship only, and returns a verified answer or falls back to extractive. `judge_answer` scores one answer with the same model (label-aware parsing: the judge sometimes swaps the two lines). All model text goes through `complete()`, which honours a test override so unit tests never load the model. Phase 2, Step 2: the kept sentences also pass `verify_answer_relevance`; on failure the path falls back to extractive (`relevance_verification_failed`). |
 | `app/verification.py` | Deterministic verification of generated sentences against the cited chunks | The guard, not the judge. A sentence is kept only if its *novel* stems (content stems not already in the question) are covered ≥50% by one chunk, and every number in it appears in the chunks. Two fixes came from measured failures: the named-doc filter (q17 — the model copied SI's field list into a Manaaki answer) and novel-stem coverage (question-word overlap alone passed an ungrounded sentence). Verification stops invented facts; it cannot tell whether a grounded sentence answers the question (o04) or contradicts a corpus fact the model did not read (q21). |
 | `app/eligibility.py` | Degree-level and citizenship checks against corpus-grounded rules, validated at load time against the chunk text | A scholarship answer is useless if the reader cannot apply for it. Rules are written as a table, but each rule's evidence sentence must be found verbatim in the named chunk or the rule drops to `unknown`. Phase 2, Step 4: the checker also reads `data/closures.json` — one entry per programme the corpus says is closed, with verbatim evidence validated the same way — and a closed programme gets the distinct verdict `closed` (checked before degree/citizenship, whatever the profile), with the replacement programme named. An entry whose evidence is not found is dropped with a warning and the programme is treated as open. |
@@ -66,7 +66,7 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
 
 1. `POST /ask` with `{"question", "top_k", "profile?"}`.
 2. `Retriever.search` embeds the question (dense modes), scores all
-   31 chunks with BM25, takes the union of the top 10 of each signal,
+   101 chunks with BM25, takes the union of the top 10 of each signal,
    normalises both to 0–1, combines them, and reranks by query-term
    coverage. Returns the top 5 with all four scores
    (`dense_score`, `bm25_score`, `combined_score`, `rerank_score`).
@@ -82,10 +82,12 @@ scripts/ci_gate.py + .github/workflows/eval.yml ──► quality gate
    in the corpus." with the reason (`weak_score`,
    `doc_name_mismatch`, `no_matching_sentences`, `weak_overlap`,
    `missing_specific_term`, `low_answer_similarity`,
-   `unanswered_ranking`). The last two are the Phase 2, Step 2
-   answer-verification step, which runs after the lexical gates:
-   the picked sentences must clear a dense-similarity floor and,
-   for ranking questions, mention a ranking.
+   `unanswered_ranking`, `unanswered_scholarship_subject`). The last
+   three are the answer-verification step, which runs after the
+   lexical gates: the picked sentences must clear a dense-similarity
+   floor and, for ranking questions, mention a ranking; and for a
+   question naming a scholarship no known document covers, mention
+   that scholarship's name (Phase 2, Step 6).
 5. With `"generate": true` (opt-in only), `generative.generate_answer`
    instead prompts the local model with the top-3 chunks of the
    named scholarship, verifies every generated sentence against
@@ -117,7 +119,7 @@ testable: each function has unit tests, and the ablation can switch
 individual components off.
 
 **Cost:** more code to maintain; no built-in integrations (vector
-stores, loaders, agent loops). For a 10-document corpus that cost is
+stores, loaders, agent loops). For a 19-document corpus that cost is
 trivial. For a production system with dozens of sources, a framework
 or a proper orchestration layer would be the right call — that is a
 Phase 2+ decision, and it would be made with measurements, not
@@ -132,16 +134,16 @@ ablate.
 **Chosen: FAISS `IndexFlatIP` in memory, built at startup from
 `chunks.jsonl`.**
 
-**Why:** 31 chunks. An exact brute-force index is instant, has no
+**Why:** 101 chunks. An exact brute-force index is instant, has no
 server, no persistence format to manage, and no dependency beyond
 `faiss-cpu`. The index is rebuilt from the committed chunks file on
 every start, so there is no separate index artefact that can go stale.
 
 **Cost:** no persistence, no metadata filtering, no scaling story
 beyond a few thousand chunks. `IndexFlatIP` is O(n) per query —
-fine at 31 chunks, wrong at 31 million.
+fine at 101 chunks, wrong at 31 million.
 
-**Rejected:** Chroma (a server and a persistence layer for 31
+**Rejected:** Chroma (a server and a persistence layer for 101
 chunks is overhead, not engineering), pgvector (needs Postgres;
 the corpus is a file, not a database). When the corpus grows past a
 few thousand chunks, the right move is an approximate index
@@ -153,23 +155,26 @@ then, not now.
 **Chosen: hybrid 0.5 dense + 0.5 BM25, with a `mode` switch so the
 choice is measured.**
 
-**Measured (28 factual questions, same golden set):**
+**Measured (39 factual questions, same golden set — Phase 2, Step 6
+re-run on the grown corpus):**
 
 | Signal (full discipline) | recall@5 | Answer-only relevance | Retrieval latency (mean) |
 |---|---|---|---|
-| BM25-only | 1.0 | 0.87 | 6.2 ms |
-| Dense-only | 1.0 | 0.826 | 57.6 ms |
-| Hybrid | 1.0 | 0.87 | 123.7 ms |
+| BM25-only | 1.0 | 0.875 | 2.0 ms |
+| Dense-only | 1.0 | 0.844 | 77.7 ms |
+| Hybrid | 1.0 | 0.875 | 185.9 ms |
 
-(Fresh re-run, Phase 2 Step 3; the Step 1 run measured 1.3 / 108.8 /
-66.4 ms. Latency varies run to run on this shared-CPU VM; the order
-of magnitude is the stable finding.)
+(Step 3 on the 31-chunk corpus measured 0.87 / 0.826 / 0.87 and
+6.2 / 57.6 / 123.7 ms. Latency varies run to run on this shared-CPU
+VM — this run's total means were higher across the board, likely
+CPU contention from other work on the VM; the order of magnitude
+is the stable finding.)
 
 **Why hybrid is the default anyway:** recall is saturated at 1.0
 for every signal on this corpus — the right document is always in
 the top 5 by keyword alone. Dense buys no measured recall here and
-slightly *hurts* answer-only relevance (0.826 vs 0.87), at ~50–80x
-the latency. On this corpus BM25-only is the better engineering
+slightly *hurts* answer-only relevance (0.844 vs 0.875), at ~39x
+the retrieval latency of BM25. On this corpus BM25-only is the better engineering
 choice. Hybrid is kept as the default because dense is expected to
 matter as the corpus grows (paraphrases, synonyms, larger
 candidate sets), and the ablation will tell us when — the claim is
@@ -232,7 +237,7 @@ bonus (+0.1 × coverage) on top of the combined score.
 costs nothing (no model call), and cannot hallucinate.
 
 **Measured:** it adds nothing on this corpus — answer-only
-relevance is 0.87 with and without it, recall identical. It is kept
+relevance is 0.875 with and without it, recall identical. It is kept
 because the mechanism is sound and the corpus is small; on a larger
 corpus it must be re-measured before it is claimed to help.
 
@@ -240,13 +245,14 @@ corpus it must be re-measured before it is claimed to help.
 is now an ablation configuration (`cross-encoder/ms-marco-MiniLM-L-6-v2`,
 22.7M params, ~91 MB, CPU-only, $0; re-sorts the top 10 by
 sigmoid(logit), term coverage recorded but unused). On the same
-28-question golden set it changes nothing either: answer-only
-relevance 0.87 → 0.87, recall@5 1.0 → 1.0, abstention 1.0 → 1.0 —
-but retrieval mean latency is 4,238.0 ms vs 123.7 ms for the lexical
-reranker (~34x; scoring 10 full chunks takes ~2.5–3.4 s per question
-on this VM). It does reorder: 17 of 23 in-corpus top-5 lists change
-order, but the top chunk and every picked answer sentence stay the
-same, so no metric moves. On a synthetic trap — a chunk repeating
+golden set it changes nothing either: answer-only
+relevance 0.875 → 0.875, recall@5 1.0 → 1.0, abstention 1.0 → 1.0 —
+but retrieval mean latency is 3,987.1 ms vs 185.9 ms for the lexical
+reranker (~21x; Step 3 on the 31-chunk corpus measured 4,238.0 ms
+vs 123.7 ms, ~34x). At Step 3 it reordered 17 of 23 in-corpus top-5
+lists but the top chunk and every picked answer sentence stayed the
+same, so no metric moved; that reorder count was not re-measured in
+Step 6. On a synthetic trap — a chunk repeating
 every query term without answering, vs the answering chunk — the
 cross-encoder does flip the order where the lexical reranker does
 not (logits 7.13 vs 5.97), so the mechanism works; the corpus is
@@ -274,7 +280,7 @@ measuring.
 
 **Rejected:** OpenAI / Cohere / Voyage embeddings. They would add
 cost, latency, a secret to manage, and a network dependency — for no
-measured benefit on 31 chunks.
+measured benefit on 101 chunks.
 
 ### 7. Chunking: 512 tokens, 200-char overlap
 
@@ -356,7 +362,7 @@ change to any of them that regresses quality fails the build.
 |---|---|---|
 | Embedding model unavailable | `embedder` field in every response | BM25-only retrieval, reported honestly |
 | Empty index | `/health` shows 0 chunks; `/ask` returns `empty_index` | "Not found in the corpus. The index is empty…" |
-| Question names a scholarship not in the corpus | Doc-name gate | Abstains (`doc_name_mismatch`) |
+| Question names a scholarship not in the corpus | Doc-name gate + scholarship-subject focus check in the answer verification | Abstains (`doc_name_mismatch` for a known name answered from the wrong page; `unanswered_scholarship_subject` when the named scholarship is not in the corpus at all — Phase 2, Step 6) |
 | Corpus page closed / stale | `scripts/check_data_quality.py` + `data/closures.json` | Documented in `DATA_QUALITY.md`; closure is a golden question (q21), and eligibility returns verdict `closed` for a closed programme (Phase 2, Step 4) |
 | Metric regression | `scripts/ci_gate.py` + GitHub workflow | Build fails; thresholds are pinned |
 | Corpus re-ingest changes the facts | Re-run eval + data-quality checker | Numbers must be re-measured before any claim |
@@ -382,12 +388,17 @@ change to any of them that regresses quality fails the build.
   cannot catch that they do not answer the question. **Fixed in
   Phase 2, Step 2:** `verify_answer_relevance` (dense floor 0.45 +
   ranking-focus check) abstains on o04 with reason
-  `unanswered_ranking`, in both paths; abstention is 1.0 (5/5).
+  `unanswered_ranking`, in both paths; abstention is 1.0 (7/7 on the
+  grown corpus).
   Dense similarity alone was measured and cannot separate o04
   (0.667, above several answerable questions), so the focus check
   does the work. The check is narrow — it covers ranking questions
   only — and it checks for a ranking *term*, not a ranked entity,
-  so a sentence about "best-ranked students" passes it. The
+  so a sentence about "best-ranked students" passes it. **Step 6
+  added a second focus check in the same place** (a question naming
+  a scholarship no known document covers must be answered by a
+  sentence that mentions its name — golden o06) and made "scholar"
+  a generic term (golden o07). The
   LLM-as-judge relevance score remains the proxy for other
   question shapes, and at 0.5B it is too weak (it scored o04's
   sibling failure q21's correct answer 0/0).
@@ -420,7 +431,27 @@ change to any of them that regresses quality fails the build.
   Phase 2, Step 3:** the cross-encoder configuration
   (`hybrid-cross-encoder`) changes no metric either (0.87 answer-only,
   1.0 abstention, both ways) at ~34x the retrieval latency — see §5.
-  Both rerankers are now measured non-wins on this corpus; re-measure
-  on a larger corpus.
-- **Corpus is 10 pages, 31 chunks:** every "dense buys nothing"
+  **Re-measured in Phase 2, Step 6** on the grown corpus: still
+  nothing (0.875 answer-only, 1.0 abstention, both ways) at ~21x
+  the retrieval latency (3,987.1 ms vs 185.9 ms). Both rerankers are
+  now measured non-wins on this corpus; re-measure on a larger corpus.
+- **Corpus is 19 pages, 101 chunks:** every "dense buys nothing"
   finding is a finding *about this corpus size*. Re-measure as it grows.
+- **Bullet-list merging (q32, new in Step 6):** the sentence
+  splitter merges a dash-led bullet list into one long sentence, so
+  the "SEK 12,000" allowance sentence loses to the page intro on
+  shared stems. The evidence is in the top retrieved chunk; the
+  picker does not surface it. Fix: split list items into separate
+  pickable sentences (not yet done).
+- **No eligibility rules for the 9 new documents (Step 6):** profile
+  checks for Gates, Rhodes, Knight-Hennessy, Schwarzman,
+  Commonwealth Shared, RTP, Marshall, Erasmus Mundus (organisations)
+  and SI Pioneering Women return `unknown` by construction — no
+  rules are authored yet. Authoring them is a separate step; the
+  data-quality checker flags degree-levels/citizenship as missing
+  for all nine in the meantime.
+- **Data-quality checker misses £/SEK amounts (Step 6):** its money
+  pattern matches €/$ only, so it flags "stipend missing" for Gates
+  (£23,152), Rhodes (£21,060), Commonwealth (£1,712/month) and SI
+  Pioneering (SEK 12,000/month) even though the pages state amounts.
+  Pinned by a test; fix by extending the pattern to £/SEK/¥.

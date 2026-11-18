@@ -11,8 +11,8 @@ def test_health():
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["docs"] == 10
-    assert body["chunks"] > 0
+    assert body["docs"] == 19  # Phase 2, Step 6: 10 + 9 new documents
+    assert body["chunks"] == 101  # measured by scripts.build_index at 512 tokens
 
 
 def test_ask_returns_citations():

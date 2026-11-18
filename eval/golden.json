@@ -287,5 +287,73 @@
     "question": "How much is the monthly stipend for a doctoral student on the Eiffel Scholarship?",
     "expected_doc": "eiffel",
     "expected_answer": "€2,000"
+  },
+  {
+    "id": "q24",
+    "question": "How many full-cost Gates Cambridge Scholarships are offered each year?",
+    "expected_doc": "gates-cambridge",
+    "expected_answer": "around 70 full-cost scholarships"
+  },
+  {
+    "id": "q25",
+    "question": "What is the annual stipend for a Rhodes Scholar in 2026-27?",
+    "expected_doc": "rhodes",
+    "expected_answer": "\u00a321,060"
+  },
+  {
+    "id": "q26",
+    "question": "How many years of funding do Knight-Hennessy Scholars receive at Stanford?",
+    "expected_doc": "knight-hennessy",
+    "expected_answer": "up to three years"
+  },
+  {
+    "id": "q27",
+    "question": "What is the maximum age for Schwarzman Scholars as of August 1 of their enrollment year?",
+    "expected_doc": "schwarzman",
+    "expected_answer": "not yet 29 years of age"
+  },
+  {
+    "id": "q28",
+    "question": "When is the closing date for Commonwealth Shared Scholarship applications for 2027/28?",
+    "expected_doc": "commonwealth-shared",
+    "expected_answer": "8 December 2026"
+  },
+  {
+    "id": "q29",
+    "question": "What is the full-time base RTP stipend rate for 2026?",
+    "expected_doc": "rtp",
+    "expected_answer": "34,315"
+  },
+  {
+    "id": "q30",
+    "question": "How many Marshall Scholarships are awarded each year?",
+    "expected_doc": "marshall",
+    "expected_answer": "Up to 50 Scholarships awarded annually"
+  },
+  {
+    "id": "q31",
+    "question": "How much is the monthly EMJM scholarship for individuals?",
+    "expected_doc": "erasmus-mundus-org",
+    "expected_answer": "\u20ac1,400 per month"
+  },
+  {
+    "id": "q32",
+    "question": "What is the monthly allowance for a Pioneering Women in STEM scholar?",
+    "expected_doc": "si-pioneering-women",
+    "expected_answer": "SEK 12,000"
+  },
+  {
+    "id": "o06",
+    "question": "What is the deadline for the Australia Awards Scholarship 2027?",
+    "expected_doc": "",
+    "expected_answer": "",
+    "out_of_corpus": true
+  },
+  {
+    "id": "o07",
+    "question": "What is the acceptance rate for the Knight-Hennessy Scholars programme?",
+    "expected_doc": "",
+    "expected_answer": "",
+    "out_of_corpus": true
   }
 ]

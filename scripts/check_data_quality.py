@@ -120,6 +120,15 @@ RESOLUTIONS = {
                       "those questions (golden o-questions cover this).",
         "evidence": "147 Scholarship options for your selection.",
     },
+    ("erasmus-mundus-org", "multiple_amounts"): {
+        "resolution": "Not a contradiction. The two amounts are different "
+                      "fields: €5 million is the maximum grant per EMJM "
+                      "project (to the consortium), €1,400 per month is the "
+                      "EU scholarship paid to an individual student (max. "
+                      "24 months). Quote each with its field.",
+        "evidence": "Grant per project: up to €5 million. EU scholarship "
+                    "for individuals: €1,400 per month (max. 24 months).",
+    },
 }
 
 

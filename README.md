@@ -1,4 +1,4 @@
-# Production RAG with Eval Harness — Phase 2, Step 5
+# Production RAG with Eval Harness — Phase 2, Step 6
 
 A small, honest, production-shaped RAG system over public official
 scholarship pages. It answers questions **only from the fetched corpus**,
@@ -36,6 +36,26 @@ the fix). Phase 2, Step 5 (this branch,
 `eligible` when they are not (its citizenship rule drops when the
 evidence sentence moves chunk). The extractive default is unchanged,
 and the generator is deliberately the weaker path on this corpus.
+Phase 2, Step 6 (this branch, `feat/corpus-growth`) grows the
+corpus — 10 → **19 documents**, 31 → **101 chunks**, 39 → **50
+golden questions** — and re-measures everything on the grown
+corpus. The new documents are 9 more official scholarship pages
+(Gates Cambridge, Rhodes, Knight-Hennessy, Schwarzman,
+Commonwealth Shared, RTP, Marshall, Erasmus Mundus organisations
+page, SI Pioneering Women in STEM), each with one new golden
+question (q24–q32); 8 of the 9 pass, q32 is a documented miss
+(bullet-list merging). Growing the corpus first **broke**
+abstention, 1.0 → 0.714 (5/7): the new pages gave the lexical
+gates other scholarships' deadline and rate-adjacent sentences to
+quote (o06 answered with SI + Commonwealth dates, o07 with KHS
+funding sentences). Step 6 fixed both — "scholar" joined the
+generic terms and the answer verification gained a
+scholarship-subject focus check — so abstention is **1.0 (7/7)**
+again, with the dip recorded, not hidden. Answer-only relevance is
+0.907 (39/43), recall@5 and faithfulness still 1.0, eligibility
+still 1.0 (11/11). Dense retrieval still buys nothing, the
+reranker still changes nothing, and q03/q10/q17 still miss —
+re-measured, not assumed.
 
 **Read first:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (what was built,
 why, trade-offs) · [`EVAL_RESULTS.md`](EVAL_RESULTS.md) (every measured
@@ -43,13 +63,16 @@ number) · [`DATA_QUALITY.md`](DATA_QUALITY.md) (the corpus's messy
 data, documented not hidden) · [`benchmarks/results/before_after.md`](benchmarks/results/before_after.md)
 (before/after with failure tables).
 
-## Corpus (Phase 1: 10 documents, 31 chunks)
+## Corpus (Phase 2, Step 6: 19 documents, 101 chunks)
 
-Public official pages for 10 of the 21 family scholarships from
-The Next Scholar. One page per scholarship, fetched 18 Nov 2026.
-See `data/sources.json` and `data/raw/*.json` for the exact URL, fetch
-method, HTTP status and fetch date of every document. Raw text is
-saved verbatim and never edited after fetching.
+Public official pages for 19 scholarships. One page per
+scholarship, the original 10 fetched 18 Nov 2026 and the 9 new
+ones fetched 18 Nov 2026. See `data/sources.json` and
+`data/raw/*.json` for the exact URL, fetch method, HTTP status and
+fetch date of every document. Raw text is saved verbatim and never
+edited after fetching. No raw HTML is stored (`data/raw/*.html`
+is gitignored and was removed from history); only extracted `.txt`
+and metadata `.json`.
 
 | # | Scholarship | Source |
 |---|-------------|--------|
@@ -63,12 +86,35 @@ saved verbatim and never edited after fetching.
 | 8 | Manaaki New Zealand Scholarships | https://www.nzscholarships.govt.nz/ |
 | 9 | Hong Kong PhD Fellowship Scheme (HKPFS) | https://cerg1.ugc.edu.hk/hkpfs/index.html |
 | 10 | MEXT (Japan) | https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/ |
+| 11 | Gates Cambridge | https://www.gatescambridge.org/programme/the-scholarship/ |
+| 12 | Rhodes Scholarship (FAQs) | https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/ |
+| 13 | Knight-Hennessy Scholars — Funding (Stanford) | https://knight-hennessy.stanford.edu/program-overview/funding |
+| 14 | Schwarzman Scholars (FAQs) | https://www.schwarzmanscholars.org/frequently-asked-questions/ |
+| 15 | Commonwealth Shared Scholarships | https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/ |
+| 16 | Research Training Program (RTP, Australia) | https://www.education.gov.au/research-block-grants/research-training-program |
+| 17 | Marshall Scholarship | https://marshallscholarship.org/about/ |
+| 18 | Erasmus Mundus Joint Masters (organisations page) | https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters |
+| 19 | SI Scholarship Pioneering Women in STEM | https://si.se/en/apply/scholarships/pioneeringwomeninstem/ |
+
+Chunk counts at 512 tokens (measured by `scripts.build_index`):
+chevening 1, sweden-si 12, fulbright 3, daad 1, erasmus-mundus 2,
+eiffel 3, vanier 1, manaaki 1, hkpfs 2, mext 5, gates-cambridge 2,
+rhodes 29, knight-hennessy 2, schwarzman 12, commonwealth-shared 12,
+rtp 4, marshall 2, erasmus-mundus-org 1, si-pioneering-women 6 —
+101 chunks in total. Rhodes is 29 chunks because its FAQ page is
+long (50,171 chars of extracted text, saved twice over: narrative
+sections plus the Q&A section, as fetched).
 
 Chevening returned HTTP 403 to a direct fetch and DAAD's direct fetch
 failed (proxy connection error), so both were saved via a text fetcher
 from the same official URLs — recorded as
 `fetch_method: "browser-text-fetch"` in `data/raw/*.json`, not hidden.
-The other 8 returned HTTP 200. No Reddit data. No tutorial corpus.
+The other 8 returned HTTP 200. The 9 new pages were also saved via
+a text fetcher from the same official URLs on 2026-11-18 —
+recorded the same way in `data/raw/*.json`, with the reason per
+page (thin/JS-rendered pages for Gates Cambridge, Rhodes,
+Knight-Hennessy, Schwarzman and Commonwealth Shared; direct fetch
+timed out for RTP). No Reddit data. No tutorial corpus.
 No scraped private data.
 
 ## How it works
@@ -141,17 +187,20 @@ with a transparent lexical reranker (query-term coverage bonus).
 Phase 2, Step 3 added a cross-encoder reranker
 (`cross-encoder/ms-marco-MiniLM-L-6-v2`, 22.7M params, ~91 MB,
 CPU-only, $0) as an ablation configuration (`hybrid-cross-encoder`)
-and measured it against the lexical reranker on the same 38-question
-golden set: it reorders 17 of 23 top-5 lists but changes no answer
-and no metric — answer-only relevance 0.87 with and without it,
-abstention 1.0 both ways — at 4,238 ms retrieval mean vs 123.7 ms
-for the lexical reranker (~34x). The lexical reranker stays the
-default; the cross-encoder is kept as a measured option, not a win.
+and measured it against the lexical reranker on the same golden
+set: it changes no answer and no metric — answer-only relevance
+0.875 with and without it, abstention 1.0 both ways — at 3,987.1 ms
+retrieval mean vs 185.9 ms for the lexical reranker (~21x) on the
+grown 101-chunk corpus (Step 6 re-run, 39 factual questions; Step 3
+measured 4,238.0 ms vs 123.7 ms, ~34x, on the 31-chunk corpus).
+The lexical reranker stays the default; the cross-encoder is kept
+as a measured option, not a win.
 
-Honest finding from the ablation: on this 31-chunk corpus, dense
+Honest finding from the ablation: on this 101-chunk corpus, dense
 retrieval buys **no measured recall** (recall@5 is 1.0 for every
-signal) and slightly hurts answer-only relevance (dense-only 0.826
-vs BM25-only 0.87) at ~50–80x the latency. The improvement comes
+signal) and slightly hurts answer-only relevance (dense-only 0.844
+vs BM25-only 0.875) at ~39x the retrieval latency (77.7 ms vs
+2.0 ms). The improvement comes
 from the answering discipline, not the retrieval signal. See
 "Benchmarks" below and [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
@@ -170,7 +219,8 @@ content word with the question, the API returns:
 
 Every refusal names its reason (`weak_score`, `doc_name_mismatch`,
 `no_matching_sentences`, `weak_overlap`, `missing_specific_term`,
-`low_answer_similarity`, `unanswered_ranking`, `empty_index`).
+`low_answer_similarity`, `unanswered_ranking`,
+`unanswered_scholarship_subject`, `empty_index`).
 Abstaining is a feature, not a failure. A scholarship
 assistant that invents a deadline is worse than one that says it
 does not know.
@@ -192,6 +242,31 @@ not used as a guard — it is the same weak, lenient instrument
 that scored q10's wrong duration 1/1 in Step 1, and the guard
 stays deterministic.
 
+Phase 2, Step 6 adds a second question-focus check to the same
+verification step, plus one word to the generic terms. Growing the
+corpus broke abstention (1.0 → 0.714): o06 ("deadline for the
+Australia Awards Scholarship 2027" — a scholarship the corpus
+does not hold; the phrase "Australia Awards" appears nowhere in
+it) was answered with SI + Commonwealth dates, because the
+doc-name gate only fires for known documents and the picked
+sentences share "deadline" and "2027" with the question. The new
+check refuses a question that names a scholarship no known
+document covers unless a picked sentence mentions that
+scholarship's name (`unanswered_scholarship_subject`). o07
+("acceptance rate for the Knight-Hennessy Scholars programme" —
+no "acceptance" anywhere in the corpus) was answered with KHS
+funding sentences, because the specific-term gate passed on the
+word "scholar" alone — every KHS sentence contains "scholars".
+"Scholar" therefore joined the generic terms (in a scholarship
+corpus it is as generic as "scholarship" or "student"); o07's
+only specific terms are now "acceptance" and "rate", neither in
+any picked sentence, so it abstains with
+`missing_specific_term`. Abstention is 1.0 (7/7) again; the dip
+is recorded in `tests/test_corpus_growth.py`, not hidden. The new
+check is narrow, like the ranking check: it looks for the named
+scholarship's name *terms* in the picked sentences, not for the
+scholarship as an entity.
+
 ### Dense sentence scoring (Phase 2, Step 2)
 
 Sentence picking is lexical + dense: each candidate sentence scores
@@ -203,7 +278,7 @@ no golden answer at all, and weights 3, 3.5 and 4 fix q03 but lose
 q16 (its correct sentence scores only 0.394 dense similarity,
 below the boilerplate that replaces it) — net answer-only 0.909
 either way. So dense sentence scoring, like dense retrieval before
-it, buys nothing measurable on this 31-chunk corpus: q03's correct
+it, buys nothing measurable on this 101-chunk corpus: q03's correct
 sentence ranks 4th by dense similarity (0.630), q10's 8th (0.438)
 and q17's 14th (0.527). The mechanism stays in the path at the
 largest non-regressing weight so it is measured, not assumed — and
@@ -252,8 +327,8 @@ chunk with its dense score, BM25 score, combined score, rerank
 score and term coverage, in reranked order, and whether it was
 injected into the answer. A wrong answer can be traced to the exact
 chunk and score that produced it. `benchmarks/audit_retrieval.py`
-writes the same trace for all 38 golden questions to
-`benchmarks/results/retrieval_audit.json` (38 questions, 52 injected
+writes the same trace for all 50 golden questions to
+`benchmarks/results/retrieval_audit.json` (50 questions, 72 injected
 chunks).
 
 ## Quickstart (local)
@@ -289,7 +364,7 @@ curl -X POST http://localhost:8000/ask \
 
 ## API
 
-`GET /health` — `{"status": "ok", "docs": 10, "chunks": 31, "embedder": ...}`
+`GET /health` — `{"status": "ok", "docs": 19, "chunks": 101, "embedder": ...}`
 
 `POST /ask` — body `{"question": "...", "top_k": 5, "profile": {"nationality": "...", "degree_level": "..."}, "generate": false}`
 (`profile` is optional; `generate` is optional, default `false` —
@@ -334,8 +409,8 @@ pretends dense retrieval ran when it did not.
 
 ## Eval harness
 
-`eval/golden.json` holds 39 hand-written questions (23 in-corpus
-factual, 5 out-of-corpus, 11 eligibility). Every question was checked
+`eval/golden.json` holds 50 hand-written questions (32 in-corpus
+factual, 7 out-of-corpus, 11 eligibility). Every question was checked
 against the actual fetched text before it was added — the expected
 answer phrase must appear in the cited document.
 
@@ -367,26 +442,28 @@ is invented.
 python -m benchmarks.run_benchmark   # 8 configurations, same golden set
 ```
 
-Re-run in Phase 2, Step 3 with the current code — the Step 1 numbers
-were stale after Step 2 changed the `answer()` defaults (dense
-sentence scoring on, verification on). Two things changed on the
-re-run: abstention is now 1.0, not 0.8 (Step 2's verification
-abstains on o04), and total latency is ~1–1.5 s, not ~70 ms (Step 2's
-dense sentence scoring embeds the candidate sentences per question;
-retrieval itself is unchanged). The cross-encoder buys nothing: it
-reorders 17 of 23 top-5 lists but changes no answer and no metric,
-at ~34x the retrieval latency.
+Re-run in Phase 2, Step 6 with the current code on the grown
+corpus — the Step 3 numbers were measured on the 31-chunk corpus
+and the 39-question golden set. Two things changed on the re-run:
+abstention is 1.0 for every gated configuration (Step 6's
+verification fix restores o06/o07), and latencies are higher
+across the board (total mean ~1.2–2.6 s vs ~1.0–1.7 s) — the dense
+sentence scoring embeds the candidate sentences per question, and
+this run shared the VM with other work; the order of magnitude is
+the stable finding, the exact figures are one measured run. The
+cross-encoder buys nothing: it changes no answer and no metric,
+at ~21x the retrieval latency of the lexical reranker.
 
 | Configuration | Mode | Reranker | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
 |---|---|---|---|---|---|---|---|---|---|
-| baseline-naive | bm25 | lexical | 1.0 | 0.522 | 1.0 | 0.0 | 0.2 ms | 0.5 ms | $0.00 |
-| hybrid-plain | hybrid | lexical | 1.0 | 0.565 | 1.0 | 0.0 | 103.5 ms | 106.5 ms | $0.00 |
-| improved-bm25 | bm25 | lexical | 1.0 | 0.87 | 1.0 | 1.0 | 6.2 ms | 1070.7 ms | $0.00 |
-| dense-only | dense | lexical | 1.0 | 0.826 | 1.0 | 1.0 | 57.6 ms | 961.3 ms | $0.00 |
-| hybrid-no-rerank | hybrid | lexical | 1.0 | 0.87 | 1.0 | 1.0 | 77.4 ms | 1307.1 ms | $0.00 |
-| hybrid-no-gates | hybrid | lexical | 1.0 | 0.826 | 1.0 | 0.0 | 74.9 ms | 1342.9 ms | $0.00 |
-| improved-hybrid | hybrid | lexical | 1.0 | 0.87 | 1.0 | 1.0 | 123.7 ms | 1490.6 ms | $0.00 |
-| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 0.87 | 1.0 | 1.0 | 4238.0 ms | 5429.1 ms | $0.00 |
+| baseline-naive | bm25 | lexical | 1.0 | 0.625 | 1.0 | 0.0 | 0.3 ms | 0.7 ms | $0.00 |
+| hybrid-plain | hybrid | lexical | 1.0 | 0.656 | 1.0 | 0.0 | 84.1 ms | 84.6 ms | $0.00 |
+| improved-bm25 | bm25 | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 2.0 ms | 1179.2 ms | $0.00 |
+| dense-only | dense | lexical | 1.0 | 0.844 | 1.0 | 1.0 | 77.7 ms | 1443.7 ms | $0.00 |
+| hybrid-no-rerank | hybrid | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 60.2 ms | 1407.1 ms | $0.00 |
+| hybrid-no-gates | hybrid | lexical | 1.0 | 0.844 | 1.0 | 0.0 | 145.3 ms | 2038.0 ms | $0.00 |
+| improved-hybrid | hybrid | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 185.9 ms | 2566.1 ms | $0.00 |
+| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 0.875 | 1.0 | 1.0 | 3987.1 ms | 5374.9 ms | $0.00 |
 
 Each configuration changes one thing from its neighbour, so each
 component's contribution is isolated. Full results:
@@ -402,10 +479,11 @@ python -m benchmarks.before_after   # generated from the results files
 | Metric | Before (baseline-naive) | After (improved-hybrid) | Change |
 |---|---|---|---|
 | recall@5 | 1.0 | 1.0 | +0.000 |
-| Answer-only relevance | 0.522 | 0.87 | +0.348 |
+| Answer-only relevance | 0.625 | 0.875 | +0.250 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
 | Abstention accuracy | 0.0 | 1.0 | +1.000 |
-| Retrieval latency (mean) | 0.2 ms | 123.7 ms | +123.5 ms |
+| Retrieval latency (mean) | 0.3 ms | 185.9 ms | +185.6 ms |
+| Total latency (mean) | 0.7 ms | 2566.1 ms | +2565.4 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 |
 
 Why it changed: the answering discipline (scored picking + gates),
@@ -419,11 +497,22 @@ Full report with failure tables:
 | Question | Why it still fails |
 |---|---|
 | q03, q10, q17 | Paraphrase gap — the expected answer's key terms are not in the question, so lexical picking cannot find the sentence; dense sentence scoring (Step 2, weight 2.0) does not fix them either — q03's correct sentence ranks 4th by dense sim, q10's 8th, q17's 14th. The generative path fixes q03 only. |
-| o04 (Vanier ranked university) | **Fixed in Step 2:** the answer-verification step now abstains with reason `unanswered_ranking` (abstention 1.0, 5/5). Dense similarity alone could not catch it (o04 scored 0.667, above several answerable questions). |
+| q32 (SI Pioneering Women allowance) | Bullet-list merging — the "SEK 12,000" sentence sits in a dash-led bullet list, the splitter merges the whole list into one long sentence, and it loses to the page intro on shared stems. The evidence is in the top retrieved chunk (`si-pioneering-women-1`); the picker does not surface it. New in Step 6. |
+| o04 (Vanier ranked university) | **Fixed in Step 2:** the answer-verification step now abstains with reason `unanswered_ranking` (abstention 1.0, 7/7). Dense similarity alone could not catch it (o04 scored 0.667, above several answerable questions). |
+| o06, o07 (abstention lost on corpus growth) | **Fixed in Step 6:** growing the corpus to 19 documents first broke both — o06 answered with SI + Commonwealth dates, o07 with KHS funding sentences (abstention 1.0 → 0.714 mid-step). Fixed two ways: the verification gained a scholarship-subject focus check (o06, `unanswered_scholarship_subject`) and "scholar" joined the generic terms (o07, `missing_specific_term`). Abstention is 1.0 (7/7) again; the dip is recorded in `tests/test_corpus_growth.py`, not hidden. |
 | Eligibility vs Vanier closure | **Fixed in Step 4:** a profile check for Vanier now returns verdict `closed` with the closure evidence and the replacement programme (e02, e05, e11 all pass; eligibility 1.0, 11/11). |
 
-No regressions: no question the baseline got right is lost by the
-improved pipeline (pinned by `tests/test_dense_verification.py::test_no_baseline_correct_answer_lost`).
+No regressions in the improved pipeline: no question it got right
+is lost (pinned by
+`tests/test_dense_verification.py::test_no_baseline_correct_answer_lost`
+— the correct set is exactly the Step 5 set plus q24–q31, 39/43).
+The failure table does label q03 and q32 "REGRESSION" — that is a
+baseline-side change, not an improved-side loss: on the grown
+corpus the naive baseline's BM25 top chunk changed, so its
+first-sentence picking now happens to land on the right sentence
+for those two, while the improved pipeline misses them exactly as
+it did in Step 5. The test pins exactly those two rows, so a third
+one fails the build.
 
 ## Data quality (messy real scholarship data)
 
@@ -431,14 +520,28 @@ improved pipeline (pinned by `tests/test_dense_verification.py::test_no_baseline
 python -m scripts.check_data_quality
 ```
 
-36 findings (8 resolved, 28 open), each citing sentence + chunk +
+72 findings (9 resolved, 63 open), each citing sentence + chunk +
 source URL. Headline findings: Vanier is **closed** and replaced by
 a harmonized doctoral programme — and eligibility now returns
 verdict `closed` for it (Step 4); Eiffel €1,200 is the Master's
 allowance and €2,000 the Doctorate stipend (not a contradiction);
-HKPFS HK$344,400 ≈ US$44,150 is one 2026/27 stipend in two
-currencies; DAAD is a 147-option database, not one award; only SI
-states a deadline; only Vanier/Eiffel/HKPFS state a stipend.
+the EMJM organisations page's €5 million (max grant per project)
+and €1,400/month (scholarship per individual) are different fields,
+not a contradiction (resolved in Step 6); HKPFS HK$344,400 ≈
+US$44,150 is one 2026/27 stipend in two currencies; DAAD is a
+147-option database, not one award; 15 of 19 pages state no
+deadline and 14 of 19 state no stipend (by the checker's rules: a
+deadline needs a date-bearing sentence with a deadline word, a
+stipend needs a €/$/HK$/US$ amount). Known checker gap, pinned by
+a test: its money pattern matches €/$ only, not £/SEK, so it flags
+"stipend missing" for Rhodes (£21,060), Commonwealth (£1,712/month)
+and SI Pioneering (SEK 12,000/month) even though the pages state
+amounts — and fails to flag Gates, whose "US$210m" founding donation
+matches the pattern while its real stipend (£23,152) is in pounds.
+No eligibility rules are
+authored for the 9 new documents yet, so the checker flags
+degree-levels/citizenship as missing for all nine by construction
+— authoring rules is a separate step.
 Full documentation: [`DATA_QUALITY.md`](DATA_QUALITY.md).
 
 ## CI gate
@@ -449,12 +552,51 @@ python -m scripts.ci_gate
 
 Thresholds: recall@5 ≥ 0.90, answer-only relevance ≥ 0.60,
 faithfulness ≥ 0.95, abstention ≥ 0.60, eligibility ≥ 0.80.
-Measured (Phase 2, Step 4): 1.0, 0.912, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
-(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.912),
+Measured (Phase 2, Step 6): 1.0, 0.907, 1.0, 1.0, 1.0 — **gate passes**. Strict mode
+(`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.907),
 proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml`
 (build index → tests → gate on every push/PR).
 
 ## Results (Phase 1, real local run, 18 Nov 2026)
+
+### Results (Phase 2, Step 6 — corpus growth, same 50 questions, 18 Nov 2026)
+
+Commands: `python -m scripts.run_eval` (writes
+`benchmarks/results/extractive_eval.json`; before-run saved as
+`benchmarks/results/extractive_eval_before_corpus_growth.json` and
+all pre-step results copied to
+`benchmarks/results/before_corpus_growth/`, so the before/after
+below is generated files, not hand-typed numbers) and
+`python -m benchmarks.run_benchmark` (writes the 8 configuration
+files + `benchmarks/results/summary.md`).
+
+| Metric | Before (10 docs, 31 chunks, 39 q) | After (19 docs, 101 chunks, 50 q) | Change |
+|---|---|---|---|
+| n_in_corpus / n_out_of_corpus | 34 / 5 | 43 / 7 | +9 factual (q24–q32), +2 out-of-corpus (o06, o07) |
+| n_eligibility | 11 | 11 | none (no new rules authored) |
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 | none |
+| answer_relevance_proxy | 1.0 | 1.0 | none |
+| answer_only_relevance | 0.912 (31/34) | 0.907 (39/43) | +8 correct, +1 miss (q32) |
+| faithfulness | 1.0 | 1.0 | none |
+| abstention_accuracy | 1.0 (5/5) | **1.0 (7/7)** | dipped to 0.714 (5/7) mid-step, fixed in-step |
+| eligibility_accuracy | 1.0 (11/11) | 1.0 (11/11) | none |
+
+Read honestly: the corpus nearly doubled in documents and more
+than tripled in chunks, and nothing in the headline metrics moved
+except the two things that should move — 8 of the 9 new questions
+pass, and abstention dipped and was fixed in the same step (see
+"Failures"). The Phase 1 findings re-tested on the grown corpus:
+dense still buys nothing (dense-only 0.844 vs BM25-only 0.875,
+recall 1.0 for every signal), the lexical reranker still changes
+nothing (0.875 with and without it), the cross-encoder still
+changes nothing (0.875, abstention 1.0, at 3,987.1 ms vs 185.9 ms
+retrieval mean), recall stays 1.0, and q03/q10/q17 still miss.
+The generative eval was **not** re-run in this step
+(`benchmarks/results/generative_eval.json` still holds the Step 2
+run on the 38-question set) — Step 6 is extractive-path only, and
+the generative numbers in this README are labelled with the set
+they were measured on. Full analysis in
+[`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 
 | Metric | Value |
 |---|---|
@@ -553,7 +695,7 @@ trust. Full analysis in [`EVAL_RESULTS.md`](EVAL_RESULTS.md).
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 158 passed
+python -m pytest tests/ -q   # 174 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text

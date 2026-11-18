@@ -7,10 +7,10 @@ policy (200 chars, constant — chunk size is the only variable):
   1. Build the index into benchmarks/results/chunk_ablation/chunk-<size>/
      (chunks.jsonl + faiss.index) via scripts.build_index. The working
      data/processed/ 512-token index is never touched.
-  2. Run the full extractive eval on the same 39-question golden set
+  2. Run the full extractive eval on the same 50-question golden set
      (app.eval.run_eval, full pipeline: hybrid retrieval, lexical
      rerank, scored picking, abstention gates, eligibility-first).
-  3. Measure retrieval + total latency on the 28 factual questions
+  3. Measure retrieval + total latency on the factual questions
      with benchmarks.run_benchmark.measure_latency (same definition
      as the 8-configuration ablation).
 
@@ -85,7 +85,7 @@ def build_summary(results_dir: Path = RESULTS_DIR) -> Path:
     n = results[0]["quality"]["n_in_corpus"]
     lines = ["# Chunk-size ablation (Phase 2, Step 5)\n",
              f"Same .txt corpus, same overlap policy (200 chars, constant), "
-             f"same 39-question golden set ({n} in-corpus + "
+             f"same {n + results[0]['quality']['n_out_of_corpus']}-question golden set ({n} in-corpus + "
              f"{results[0]['quality']['n_out_of_corpus']} out-of-corpus, "
              f"{results[0]['quality']['n_eligibility']} eligibility). Full "
              f"extractive pipeline for every size: hybrid retrieval, lexical "

@@ -1,0 +1,479 @@
+{
+  "findings": [
+    {
+      "doc": "fulbright",
+      "kind": "approximate_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "Approximately 4,000 foreign students receive Fulbright scholarships each year.",
+      "chunk_id": "fulbright-0",
+      "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+      "note": "Quote the figure with its hedge ('approximately').",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "daad",
+      "kind": "database_page",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "Scholarship Database - DAAD - Deutscher Akademischer Austauschdienst.",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "The page is a listing, not one award.",
+      "resolution": "The DAAD page is a scholarship database (147 options), not one award. There is no single DAAD deadline or stipend to answer with; the system must abstain on those questions (golden o-questions cover this).",
+      "resolution_evidence": "147 Scholarship options for your selection."
+    },
+    {
+      "doc": "daad",
+      "kind": "database_page",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "Welcome to our scholarship database!",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "The page is a listing, not one award.",
+      "resolution": "The DAAD page is a scholarship database (147 options), not one award. There is no single DAAD deadline or stipend to answer with; the system must abstain on those questions (golden o-questions cover this).",
+      "resolution_evidence": "147 Scholarship options for your selection."
+    },
+    {
+      "doc": "daad",
+      "kind": "database_page",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "Refine your selection.",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "The page is a listing, not one award.",
+      "resolution": "The DAAD page is a scholarship database (147 options), not one award. There is no single DAAD deadline or stipend to answer with; the system must abstain on those questions (golden o-questions cover this).",
+      "resolution_evidence": "147 Scholarship options for your selection."
+    },
+    {
+      "doc": "daad",
+      "kind": "database_page",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "147 Scholarship options for your selection.",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "The page is a listing, not one award.",
+      "resolution": "The DAAD page is a scholarship database (147 options), not one award. There is no single DAAD deadline or stipend to answer with; the system must abstain on those questions (golden o-questions cover this).",
+      "resolution_evidence": "147 Scholarship options for your selection."
+    },
+    {
+      "doc": "vanier",
+      "kind": "closure",
+      "severity": "high",
+      "status": "resolved",
+      "sentence": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships.",
+      "chunk_id": "vanier-0",
+      "source_url": "https://vanier.gc.ca/en/home-accueil.html",
+      "note": "The programme as described may no longer exist.",
+      "resolution": "The Vanier programme as described on this page is closed: applications are no longer accepted and the page points to the new harmonized Canada Graduate Research Scholarship - Doctoral program. FIXED in Phase 2, Step 4: the closure is now a flag in data/closures.json, read and verbatim-validated by the eligibility module, so a profile check for Vanier returns verdict 'closed' with this evidence and the replacement, whatever the profile (golden e02, e05, e11).",
+      "resolution_evidence": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program."
+    },
+    {
+      "doc": "vanier",
+      "kind": "closure",
+      "severity": "high",
+      "status": "resolved",
+      "sentence": "Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program.",
+      "chunk_id": "vanier-0",
+      "source_url": "https://vanier.gc.ca/en/home-accueil.html",
+      "note": "The programme as described may no longer exist.",
+      "resolution": "The Vanier programme as described on this page is closed: applications are no longer accepted and the page points to the new harmonized Canada Graduate Research Scholarship - Doctoral program. FIXED in Phase 2, Step 4: the closure is now a flag in data/closures.json, read and verbatim-validated by the eligibility module, so a profile check for Vanier returns verdict 'closed' with this evidence and the replacement, whatever the profile (golden e02, e05, e11).",
+      "resolution_evidence": "We are no longer accepting applications for the Vanier Canada Graduate Scholarships. Please refer to the Canada Graduate Research Scholarship - Doctoral program web page for information regarding the new harmonized program."
+    },
+    {
+      "doc": "hkpfs",
+      "kind": "approximate_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years.",
+      "chunk_id": "hkpfs-0",
+      "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+      "note": "Quote the figure with its hedge ('approximately').",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "hkpfs",
+      "kind": "year_specific_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years.",
+      "chunk_id": "hkpfs-0",
+      "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+      "note": "Quote the figure with its academic year.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "hkpfs",
+      "kind": "year_specific_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "400 PhD Fellowships will be awarded in the 2027/28 academic year*.",
+      "chunk_id": "hkpfs-0",
+      "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+      "note": "Quote the figure with its academic year.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "erasmus-mundus",
+      "kind": "stale_page_marker",
+      "severity": "low",
+      "status": "open",
+      "sentence": "Last updated 26 June 2025.",
+      "chunk_id": "erasmus-mundus-1",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters",
+      "note": "Page's own last-updated marker: 26 June 2025.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "eiffel",
+      "kind": "stale_page_marker",
+      "severity": "low",
+      "status": "open",
+      "sentence": "Mise \u00e0 jour October 2022.",
+      "chunk_id": "eiffel-1",
+      "source_url": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "note": "Page's own last-updated marker: October 2022.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "eiffel",
+      "kind": "stale_page_marker",
+      "severity": "low",
+      "status": "open",
+      "sentence": "Mise \u00e0 jour December 2025.",
+      "chunk_id": "eiffel-2",
+      "source_url": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "note": "Page's own last-updated marker: December 2025.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "eiffel",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "France Excellence Eiffel scholarship holders receive a monthly allowance of \u20ac1,200 (from January 2026), to which is added several services: International transportation, national transportation, insurance, housing searches, cultural activities, etc.",
+      "chunk_id": "eiffel-1",
+      "source_url": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "note": "Distinct amounts on one page: \u20ac1,200 (eiffel-1); \u20ac2,000 (eiffel-1).",
+      "resolution": "Not a contradiction. The page gives the amounts under separate level headings: \u20ac1,200/month is the Master's level allowance, \u20ac2,000/month is the Doctorate level stipend, both from January 2026. Tuition fees are not covered at either level.",
+      "resolution_evidence": "Master's level. France Excellence Eiffel scholarship holders receive a monthly allowance of \u20ac1,200 (from January 2026). Doctorate level. France Excellence Eiffel scholarship holders receive a monthly stipend of \u20ac2,000 (from January 2026)."
+    },
+    {
+      "doc": "hkpfs",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years.",
+      "chunk_id": "hkpfs-0",
+      "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+      "note": "Distinct amounts on one page: HK$14,400 (hkpfs-0); HK$344,400 (hkpfs-0); US$1,840 (hkpfs-0); US$44,150 (hkpfs-0).",
+      "resolution": "Not two stipends. HK$344,400 and approximately US$44,150 are the same 2026/27 annual stipend expressed in two currencies. Quote both figures with the year, and keep the 'approximately' on the US dollar figure.",
+      "resolution_evidence": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150)."
+    },
+    {
+      "doc": "chevening",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "chevening-0",
+      "source_url": "https://www.chevening.org/scholarships/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "chevening",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "chevening-0",
+      "source_url": "https://www.chevening.org/scholarships/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "chevening",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "chevening-0",
+      "source_url": "https://www.chevening.org/scholarships/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "daad",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "daad",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "daad",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "daad-0",
+      "source_url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "eiffel",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "eiffel-0",
+      "source_url": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "erasmus-mundus",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "erasmus-mundus-0",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "erasmus-mundus",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "erasmus-mundus-0",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students/erasmus-mundus-joint-masters",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "fulbright",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "fulbright-0",
+      "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "fulbright",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "fulbright-0",
+      "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "fulbright",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "fulbright-0",
+      "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "fulbright",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "fulbright-0",
+      "source_url": "https://foreign.fulbrightonline.org/about/foreign-student-program",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "hkpfs",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "hkpfs-0",
+      "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "manaaki",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "manaaki-0",
+      "source_url": "https://www.nzscholarships.govt.nz/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "manaaki",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "manaaki-0",
+      "source_url": "https://www.nzscholarships.govt.nz/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "mext",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "mext-0",
+      "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "mext",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "mext-0",
+      "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "mext",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "mext-0",
+      "source_url": "https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "sweden-si",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "sweden-si-0",
+      "source_url": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "vanier",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "vanier-0",
+      "source_url": "https://vanier.gc.ca/en/home-accueil.html",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    }
+  ],
+  "missing_fields": {
+    "chevening": [
+      "deadline",
+      "stipend",
+      "citizenship_rule"
+    ],
+    "daad": [
+      "deadline",
+      "stipend",
+      "degree_levels"
+    ],
+    "eiffel": [
+      "deadline"
+    ],
+    "erasmus-mundus": [
+      "deadline",
+      "stipend"
+    ],
+    "fulbright": [
+      "deadline",
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
+    ],
+    "hkpfs": [
+      "deadline"
+    ],
+    "manaaki": [
+      "deadline",
+      "stipend"
+    ],
+    "mext": [
+      "deadline",
+      "stipend",
+      "citizenship_rule"
+    ],
+    "sweden-si": [
+      "stipend"
+    ],
+    "vanier": [
+      "deadline"
+    ]
+  }
+}

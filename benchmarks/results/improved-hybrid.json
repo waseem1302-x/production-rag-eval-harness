@@ -4,32 +4,32 @@
   "retrieval_mode": "hybrid",
   "reranker": "lexical",
   "embedder": "all-MiniLM-L6-v2",
-  "n_chunks": 31,
+  "n_chunks": 101,
   "quality": {
-    "n_in_corpus": 23,
-    "n_out_of_corpus": 5,
+    "n_in_corpus": 32,
+    "n_out_of_corpus": 7,
     "n_eligibility": 0,
     "recall@3": 1.0,
     "recall@5": 1.0,
     "answer_relevance_proxy": 1.0,
-    "answer_only_relevance": 0.87,
+    "answer_only_relevance": 0.875,
     "faithfulness": 1.0,
     "abstention_accuracy": 1.0,
     "eligibility_accuracy": null
   },
   "latency": {
-    "n_queries": 28,
+    "n_queries": 39,
     "retrieval": {
-      "mean_ms": 123.7,
-      "p50_ms": 78.3,
-      "p95_ms": 445.9,
-      "max_ms": 738.8
+      "mean_ms": 185.9,
+      "p50_ms": 97.2,
+      "p95_ms": 516.8,
+      "max_ms": 871.0
     },
     "search_plus_answer": {
-      "mean_ms": 1490.6,
-      "p50_ms": 1492.8,
-      "p95_ms": 2895.0,
-      "max_ms": 4401.1
+      "mean_ms": 2566.1,
+      "p50_ms": 2295.4,
+      "p95_ms": 5784.1,
+      "max_ms": 8278.8
     }
   },
   "cost_per_query_usd": 0.0,
@@ -40,10 +40,10 @@
       "expected_doc": "chevening",
       "found_doc_top5": [
         "chevening",
-        "sweden-si",
+        "gates-cambridge",
+        "knight-hennessy",
         "daad",
-        "sweden-si",
-        "sweden-si"
+        "rhodes"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -59,10 +59,10 @@
       "expected_doc": "chevening",
       "found_doc_top5": [
         "chevening",
-        "sweden-si",
-        "daad",
-        "sweden-si",
-        "sweden-si"
+        "rhodes",
+        "commonwealth-shared",
+        "rhodes",
+        "gates-cambridge"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -80,13 +80,13 @@
         "sweden-si",
         "sweden-si",
         "sweden-si",
-        "sweden-si",
-        "sweden-si"
+        "si-pioneering-women",
+        "rtp"
       ],
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The programmes that are eligible for the SI scholarship for Global Professionals are. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. Find the list of eligible ma ster\u2019s programmes for the Scholarship for Global professionals academic year 2027/2028 here.",
+      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. Apply for a Global Professionals scholarship. - 8 Feb 2027 - 24 Feb 2027. The Scholarship for Global Professionals is a competitive full y-funded scholarship that includes: Full tuition fee coverage.",
       "answer_relevant": true,
       "answer_only_relevant": false,
       "eligibility_verdict": null
@@ -105,7 +105,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Citizens of the following countries are eligible to apply for the SI Scholarship for Global Professionals: Armenia, Azerbaijan, Bangladesh, Belarus*, Bolivia, Brazil, Colombia, Ecuador, Egypt, Ethiopia, Georgia*, Guatemala, Indonesia, Iraq, Jordan, Kenya, Liberia, Malaysia, Mexico, Moldova, Morocco, Nigeria, Peru, Philippines, Rwanda, Senegal, South Africa, Tanzania, Thailand, Uganda, Ukraine, Uzbekistan, Vietnam, Zambia. In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The programmes that are eligible for the SI scholarship for Global Professionals are. Find the list of eligible ma ster\u2019s programmes for the Scholarship for Global professionals academic year 2027/2028 here. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. .",
+      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The programmes that are eligible for the SI scholarship for Global Professionals are. Find the list of eligible ma ster\u2019s programmes for the Scholarship for Global professionals academic year 2027/2028 here. Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. .",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -116,10 +116,10 @@
       "expected_doc": "fulbright",
       "found_doc_top5": [
         "fulbright",
+        "erasmus-mundus-org",
+        "si-pioneering-women",
         "sweden-si",
-        "sweden-si",
-        "erasmus-mundus",
-        "sweden-si"
+        "erasmus-mundus"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -136,9 +136,9 @@
       "found_doc_top5": [
         "fulbright",
         "eiffel",
-        "eiffel",
-        "erasmus-mundus",
-        "sweden-si"
+        "rhodes",
+        "rhodes",
+        "gates-cambridge"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -173,10 +173,10 @@
       "expected_doc": "daad",
       "found_doc_top5": [
         "daad",
+        "rtp",
         "sweden-si",
-        "erasmus-mundus",
-        "sweden-si",
-        "sweden-si"
+        "si-pioneering-women",
+        "erasmus-mundus"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -192,10 +192,10 @@
       "expected_doc": "erasmus-mundus",
       "found_doc_top5": [
         "erasmus-mundus",
+        "erasmus-mundus-org",
         "erasmus-mundus",
         "sweden-si",
-        "sweden-si",
-        "fulbright"
+        "si-pioneering-women"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -210,11 +210,11 @@
       "question": "How long does an Erasmus Mundus Joint Master last?",
       "expected_doc": "erasmus-mundus",
       "found_doc_top5": [
+        "erasmus-mundus-org",
         "erasmus-mundus",
         "erasmus-mundus",
-        "sweden-si",
-        "sweden-si",
-        "sweden-si"
+        "rhodes",
+        "si-pioneering-women"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -232,7 +232,7 @@
         "eiffel",
         "eiffel",
         "eiffel",
-        "sweden-si",
+        "erasmus-mundus-org",
         "vanier"
       ],
       "recall@3": true,
@@ -268,10 +268,10 @@
       "expected_doc": "vanier",
       "found_doc_top5": [
         "vanier",
+        "gates-cambridge",
+        "commonwealth-shared",
         "eiffel",
-        "sweden-si",
-        "sweden-si",
-        "daad"
+        "rtp"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -287,10 +287,10 @@
       "expected_doc": "vanier",
       "found_doc_top5": [
         "vanier",
-        "sweden-si",
-        "sweden-si",
-        "sweden-si",
-        "eiffel"
+        "rhodes",
+        "rhodes",
+        "rhodes",
+        "rhodes"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -307,9 +307,9 @@
       "found_doc_top5": [
         "hkpfs",
         "hkpfs",
-        "sweden-si",
-        "eiffel",
-        "sweden-si"
+        "knight-hennessy",
+        "rhodes",
+        "knight-hennessy"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -326,9 +326,9 @@
       "found_doc_top5": [
         "hkpfs",
         "hkpfs",
-        "mext",
-        "sweden-si",
-        "daad"
+        "schwarzman",
+        "commonwealth-shared",
+        "schwarzman"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -345,9 +345,9 @@
       "found_doc_top5": [
         "manaaki",
         "sweden-si",
-        "sweden-si",
-        "sweden-si",
-        "mext"
+        "si-pioneering-women",
+        "commonwealth-shared",
+        "sweden-si"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -364,9 +364,9 @@
       "found_doc_top5": [
         "manaaki",
         "sweden-si",
+        "commonwealth-shared",
         "sweden-si",
-        "sweden-si",
-        "sweden-si"
+        "si-pioneering-women"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -383,14 +383,14 @@
       "found_doc_top5": [
         "mext",
         "mext",
-        "mext",
-        "sweden-si",
+        "daad",
+        "si-pioneering-women",
         "sweden-si"
       ],
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "As seen in the chart below, there are seven types of the Japanese Government (Monbukagakusho) Scholarship program. Please check with the Japanese embassy or other Japanese diplomatic mission in your country to see if there are any openings in the type and field you wish to apply for. There are two ways to apply for a Japanese Government Scholarship: by applying to the Ministry of Education, Culture, Sports, Science and Technology (MEXT) with a recommendation from a Japanese embassy or other Japanese diplomatic mission in your country, or by applying to the MEXT with a recommendation from a Japanese university. In this type of scholarship, scholarship recipients are recruited and initially screened by a Japanese embassy (or consulate general, depending on the country). In addition, the scholarship period and eligibility may vary depending on the type of recommendation framework a university has, so please check with the university you wish to enroll in for details.",
+      "answer": "As seen in the chart below, there are seven types of the Japanese Government (Monbukagakusho) Scholarship program. In addition, the scholarship period and eligibility may vary depending on the type of recommendation framework a university has, so please check with the university you wish to enroll in for details. With regard to application qualifications and procedures, in addition to the actual contents, there are also cases when detailed requirements are established. Only a select number of universities approved by the MEXT can make recommendations to the MEXT, and only those universities that are judged to be outstanding and deserving of the scholarship can make recommendations to the MEXT. Japanese Government (MEXT) Scholarship Applicant Qualifying Examinations - Subject Test Questions.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -402,14 +402,14 @@
       "found_doc_top5": [
         "mext",
         "mext",
-        "mext",
-        "erasmus-mundus",
-        "daad"
+        "rtp",
+        "commonwealth-shared",
+        "rtp"
       ],
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Programs offered within this scheme are Research students, Undergraduate students, Japanese and Japanese culture students, as well as College of Technology. They are Research students, Teacher training students, Undergraduate students, Japanese studies students, college of technology students, Specialized training college students, and Young Leaders Program (YLP) students. Research students. Undergraduate students. Undergraduate level.",
+      "answer": "They are Research students, Teacher training students, Undergraduate students, Japanese studies students, college of technology students, Specialized training college students, and Young Leaders Program (YLP) students. Research students. Undergraduate students. Undergraduate level. Only a select number of universities approved by the MEXT can make recommendations to the MEXT, and only those universities that are judged to be outstanding and deserving of the scholarship can make recommendations to the MEXT.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -423,7 +423,7 @@
         "sweden-si",
         "fulbright",
         "sweden-si",
-        "daad"
+        "sweden-si"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -440,9 +440,9 @@
       "found_doc_top5": [
         "eiffel",
         "eiffel",
-        "sweden-si",
-        "sweden-si",
-        "sweden-si"
+        "rhodes",
+        "gates-cambridge",
+        "rtp"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -458,10 +458,10 @@
       "expected_doc": "eiffel",
       "found_doc_top5": [
         "eiffel",
+        "rhodes",
         "eiffel",
-        "sweden-si",
-        "vanier",
-        "hkpfs"
+        "rtp",
+        "rhodes"
       ],
       "recall@3": true,
       "recall@5": true,
@@ -469,6 +469,177 @@
       "answer": "France Excellence Eiffel scholarship holders receive a monthly stipend of \u20ac2,000 (from January 2026) to which is added several services:: international transportation, national transportation, insurance, housing searches, cultural activities, etc. The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. France Excellence Eiffel scholarship holders receive a monthly allowance of \u20ac1,200 (from January 2026), to which is added several services: International transportation, national transportation, insurance, housing searches, cultural activities, etc. Developed by the Ministry of Foreign Affairs, the France Excellence Eiffel Scholarship Program provides annual training for future foreign decision-makers in the public and private sectors in degree programs at the Master's and Doctoral levels. French higher education institutions who submit candidates to the France Excellence Eiffel program agree to enroll them: in courses leading to a master's degree in an engineering program in a joint doctoral program (joint supervision of dissertation and/or dual degree), in partnership with a partner institution abroad.",
       "answer_relevant": true,
       "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q24",
+      "question": "How many full-cost Gates Cambridge Scholarships are offered each year?",
+      "expected_doc": "gates-cambridge",
+      "found_doc_top5": [
+        "gates-cambridge",
+        "commonwealth-shared",
+        "gates-cambridge",
+        "marshall",
+        "commonwealth-shared"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. A Gates Cambridge Scholarship covers the full cost of studying at Cambridge. Most costs are covered by the Scholarship but Gates Cambridge does not cover bench fees or the costs of scientific equipment or similar academic resources. months at the 2026-27 rate; pro rata for courses shorter than 12 months) \u2013 for PhD scholars the award is for up to 4 years. - one economy single airfare at both the beginning and end of the course. - inbound visa costs & the cost of the Immigration Health Surcharge. There are approximately 250 Scholars studying in Cambridge at any one time who pursue the full range of subjects available at the University and are spread across its departments and Colleges, as well as forming their own distinctive community.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q25",
+      "question": "What is the annual stipend for a Rhodes Scholar in 2026-27?",
+      "expected_doc": "rhodes",
+      "found_doc_top5": [
+        "rhodes",
+        "rhodes",
+        "rhodes",
+        "rhodes",
+        "rhodes"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "In such cases, the Rhodes Trust will award only half the annual stipend to the Scholar. The Rhodes Scholarship covers Oxford University course fees, as well as providing an annual stipend. If the value of such an award is more than 33% of the annual stipend, i.e. \u00a36,950 pa, then you would need to declare the award to the Registrar's office at Rhodes House. A: The Rhodes Scholarship covers Oxford University course fees, as well as providing an annual stipend. For the 2026-27 academic year, the stipend is \u00a321,060 paid in monthly instalments of \u00a31,755, from which Scholars pay all living expenses, including accommodation.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q26",
+      "question": "How many years of funding do Knight-Hennessy Scholars receive at Stanford?",
+      "expected_doc": "knight-hennessy",
+      "found_doc_top5": [
+        "knight-hennessy",
+        "knight-hennessy",
+        "rhodes",
+        "gates-cambridge",
+        "gates-cambridge"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. During each of the first three years of graduate study, Knight-Hennessy scholars receive several types of funding: - A fellowship applied directly to cover tuition and associated fees. - A stipend for living and academic expenses (such as room and board, books, academic supplies, instructional materials, local transportation, and reasonable personal expenses). - A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. Additional funding specific to certain years: - Newly enrolling scholars receive a one-time relocation stipend intended to offset some of the costs associated with relocation to the area and/or technology purchases. - Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel). If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q27",
+      "question": "What is the maximum age for Schwarzman Scholars as of August 1 of their enrollment year?",
+      "expected_doc": "schwarzman",
+      "found_doc_top5": [
+        "schwarzman",
+        "schwarzman",
+        "schwarzman",
+        "schwarzman",
+        "schwarzman"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Candidates must be at least 18 but not yet 29 years of age as of August 1 of their enrollment year. To be eligible, applicants must complete all of the requirements for their undergraduate degree by August 1 of the year they enter the Schwarzman Scholars program. The program of study, including all required courses and activities, is one year, beginning with mandatory orientation in late August and concluding with a graduation ceremony early the following July. For example, Schwarzman Scholars entering in August 2025 would need to have all undergraduate degree requirements completed by August 1, 2025. Final admissions decisions for Chinese Schwarzman Scholars are announced before October each year.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q28",
+      "question": "When is the closing date for Commonwealth Shared Scholarship applications for 2027/28?",
+      "expected_doc": "commonwealth-shared",
+      "found_doc_top5": [
+        "commonwealth-shared",
+        "commonwealth-shared",
+        "sweden-si",
+        "commonwealth-shared",
+        "sweden-si"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Applications for Commonwealth Shared Scholarships for the 2027/28 academic year are now open. The closing date for applications is 16:00 GMT on Tuesday 8 December 2026. Applications will be shared with the universities that will nominate their chosen candidates to the CSC in March 2027. Commonwealth Shared Scholarships - Commonwealth Scholarship Commission in the UK. The Commonwealth Shared Scholarship programme is one of three Master's programmes offered by the Commonwealth Scholarship Commission.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q29",
+      "question": "What is the full-time base RTP stipend rate for 2026?",
+      "expected_doc": "rtp",
+      "found_doc_top5": [
+        "rtp",
+        "rtp",
+        "rtp",
+        "rtp",
+        "gates-cambridge"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Year 2026, Full-time base RTP stipend rate ($) 34,315, Full-time max RTP stipend rate ($) 53,608. Year 2025, Full-time base RTP stipend rate ($) 33,511, Full-time max RTP stipend rate ($) 52,352. RTP stipend rates: Year 2027, Full-time base RTP stipend rate ($) 35,550, Full-time max RTP stipend rate ($) 55,537. RTP stipend rate ($) 33,511, Full-time max RTP stipend rate ($) 52,352. The base and maximum RTP stipend rates for the following year are announced by 1 October each year.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q30",
+      "question": "How many Marshall Scholarships are awarded each year?",
+      "expected_doc": "marshall",
+      "found_doc_top5": [
+        "marshall",
+        "marshall",
+        "commonwealth-shared",
+        "rtp",
+        "hkpfs"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. The Two Year Marshall Scholarship is tenable for two academic years (ie 22 months), but may be extended by the Commission, though not beyond the end of a third academic year. Tenure: The One Year Marshall Scholarship is tenable for one academic year (ie 12 months) and cannot be extended. In addition to the third year funding offered by the Commission: - up to three third-year extensions may be offered through the Ray Dolby-Marshall scholarship which is administered internally. - up to third-year extensions may be granted by the Cambridge Trust to those pursuing a doctorate at the University of Cambridge. Number of Awards: Up to 50 Scholarships awarded annually.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q31",
+      "question": "How much is the monthly EMJM scholarship for individuals?",
+      "expected_doc": "erasmus-mundus-org",
+      "found_doc_top5": [
+        "erasmus-mundus-org",
+        "erasmus-mundus",
+        "rhodes",
+        "sweden-si",
+        "rtp"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "EU scholarship for individuals: \u20ac1,400 per month (max. Additionally, an EMJM study programme may involve other educational and/or non-educational partners with specific expertise and interest in the area of study. The EU provides funding for both running these programmes and offering competitive scholarships to the best students worldwide. An EMJM involves at least three HEIs from three different countries, of which at least two must be EU Member States and third countries associated to the Programme (previously called Programme Countries). An EMJM enrolls excellent students worldwide.",
+      "answer_relevant": true,
+      "answer_only_relevant": true,
+      "eligibility_verdict": null
+    },
+    {
+      "id": "q32",
+      "question": "What is the monthly allowance for a Pioneering Women in STEM scholar?",
+      "expected_doc": "si-pioneering-women",
+      "found_doc_top5": [
+        "si-pioneering-women",
+        "si-pioneering-women",
+        "si-pioneering-women",
+        "sweden-si",
+        "si-pioneering-women"
+      ],
+      "recall@3": true,
+      "recall@5": true,
+      "found": true,
+      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. The SI scholarship Pioneering women in STEM is a competitive fully-funded scholarship that includes: - Full tuition fee coverage. Find the list of eligible master's programmes for the Pioneering Women in STEM scholarship academic year 2027/2028 here. To be eligible for the SI Scholarship Pioneering Women in STEM you must: - Be liable to pay tuition fees to Swedish universities. To apply, you must: - Be a female citizen of one of the 10 eligible countries in Africa and Asia. - Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship.",
+      "answer_relevant": true,
+      "answer_only_relevant": false,
       "eligibility_verdict": null
     }
   ]

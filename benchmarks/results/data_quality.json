@@ -121,6 +121,54 @@
       "resolution_evidence": null
     },
     {
+      "doc": "gates-cambridge",
+      "kind": "approximate_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+      "chunk_id": "gates-cambridge-0",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "note": "Quote the figure with its hedge ('approximately').",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "gates-cambridge",
+      "kind": "approximate_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "There are approximately 250 Scholars studying in Cambridge at any one time who pursue the full range of subjects available at the University and are spread across its departments and Colleges, as well as forming their own distinctive community.",
+      "chunk_id": "gates-cambridge-0",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "note": "Quote the figure with its hedge ('approximately').",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "schwarzman",
+      "kind": "approximate_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "The 25 minutes will be allocated along the following general guidelines: - The chair will ask you to introduce yourself very briefly, approximately one minute, describing your background and professional interests.",
+      "chunk_id": "schwarzman-8",
+      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+      "note": "Quote the figure with its hedge ('approximately').",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "commonwealth-shared",
+      "kind": "year_specific_figure",
+      "severity": "low",
+      "status": "open",
+      "sentence": "Applications for Commonwealth Shared Scholarships for the 2027/28 academic year are now open.",
+      "chunk_id": "commonwealth-shared-1",
+      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+      "note": "Quote the figure with its academic year.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
       "doc": "erasmus-mundus",
       "kind": "stale_page_marker",
       "severity": "low",
@@ -169,6 +217,18 @@
       "resolution_evidence": "Master's level. France Excellence Eiffel scholarship holders receive a monthly allowance of \u20ac1,200 (from January 2026). Doctorate level. France Excellence Eiffel scholarship holders receive a monthly stipend of \u20ac2,000 (from January 2026)."
     },
     {
+      "doc": "erasmus-mundus-org",
+      "kind": "multiple_amounts",
+      "severity": "medium",
+      "status": "resolved",
+      "sentence": "Grant per project: up to \u20ac5 million.",
+      "chunk_id": "erasmus-mundus-org-0",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters",
+      "note": "Distinct amounts on one page: \u20ac1,400 (erasmus-mundus-org-0); \u20ac5 (erasmus-mundus-org-0).",
+      "resolution": "Not a contradiction. The two amounts are different fields: \u20ac5 million is the maximum grant per EMJM project (to the consortium), \u20ac1,400 per month is the EU scholarship paid to an individual student (max. 24 months). Quote each with its field.",
+      "resolution_evidence": "Grant per project: up to \u20ac5 million. EU scholarship for individuals: \u20ac1,400 per month (max. 24 months)."
+    },
+    {
       "doc": "hkpfs",
       "kind": "multiple_amounts",
       "severity": "medium",
@@ -212,6 +272,42 @@
       "sentence": "",
       "chunk_id": "chevening-0",
       "source_url": "https://www.chevening.org/scholarships/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "commonwealth-shared",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "commonwealth-shared-0",
+      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "commonwealth-shared",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "commonwealth-shared-0",
+      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "commonwealth-shared",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "commonwealth-shared-0",
+      "source_url": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-shared-scholarships-applications/",
       "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
@@ -289,6 +385,42 @@
       "resolution_evidence": null
     },
     {
+      "doc": "erasmus-mundus-org",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "erasmus-mundus-org-0",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "erasmus-mundus-org",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "erasmus-mundus-org-0",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "erasmus-mundus-org",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "erasmus-mundus-org-0",
+      "source_url": "https://erasmus-plus.ec.europa.eu/opportunities/organisations/cooperation-among-organisations-and-institutions/erasmus-mundus-joint-masters",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
       "doc": "fulbright",
       "kind": "missing_field",
       "severity": "info",
@@ -337,6 +469,42 @@
       "resolution_evidence": null
     },
     {
+      "doc": "gates-cambridge",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "gates-cambridge-0",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "gates-cambridge",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "gates-cambridge-0",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "gates-cambridge",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "gates-cambridge-0",
+      "source_url": "https://www.gatescambridge.org/programme/the-scholarship/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
       "doc": "hkpfs",
       "kind": "missing_field",
       "severity": "info",
@@ -345,6 +513,54 @@
       "chunk_id": "hkpfs-0",
       "source_url": "https://cerg1.ugc.edu.hk/hkpfs/index.html",
       "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "knight-hennessy",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "knight-hennessy-0",
+      "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "knight-hennessy",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "knight-hennessy-0",
+      "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "knight-hennessy",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "knight-hennessy-0",
+      "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "knight-hennessy",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "knight-hennessy-0",
+      "source_url": "https://knight-hennessy.stanford.edu/program-overview/funding",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     },
@@ -369,6 +585,42 @@
       "chunk_id": "manaaki-0",
       "source_url": "https://www.nzscholarships.govt.nz/",
       "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "marshall",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "marshall-0",
+      "source_url": "https://marshallscholarship.org/about/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "marshall",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "marshall-0",
+      "source_url": "https://marshallscholarship.org/about/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "marshall",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "marshall-0",
+      "source_url": "https://marshallscholarship.org/about/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     },
@@ -409,6 +661,186 @@
       "resolution_evidence": null
     },
     {
+      "doc": "rhodes",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rhodes-0",
+      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rhodes",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rhodes-0",
+      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rhodes",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rhodes-0",
+      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rhodes",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rhodes-0",
+      "source_url": "https://www.rhodeshouse.ox.ac.uk/scholarships/faqs/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rtp",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rtp-0",
+      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rtp",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rtp-0",
+      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rtp",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rtp-0",
+      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "rtp",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "rtp-0",
+      "source_url": "https://www.education.gov.au/research-block-grants/research-training-program",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "schwarzman",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "schwarzman-0",
+      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "schwarzman",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "schwarzman-0",
+      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "schwarzman",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "schwarzman-0",
+      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "schwarzman",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "schwarzman-0",
+      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "si-pioneering-women",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "si-pioneering-women-0",
+      "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
+      "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "si-pioneering-women",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "si-pioneering-women-0",
+      "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
+      "note": "No degree_levels stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
+      "doc": "si-pioneering-women",
+      "kind": "missing_field",
+      "severity": "info",
+      "status": "open",
+      "sentence": "",
+      "chunk_id": "si-pioneering-women-0",
+      "source_url": "https://si.se/en/apply/scholarships/pioneeringwomeninstem/",
+      "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
+      "resolution": null,
+      "resolution_evidence": null
+    },
+    {
       "doc": "sweden-si",
       "kind": "missing_field",
       "severity": "info",
@@ -439,6 +871,11 @@
       "stipend",
       "citizenship_rule"
     ],
+    "commonwealth-shared": [
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
+    ],
     "daad": [
       "deadline",
       "stipend",
@@ -451,22 +888,66 @@
       "deadline",
       "stipend"
     ],
+    "erasmus-mundus-org": [
+      "deadline",
+      "degree_levels",
+      "citizenship_rule"
+    ],
     "fulbright": [
       "deadline",
       "stipend",
       "degree_levels",
       "citizenship_rule"
     ],
+    "gates-cambridge": [
+      "deadline",
+      "degree_levels",
+      "citizenship_rule"
+    ],
     "hkpfs": [
       "deadline"
+    ],
+    "knight-hennessy": [
+      "deadline",
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
     ],
     "manaaki": [
       "deadline",
       "stipend"
     ],
+    "marshall": [
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
+    ],
     "mext": [
       "deadline",
       "stipend",
+      "citizenship_rule"
+    ],
+    "rhodes": [
+      "deadline",
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
+    ],
+    "rtp": [
+      "deadline",
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
+    ],
+    "schwarzman": [
+      "deadline",
+      "stipend",
+      "degree_levels",
+      "citizenship_rule"
+    ],
+    "si-pioneering-women": [
+      "stipend",
+      "degree_levels",
       "citizenship_rule"
     ],
     "sweden-si": [
