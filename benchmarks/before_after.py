@@ -215,28 +215,32 @@ def main() -> None:
     lines.append("")
     lines.append("## What still fails, and why\n")
     lines.append(
-        "- q03, q10, q17 (paraphrase gap): the expected answer's key terms "
+        "- q10, q17 (paraphrase gap): the expected answer's key terms "
         "do not appear in the question, so lexical picking cannot rank the "
         "right sentence first. Dense sentence scoring shipped in Phase 2 "
-        "Step 2 and did not fix these three; what remains is a generative "
-        "answer with a verification step.")
+        "Step 2 and did not fix these two; what remains is a generative "
+        "answer with a verification step. q03 was in this group until the "
+        "Phase 2 improvement (bullet-list splitting) fixed it: answer-only "
+        "0.907 -> 0.930.")
     lines.append(
-        "- q32 (bullet-list merging): the SEK 12,000 allowance sentence sits "
-        "in a dash-led bullet list, and the sentence splitter merges the "
-        "whole list into one long sentence, so it shares fewer query stems "
-        "than the page intro and is not picked. The evidence is in the top "
-        "retrieved chunk; the picker did not surface it.")
+        "- q32 (bullet-list scoring): the SEK 12,000 allowance sentence is "
+        "now its own pickable sentence (the Phase 2 improvement splits "
+        "dash-led bullet items), but it still shares only 'monthly' and "
+        "'allowance' with the question while the page intro shares "
+        "pioneering, women, stem and scholar, so the intro still outscores "
+        "it. The evidence is in the top retrieved chunk; the picker still "
+        "does not surface it.")
     lines.append(
-        "- q03, q32 (baseline gained, improved unchanged): on the "
+        "- q32 (baseline gained, improved unchanged): on the "
         "grown corpus the naive baseline's BM25 top chunk changed, "
         "so its first-sentence picking now lands on the right "
-        "sentence for q03 and q32, while the improved pipeline "
-        "still misses both (q03 paraphrase gap, q32 bullet-list "
-        "merging). The failure table labels both REGRESSION, but "
-        "the improved column is unchanged since Step 5 — no "
+        "sentence for q32, while the improved pipeline "
+        "still misses it (q32 bullet-list scoring). The failure table labels it "
+        "REGRESSION, but the improved column is unchanged since Step 5 — no "
         "question the improved pipeline got right was lost; the "
         "baseline got luckier. The no-regression test pins exactly "
-        "these two rows, so a third one fails the build.")
+        "this one row, so a second one fails the build. q03 was the "
+        "other pinned row until the Phase 2 improvement fixed it.")
     lines.append(
         "- o06, o07 (abstention lost on corpus growth, then fixed "
         "in Step 6): the grown corpus gave the lexical gates other "

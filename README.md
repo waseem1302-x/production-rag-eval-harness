@@ -35,21 +35,21 @@ Read first:
 
 ## Results at a glance
 
-Final state after Phase 2, Step 7, measured 18 Nov 2026 on a local run. No number here is invented.
+Final state after the Phase 2 improvement (bullet-list splitting), measured 18 Nov 2026 on a local run. No number here is invented.
 
 | Metric | Value |
 |---|---|
 | Corpus | 19 documents, 101 chunks |
 | Golden questions | 50 (32 factual + 11 eligibility + 7 out-of-corpus) |
 | recall@3 / recall@5 | 1.0 / 1.0 |
-| Answer-only relevance | 0.907 (39/43) |
+| Answer-only relevance | 0.930 (40/43) |
 | Faithfulness | 1.0 |
 | Abstention accuracy | 1.0 (7/7) |
 | Eligibility accuracy | 1.0 (11/11) |
-| Tests | 179 passed, 0 failed |
+| Tests | 183 passed, 0 failed |
 | Cost per query | $0.00 (local CPU, no API calls) |
 | Data-quality findings | 73 (16 resolved, 57 open) |
-| CI gate | Pass (1.0, 0.907, 1.0, 1.0, 1.0) |
+| CI gate | Pass (1.0, 0.930, 1.0, 1.0, 1.0) |
 
 ## Tech stack
 
@@ -139,7 +139,7 @@ official pages -> ingest.py (fetch + extract text, save raw + metadata)
 
 - Dense embeddings alone miss exact names and numbers ("Vanier", "$50,000", "SI Scholarship"). BM25 alone misses paraphrases ("fully funded master's in the UK" vs "one-year master's degrees").
 - So retrieval is hybrid: FAISS cosine similarity over all-MiniLM-L6-v2 embeddings, plus BM25 over chunk tokens, each normalised to 0-1 and combined 0.5/0.5. The top 10 are then reranked with a transparent lexical reranker (query-term coverage bonus).
-- Honest finding from the ablation: on this 101-chunk corpus, dense retrieval buys no measured recall (recall@5 is 1.0 for every signal) and slightly hurts answer-only relevance (dense-only 0.844 vs BM25-only 0.875) at about 39x the retrieval latency (77.7 ms vs 2.0 ms). The improvement comes from the answering discipline, not the retrieval signal.
+- Honest finding from the ablation: on this 101-chunk corpus, dense retrieval buys no measured recall (recall@5 is 1.0 for every signal) and now matches BM25 on answer-only relevance (dense-only 0.875 vs BM25-only 0.875) at about 170x the retrieval latency (1121.2 ms vs 6.6 ms in the latest run; latency varies a lot run to run on this VM). The improvement comes from the answering discipline, not the retrieval signal.
 
 ### Answering: why extractive, why abstain
 
@@ -180,11 +180,12 @@ Each step is one branch, merged with `--no-ff`, measured on the golden set befor
 
 - **Step 1, generative answer + verification + LLM-as-judge.** Opt-in generative answer from local Qwen2.5-0.5B-Instruct (0.5B params, 988.1 MB, CPU-only, $0), with a deterministic verification step: every generated sentence is checked against the cited chunks, unsupported sentences are dropped, otherwise the answer falls back to extractive. Measured on 38 questions: generative answer-only 0.697 (23/33) vs extractive 0.909 (30/33). The generator is worse than quoting the source, so extractive stays the default. The judge scored 0.957 / 0.957 (n=23) but overstates quality: it scored q10's wrong "one academic year" 1/1 and the correct Vanier-closure answer (q21) 0/0. It fixed one paraphrase-gap failure (q03).
 - **Step 2, dense sentence scoring + answer verification.** Sentence picking now adds 2.0 x cosine similarity (same local MiniLM embedder, $0) to the lexical score. Weight 2.0 shipped as the largest with zero regressions: weights 3-4 fix q03 but lose q16. The verification step fixed o04, which now abstains with reason `unanswered_ranking`. Abstention went 0.8 (4/5) to 1.0 (5/5). Dense scoring itself buys nothing measurable on this corpus.
-- **Step 3, cross-encoder reranker ablation.** Model `cross-encoder/ms-marco-MiniLM-L-6-v2` (22.7M params, ~91 MB, CPU-only, $0) as the `hybrid-cross-encoder` configuration. Measured on the 31-chunk corpus: answer-only 0.87 with and without it, abstention 1.0 both ways, at 4,238.0 ms vs 123.7 ms retrieval mean (about 34x). Re-measured on the grown 101-chunk corpus: still 0.875 both ways, at 3,987.1 ms vs 185.9 ms (about 21x). It reorders 17 of 23 top-5 lists but no picked answer changes. Lexical stays the default.
+- **Step 3, cross-encoder reranker ablation.** Model `cross-encoder/ms-marco-MiniLM-L-6-v2` (22.7M params, ~91 MB, CPU-only, $0) as the `hybrid-cross-encoder` configuration. Measured on the 31-chunk corpus: answer-only 0.87 with and without it, abstention 1.0 both ways, at 4,238.0 ms vs 123.7 ms retrieval mean (about 34x). Re-measured on the grown 101-chunk corpus: still 0.875 both ways, at 3,987.1 ms vs 185.9 ms (about 21x). It reorders 17 of 23 top-5 lists but no picked answer changes. Lexical stays the default. Re-measured again in the Phase 2 improvement run: cross-encoder 0.875 vs improved-hybrid 0.906, it loses q03 again, at 5,590.4 ms vs 87.0 ms retrieval mean (about 64x).
 - **Step 4, eligibility reads the closure flag.** Vanier is closed, so a profile check returns verdict `closed`, not `not_eligible`, with the closure evidence and the replacement programme, whatever the profile. New file `data/closures.json` (version 1), evidence validated verbatim at load time. Golden set 38 to 39 questions (new e11, Pakistani doctoral applicant, Vanier). Eligibility 1.0 (11/11). Answer-only 0.909 to 0.912 (31/34).
 - **Step 5, chunk-size ablation.** Same `.txt` corpus, overlap constant at 200 chars, three indexes (256 / 512 / 1,024 tokens), same 39-question golden set. 256 gives 60 chunks, answer-only 0.853, eligibility 0.818. 512 gives 31 chunks, answer-only 0.912, eligibility 1.0. 1,024 gives 19 chunks, answer-only 0.853, eligibility 0.909. Recall, faithfulness, and abstention are 1.0 at all sizes. **512 kept, by the numbers.** 256 fixes q03 but drops 7 eligibility rules and tells a Pakistani SI applicant they are `eligible` when they are not. Honest confound: the rules were authored against 512-token chunking, so 512 has home-field advantage.
 - **Step 6, corpus growth.** 10 to 19 documents, 31 to 101 chunks, 39 to 50 golden questions. Nine new docs, all fetched 18 Nov 2026 as `.txt` only: Gates Cambridge, Rhodes, Knight-Hennessy, Schwarzman, Commonwealth Shared, RTP, Marshall, Erasmus Mundus organisations page, SI Pioneering Women in STEM. Answer-only 0.912 to 0.907 (8 of 9 new questions pass, q32 is a documented miss). Growing the corpus first broke abstention, 1.0 to 0.714 (5/7): o06 was answered with SI + Commonwealth dates and o07 with KHS funding sentences. Both were fixed in the same step, so abstention is 1.0 (7/7) again, with the dip recorded, not hidden.
 - **Step 7, re-verify stale pages.** All 19 source pages re-fetched 18 Nov 2026. All 19 live, 18 substantively unchanged, Eiffel changed only in a sidebar teaser. No `.txt` was rewritten, the rebuilt index is byte-identical (101 chunks), and the re-run eval is byte-identical to the before-run file. Same step fixes the data-quality checker's currency gap: its money pattern now matches £, SEK, and ¥ plus detached "($) 35,550" rates, so stipend-missing flags went 14 of 19 to 8 of 19, and findings went 72 to 73 (9 to 16 resolved, 63 to 57 open).
+- **Phase 2 improvement, bullet-list splitting.** `segment_sentences` now splits dash-led bullet items into their own sentences (after terminal punctuation or a colon intro). Measured on the 50-question golden set: answer-only 0.907 (39/43) to 0.930 (40/43), q03 fixed, zero other regressions, faithfulness still 1.0. q32 still misses: the SEK 12,000 sentence is pickable now but still loses on lexical score to the page intro. Side effect, recorded not hidden: dense-only abstention 1.0 to 0.857 (o06 answered in dense-only mode only; the shipped improved-hybrid still abstains 1.0).
 
 ## Quickstart (local)
 
@@ -268,25 +269,25 @@ All numbers in this README come from a real local run. See [EVAL_RESULTS.md](EVA
 python -m benchmarks.run_benchmark   # 8 configurations, same golden set
 ```
 
-Re-run in Phase 2, Step 6 with the current code on the grown corpus (101 chunks, 50 questions). Latency is measured after warm-up with the embedding model already loaded. Cost is $0.00 everywhere (local CPU, no API calls). Latency varies run to run by tens of milliseconds on this VM (shared CPU, 1.5 cores). The order of magnitude is stable; the exact figures are one measured run.
+Re-run in the Phase 2 improvement with the current code on the grown corpus (101 chunks, 50 questions). Latency is measured after warm-up with the embedding model already loaded. Cost is $0.00 everywhere (local CPU, no API calls). Latency varies run to run by hundreds of milliseconds on this VM (shared CPU, 1.5 cores, and the dense configs embed every candidate sentence per question). The order of magnitude is stable; the exact figures are one measured run.
 
 | Configuration | Mode | Reranker | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
 |---|---|---|---|---|---|---|---|---|---|
-| baseline-naive | bm25 | lexical | 1.0 | 0.625 | 1.0 | 0.0 | 0.3 ms | 0.7 ms | $0.00 |
-| hybrid-plain | hybrid | lexical | 1.0 | 0.656 | 1.0 | 0.0 | 84.1 ms | 84.6 ms | $0.00 |
-| improved-bm25 | bm25 | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 2.0 ms | 1179.2 ms | $0.00 |
-| dense-only | dense | lexical | 1.0 | 0.844 | 1.0 | 1.0 | 77.7 ms | 1443.7 ms | $0.00 |
-| hybrid-no-rerank | hybrid | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 60.2 ms | 1407.1 ms | $0.00 |
-| hybrid-no-gates | hybrid | lexical | 1.0 | 0.844 | 1.0 | 0.0 | 145.3 ms | 2038.0 ms | $0.00 |
-| improved-hybrid | hybrid | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 185.9 ms | 2566.1 ms | $0.00 |
-| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 0.875 | 1.0 | 1.0 | 3987.1 ms | 5374.9 ms | $0.00 |
+| baseline-naive | bm25 | lexical | 1.0 | 0.625 | 1.0 | 0.0 | 0.4 ms | 0.9 ms | $0.00 |
+| hybrid-plain | hybrid | lexical | 1.0 | 0.656 | 1.0 | 0.0 | 172.3 ms | 176.3 ms | $0.00 |
+| improved-bm25 | bm25 | lexical | 1.0 | 0.875 | 1.0 | 1.0 | 6.6 ms | 3248.7 ms | $0.00 |
+| dense-only | dense | lexical | 1.0 | 0.875 | 1.0 | 0.857 | 1121.2 ms | 6615.7 ms | $0.00 |
+| hybrid-no-rerank | hybrid | lexical | 1.0 | 0.906 | 1.0 | 1.0 | 559.5 ms | 4940.3 ms | $0.00 |
+| hybrid-no-gates | hybrid | lexical | 1.0 | 0.906 | 1.0 | 0.0 | 377.3 ms | 3148.1 ms | $0.00 |
+| improved-hybrid | hybrid | lexical | 1.0 | 0.906 | 1.0 | 1.0 | 87.0 ms | 1207.5 ms | $0.00 |
+| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 0.875 | 1.0 | 1.0 | 5590.4 ms | 7984.7 ms | $0.00 |
 
 Each configuration changes one thing from its neighbour, so each component's contribution is isolated. What the ablation shows:
 
-- The improvement is the answering discipline, not the retrieval signal. Baseline to improved-hybrid: answer-only 0.625 to 0.875, abstention 0.0 to 1.0. Hybrid-plain (hybrid retrieval, naive answering) scores only 0.656.
+- The improvement is the answering discipline, not the retrieval signal. Baseline to improved-hybrid: answer-only 0.625 to 0.906, abstention 0.0 to 1.0. Hybrid-plain (hybrid retrieval, naive answering) scores only 0.656.
 - Dense buys no recall here: recall@5 is 1.0 for every configuration.
-- Dense slightly hurts answer-only relevance (dense-only 0.844 vs BM25-only 0.875) at about 39x the retrieval latency of BM25.
-- The reranker adds nothing measurable (0.875 with and without it). The cross-encoder adds nothing either, at about 21x the retrieval latency of the lexical reranker on the grown corpus.
+- Dense now matches BM25 on answer-only relevance (dense-only 0.875 vs BM25-only 0.875, both up from 0.844 after the bullet-list split fixed q03 in the dense config too), but dense-only lost one abstention (0.857, o06 answered in dense-only mode only; the shipped improved-hybrid still abstains 1.0).
+- The reranker adds nothing measurable (0.906 with and without it). The cross-encoder now hurts answer-only relevance (0.906 to 0.875, it loses q03 again) at about 64x the retrieval latency of the lexical reranker on the grown corpus.
 - The gates are the entire abstention story (hybrid-no-gates 0.0 to improved-hybrid 1.0).
 
 Full results: `benchmarks/results/<config>.json`. Summary: `benchmarks/results/summary.md`.
@@ -302,11 +303,11 @@ Baseline-naive to improved-hybrid, on the grown corpus (39 factual questions):
 | Metric | Before (baseline-naive) | After (improved-hybrid) | Change |
 |---|---|---|---|
 | recall@5 | 1.0 | 1.0 | +0.000 |
-| Answer-only relevance | 0.625 | 0.875 | +0.250 |
+| Answer-only relevance | 0.625 | 0.906 | +0.281 |
 | Faithfulness | 1.0 | 1.0 | +0.000 |
 | Abstention accuracy | 0.0 | 1.0 | +1.000 |
-| Retrieval latency (mean) | 0.3 ms | 185.9 ms | +185.6 ms |
-| Total latency (mean) | 0.7 ms | 2566.1 ms | +2565.4 ms |
+| Retrieval latency (mean) | 0.4 ms | 87.0 ms | +86.6 ms |
+| Total latency (mean) | 0.9 ms | 1207.5 ms | +1206.6 ms |
 | Cost per query | $0.00 | $0.00 | $0.00 |
 
 Why it changed: the answering discipline (scored picking + gates), not the retrieval signal. The baseline returned the first sentences of the top chunk, usually headers, navigation, or a marketing intro. Full report with failure tables: [benchmarks/results/before_after.md](benchmarks/results/before_after.md).
@@ -391,8 +392,8 @@ No regressions in the improved pipeline: no question it got right is lost. The f
 
 | Question | Why it still fails |
 |---|---|
-| q03, q10, q17 | Paraphrase gap. The expected answer's key terms are not in the question, so lexical picking cannot find the sentence. Dense sentence scoring (Step 2, weight 2.0) does not fix them either: q03's correct sentence ranks 4th by dense sim (0.630), q10's 8th (0.438), q17's 14th (0.527). The generative path fixes q03 only. |
-| q32 (SI Pioneering Women allowance) | Bullet-list merging. The "SEK 12,000" sentence sits in a dash-led bullet list, the splitter merges the whole list into one long sentence, and it loses to the page intro on shared stems. The evidence is in the top retrieved chunk (`si-pioneering-women-1`); the picker does not surface it. New in Step 6. |
+| q10, q17 | Paraphrase gap. The expected answer's key terms are not in the question, so lexical picking cannot find the sentence. Dense sentence scoring (Step 2, weight 2.0) does not fix them either: q10's correct sentence ranks 8th by dense sim (0.438), q17's 14th (0.527). q03 was in this row until the Phase 2 improvement (bullet-list splitting) fixed it. |
+| q32 (SI Pioneering Women allowance) | Bullet-list scoring. The "SEK 12,000" sentence is now its own pickable sentence (the Phase 2 improvement splits dash-led bullet items), but it shares only "monthly" and "allowance" with the question while the page intro shares pioneering, women, stem and scholar, so the intro still outscores it. The evidence is in the top retrieved chunk (`si-pioneering-women-1`); the picker does not surface it. New in Step 6, still open after the improvement. |
 | o04 (Vanier ranked university) | **Fixed in Step 2.** The answer-verification step now abstains with reason `unanswered_ranking` (abstention 1.0, 7/7). Dense similarity alone could not catch it (o04 scored 0.667, above several answerable questions). |
 | o06, o07 (abstention lost on corpus growth) | **Fixed in Step 6.** Growing the corpus to 19 documents first broke both: o06 answered with SI + Commonwealth dates, o07 with KHS funding sentences (abstention 1.0 to 0.714 mid-step). Fixed two ways: the verification gained a scholarship-subject focus check (o06, `unanswered_scholarship_subject`) and "scholar" joined the generic terms (o07, `missing_specific_term`). Abstention is 1.0 (7/7) again; the dip is recorded in `tests/test_corpus_growth.py`, not hidden. |
 | Eligibility vs Vanier closure | **Fixed in Step 4.** A profile check for Vanier now returns verdict `closed` with the closure evidence and the replacement programme (e02, e05, e11 all pass; eligibility 1.0, 11/11). |
@@ -429,7 +430,7 @@ Thresholds: recall@5 at least 0.90, answer-only relevance at least 0.60, faithfu
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 179 passed
+python -m pytest tests/ -q   # 183 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text normalisation), retrieval (modes, known questions, empty index), answering and abstention (edge cases: empty documents, missing context, weak retrieval, duplicate chunks, single long sentence), auditable retrieval (abstention reasons, retrieval trace), eligibility (verdict cases, evidence grounding, API profile behaviour, closure), data quality (all known findings, no false positives), ablation (retrieval modes, configuration coverage), chunk-size ablation (256/512/1,024 tokens), corpus growth (19 documents, 101 chunks, 50 questions, o06/o07 abstaining), re-verification (19 pages live, £/SEK/¥ matching, eval identical to before-run), and report integrity (generated before/after report matches the results files). Phase 2, Step 1 adds 25 generative tests (`tests/test_generative.py`, fake model only; the real 0.5B model is never loaded in tests).
@@ -449,7 +450,7 @@ The Dockerfile builds the index at image build time from the committed `data/` s
 - No deployment (local + Docker only; not deployed anywhere).
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually, then re-run the eval and the data-quality checker).
 - No eligibility rules for the 9 new Step 6 documents (Gates, Rhodes, Knight-Hennessy, Schwarzman, Commonwealth Shared, RTP, Marshall, Erasmus Mundus organisations page, SI Pioneering Women). Profile checks for them return `unknown` by construction.
-- No fix yet for the q32 bullet-list merging bug (split list items into separate pickable sentences).
+- No fix yet for q32 bullet-list scoring (the split list items are pickable now, but the SEK sentence still loses on lexical score to the page intro).
 - No stronger generator or judge: the 0.5B model is measured worse than extractive (0.697 vs 0.909), and the 0.5B judge overstates quality.
 
 Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as an ablation config, LLM-as-judge, dense sentence scoring, answer-verification step, Vanier closure verdict, chunk-size ablation, corpus growth, and stale-page re-verification.

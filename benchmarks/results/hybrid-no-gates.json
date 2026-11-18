@@ -12,7 +12,7 @@
     "recall@3": 1.0,
     "recall@5": 1.0,
     "answer_relevance_proxy": 1.0,
-    "answer_only_relevance": 0.844,
+    "answer_only_relevance": 0.906,
     "faithfulness": 1.0,
     "abstention_accuracy": 0.0,
     "eligibility_accuracy": null
@@ -20,16 +20,16 @@
   "latency": {
     "n_queries": 39,
     "retrieval": {
-      "mean_ms": 145.3,
-      "p50_ms": 77.5,
-      "p95_ms": 627.0,
-      "max_ms": 1033.9
+      "mean_ms": 377.3,
+      "p50_ms": 293.3,
+      "p95_ms": 1004.6,
+      "max_ms": 1214.5
     },
     "search_plus_answer": {
-      "mean_ms": 2038.0,
-      "p50_ms": 1681.1,
-      "p95_ms": 4015.2,
-      "max_ms": 6375.7
+      "mean_ms": 3148.1,
+      "p50_ms": 2789.3,
+      "p95_ms": 5596.6,
+      "max_ms": 6487.1
     }
   },
   "cost_per_query_usd": 0.0,
@@ -86,9 +86,9 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. Apply for a Global Professionals scholarship. - 8 Feb 2027 - 24 Feb 2027. The Scholarship for Global Professionals is a competitive full y-funded scholarship that includes: Full tuition fee coverage.",
+      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. The Scholarship for Global Professionals is a competitive full y-funded scholarship that includes: Full tuition fee coverage. The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance.",
       "answer_relevant": true,
-      "answer_only_relevant": false,
+      "answer_only_relevant": true,
       "eligibility_verdict": null
     },
     {
@@ -314,7 +314,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years. Pursue your dream with the Hong Kong PhD Fellowship Scheme (30.08.2021). Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities. During each of the first three years of graduate study, Knight-Hennessy scholars receive several types of funding: - A fellowship applied directly to cover tuition and associated fees. - A stipend for living and academic expenses (such as room and board, books, academic supplies, instructional materials, local transportation, and reasonable personal expenses). - A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. 400 PhD Fellowships will be awarded in the 2027/28 academic year*.",
+      "answer": "In the 2026/27 academic year, the Fellowship provides an annual stipend of HK$344,400 (approximately US$44,150) and a conference and research-related travel allowance of HK$14,400 (approximately US$1,840) per year for each awardee for a period up to three years. Pursue your dream with the Hong Kong PhD Fellowship Scheme (30.08.2021). Established by the Research Grants Council (RGC) of Hong Kong in 2009, the Hong Kong PhD Fellowship Scheme (HKPFS) aims at attracting the best and brightest students in the world to pursue their PhD studies in Hong Kong's universities. 400 PhD Fellowships will be awarded in the 2027/28 academic year*. A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -485,7 +485,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. Each scholarship provides: - Approved airfare from the Scholar's home country to the UK and return at the end of the award (the CSC will not reimburse the cost of fares for dependants, nor the cost of journeys made before the award is confirmed) \u2013 funded by the CSC. - Approved tuition fees: full fees are covered by agreement between the CSC and the UK university, and scholars are not liable to pay for any part of the tuition fee. - Stipend (living allowance) at the rate of \u00a31,712 per month, or \u00a32,000 per month for those at universities in the London metropolitan area (rates quoted at current levels) \u2013 paid and funded by the university. - Thesis grant towards the cost of preparing a thesis or dissertation, where applicable \u2013 paid by the university, funded by the CSC. - Study travel grant towards the cost of study-related travel within the UK or overseas \u2013 paid by the university, funded by the CSC. - Contribution towards the cost of a mandatory tuberculosis (TB) test, where required for a visa application (receipts must be supplied) \u2013 paid by the university, funded by the CSC. - If a Scholar has children and is widowed, divorced, or a single parent, child allowance of child allowance of \u00a3622 per month for the first child, and \u00a3154 per month for the second and third child under the age of 16, if their children are living with them at the same address in the UK. A Gates Cambridge Scholarship covers the full cost of studying at Cambridge. Most costs are covered by the Scholarship but Gates Cambridge does not cover bench fees or the costs of scientific equipment or similar academic resources. months at the 2026-27 rate; pro rata for courses shorter than 12 months) \u2013 for PhD scholars the award is for up to 4 years. - one economy single airfare at both the beginning and end of the course. - inbound visa costs & the cost of the Immigration Health Surcharge.",
+      "answer": "Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. A Gates Cambridge Scholarship covers the full cost of studying at Cambridge. Most costs are covered by the Scholarship but Gates Cambridge does not cover bench fees or the costs of scientific equipment or similar academic resources. months at the 2026-27 rate; pro rata for courses shorter than 12 months) \u2013 for PhD scholars the award is for up to 4 years. - one economy single airfare at both the beginning and end of the course. - inbound visa costs & the cost of the Immigration Health Surcharge. Scholarships are tenable for any approved course offered by a participating UK university.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -523,7 +523,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. During each of the first three years of graduate study, Knight-Hennessy scholars receive several types of funding: - A fellowship applied directly to cover tuition and associated fees. - A stipend for living and academic expenses (such as room and board, books, academic supplies, instructional materials, local transportation, and reasonable personal expenses). - A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. Additional funding specific to certain years: - Newly enrolling scholars receive a one-time relocation stipend intended to offset some of the costs associated with relocation to the area and/or technology purchases. - Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel). If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment.",
+      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment. Funding | Knight-Hennessy Scholars at Stanford University. Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel).",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -599,9 +599,9 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Each scholarship provides: - Approved airfare from the Scholar's home country to the UK and return at the end of the award (the CSC will not reimburse the cost of fares for dependants, nor the cost of journeys made before the award is confirmed) \u2013 funded by the CSC. - Approved tuition fees: full fees are covered by agreement between the CSC and the UK university, and scholars are not liable to pay for any part of the tuition fee. - Stipend (living allowance) at the rate of \u00a31,712 per month, or \u00a32,000 per month for those at universities in the London metropolitan area (rates quoted at current levels) \u2013 paid and funded by the university. - Thesis grant towards the cost of preparing a thesis or dissertation, where applicable \u2013 paid by the university, funded by the CSC. - Study travel grant towards the cost of study-related travel within the UK or overseas \u2013 paid by the university, funded by the CSC. - Contribution towards the cost of a mandatory tuberculosis (TB) test, where required for a visa application (receipts must be supplied) \u2013 paid by the university, funded by the CSC. - If a Scholar has children and is widowed, divorced, or a single parent, child allowance of child allowance of \u00a3622 per month for the first child, and \u00a3154 per month for the second and third child under the age of 16, if their children are living with them at the same address in the UK. Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. The Two Year Marshall Scholarship is tenable for two academic years (ie 22 months), but may be extended by the Commission, though not beyond the end of a third academic year. Tenure: The One Year Marshall Scholarship is tenable for one academic year (ie 12 months) and cannot be extended. In addition to the third year funding offered by the Commission: - up to three third-year extensions may be offered through the Ray Dolby-Marshall scholarship which is administered internally. - up to third-year extensions may be granted by the Cambridge Trust to those pursuing a doctorate at the University of Cambridge.",
+      "answer": "Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. The Two Year Marshall Scholarship is tenable for two academic years (ie 22 months), but may be extended by the Commission, though not beyond the end of a third academic year. Tenure: The One Year Marshall Scholarship is tenable for one academic year (ie 12 months) and cannot be extended. In addition to the third year funding offered by the Commission: - up to three third-year extensions may be offered through the Ray Dolby-Marshall scholarship which is administered internally. - up to third-year extensions may be granted by the Cambridge Trust to those pursuing a doctorate at the University of Cambridge. Number of Awards: Up to 50 Scholarships awarded annually.",
       "answer_relevant": true,
-      "answer_only_relevant": false,
+      "answer_only_relevant": true,
       "eligibility_verdict": null
     },
     {
@@ -637,7 +637,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. The SI scholarship Pioneering women in STEM is a competitive fully-funded scholarship that includes: - Full tuition fee coverage. Find the list of eligible master's programmes for the Pioneering Women in STEM scholarship academic year 2027/2028 here. To be eligible for the SI Scholarship Pioneering Women in STEM you must: - Be liable to pay tuition fees to Swedish universities. To apply, you must: - Be a female citizen of one of the 10 eligible countries in Africa and Asia. - Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship.",
+      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. 13 November 2026: Pioneering Women in STEM application documents and eligible master's programmes are published on this page. Find the list of eligible master's programmes for the Pioneering Women in STEM scholarship academic year 2027/2028 here. Pioneering Women in STEM - Svenska institutet.",
       "answer_relevant": true,
       "answer_only_relevant": false,
       "eligibility_verdict": null

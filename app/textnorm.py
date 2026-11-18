@@ -109,12 +109,26 @@ def _finish(sentence: str) -> str:
     return sentence
 
 
+_BULLET_RE = re.compile(r"(?<=[.!?:])\s+-\s+(?=[A-Z0-9])")
+
+
 def segment_sentences(text: str) -> list[str]:
     """Split text into sentences. Each line is first treated as a
     sentence unit (normalised documents are one sentence per line);
     a line holding several sentences is split on sentence-ending
     punctuation. The result is what `app.answer` picks from and
-    what the eval's faithfulness check verifies against."""
+    what the eval's faithfulness check verifies against.
+
+    Dash-led bullet items are split off as their own sentences
+    (Phase 2 improvement, Step 1): the normaliser joins a bullet
+    list into one line ("...includes: - Full tuition fee coverage.
+    - A monthly allowance of SEK 12,000 ..."), and without this
+    split the whole list is one long "sentence" that shares few
+    query stems and loses to the page intro (golden q32). A bullet
+    marker is only split after terminal punctuation or a colon,
+    so inline dashes ("8-24 February", "well-known") are untouched.
+    Each split piece is still a verbatim substring of the chunk
+    text, so faithfulness stays measurable."""
     out: list[str] = []
     for line in text.splitlines():
         line = line.strip()
@@ -122,7 +136,8 @@ def segment_sentences(text: str) -> list[str]:
             continue
         parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(\[])",
                          line)
-        out.extend(p.strip() for p in parts if p.strip())
+        for part in parts:
+            out.extend(p.strip() for p in _BULLET_RE.split(part) if p.strip())
     if not out and text.strip():
         out = [text.strip()]
     return out

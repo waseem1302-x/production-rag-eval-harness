@@ -12,24 +12,24 @@
     "recall@3": 1.0,
     "recall@5": 1.0,
     "answer_relevance_proxy": 1.0,
-    "answer_only_relevance": 0.844,
+    "answer_only_relevance": 0.875,
     "faithfulness": 1.0,
-    "abstention_accuracy": 1.0,
+    "abstention_accuracy": 0.857,
     "eligibility_accuracy": null
   },
   "latency": {
     "n_queries": 39,
     "retrieval": {
-      "mean_ms": 77.7,
-      "p50_ms": 76.0,
-      "p95_ms": 211.5,
-      "max_ms": 329.3
+      "mean_ms": 1121.2,
+      "p50_ms": 1187.2,
+      "p95_ms": 1966.1,
+      "max_ms": 2110.4
     },
     "search_plus_answer": {
-      "mean_ms": 1443.7,
-      "p50_ms": 1133.3,
-      "p95_ms": 2727.5,
-      "max_ms": 5983.8
+      "mean_ms": 6615.7,
+      "p50_ms": 6826.7,
+      "p95_ms": 11618.3,
+      "max_ms": 12179.2
     }
   },
   "cost_per_query_usd": 0.0,
@@ -86,9 +86,9 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. Apply for a Global Professionals scholarship. - 8 Feb 2027 - 24 Feb 2027. The Scholarship for Global Professionals is a competitive full y-funded scholarship that includes: Full tuition fee coverage.",
+      "answer": "In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. . Below you can find more information about our requirements and instructions for applying to the SI scholarship for Global Professionals. The Scholarship for Global Professionals is a competitive full y-funded scholarship that includes: Full tuition fee coverage. The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance.",
       "answer_relevant": true,
-      "answer_only_relevant": false,
+      "answer_only_relevant": true,
       "eligibility_verdict": null
     },
     {
@@ -523,7 +523,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. During each of the first three years of graduate study, Knight-Hennessy scholars receive several types of funding: - A fellowship applied directly to cover tuition and associated fees. - A stipend for living and academic expenses (such as room and board, books, academic supplies, instructional materials, local transportation, and reasonable personal expenses). - A travel stipend intended to cover an economy-class ticket for one annual trip to and from Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. Additional funding specific to certain years: - Newly enrolling scholars receive a one-time relocation stipend intended to offset some of the costs associated with relocation to the area and/or technology purchases. - Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel). If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment.",
+      "answer": "Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford. Scholars who wish to enroll in an additional graduate program may apply to KHS to receive additional funding up to the maximum of three years. If a scholar is admitted to a degree program that exceeds three years \u2014 such as an MD, PhD, or Stanford dual- or joint-degree program \u2014 then funding is based on the graduate degree program's standard funding commitment. Funding | Knight-Hennessy Scholars at Stanford University. Scholars in their second and third years may apply for supplemental funds to support academic enrichment activities (e.g., conference travel).",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -637,7 +637,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. Female citizens of the following countries are eligible to apply for Pioneering Women in STEM: Bangladesh, Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, South Africa, Thailand, Vietnam. The SI scholarship Pioneering women in STEM is a competitive fully-funded scholarship that includes: - Full tuition fee coverage. To apply, you must: - Be a female citizen of one of the 10 eligible countries in Africa and Asia. - Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. To apply, you must: - Be a female citizen of one of the 10 eligible countries in Africa and Asia. - Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. - Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship); - Have documented work and leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. - Not have previously received an SI scholarship for studies or hold a Swedish degree.",
+      "answer": "The Pioneering Women in STEM scholarship supports women who want to lead innovation, strengthen their professional capacity, tackle complex challenges, and contribute to more inclusive and sustainable societies. Apply to a STEM-related master's programme eligible for the Pioneering Women in STEM scholarship. 13 November 2026: Pioneering Women in STEM application documents and eligible master's programmes are published on this page. Female citizens of the following countries are eligible to apply for Pioneering Women in STEM: Bangladesh, Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, South Africa, Thailand, Vietnam. Pioneering Women in STEM - Svenska institutet.",
       "answer_relevant": true,
       "answer_only_relevant": false,
       "eligibility_verdict": null
