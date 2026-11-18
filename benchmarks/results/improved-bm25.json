@@ -12,7 +12,7 @@
     "recall@3": 1.0,
     "recall@5": 1.0,
     "answer_relevance_proxy": 1.0,
-    "answer_only_relevance": 0.938,
+    "answer_only_relevance": 1.0,
     "faithfulness": 1.0,
     "abstention_accuracy": 0.857,
     "eligibility_accuracy": null
@@ -20,16 +20,16 @@
   "latency": {
     "n_queries": 39,
     "retrieval": {
-      "mean_ms": 5.0,
-      "p50_ms": 1.9,
-      "p95_ms": 2.4,
-      "max_ms": 67.0
+      "mean_ms": 5.6,
+      "p50_ms": 2.0,
+      "p95_ms": 10.4,
+      "max_ms": 67.1
     },
     "search_plus_answer": {
-      "mean_ms": 887.1,
-      "p50_ms": 780.6,
-      "p95_ms": 1918.2,
-      "max_ms": 4017.5
+      "mean_ms": 897.0,
+      "p50_ms": 893.2,
+      "p95_ms": 1796.3,
+      "max_ms": 3803.6
     }
   },
   "cost_per_query_usd": 0.0,
@@ -86,7 +86,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "You are not eligible for the SI Scholarship for Global Professionals if you\u2026. are currently enrolled in or hold a degree from a Swedish university/university college; have already resided in Sweden for cumulatively two years or more, prior to the scholarship period (starting August 2027)*; have previously been awarded a Swedish Institute scholarship for studies in Sweden. have a Swedish or EU/EEA citizenship*, a Swedish permanent residence permit or a temporary work- and residence permit based on work or on family ties with a citizen of Sweden/EU/EEA country who has a temporary or permanent right of residence in Sweden have dual citizenship in countries not listed on the latest update of the DAC list of ODA recipients. *. *Exceptions: 1. The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance. In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The programmes that are eligible for the SI scholarship for Global Professionals are. The SI Scholarship for Global Professionals offers you the opportunity to access world-class education. , cutting edge research and gain new perspectives. .",
+      "answer": "You are not eligible for the SI Scholarship for Global Professionals if you\u2026. are currently enrolled in or hold a degree from a Swedish university/university college; have already resided in Sweden for cumulatively two years or more, prior to the scholarship period (starting August 2027)*; have previously been awarded a Swedish Institute scholarship for studies in Sweden. have a Swedish or EU/EEA citizenship*, a Swedish permanent residence permit or a temporary work- and residence permit based on work or on family ties with a citizen of Sweden/EU/EEA country who has a temporary or permanent right of residence in Sweden have dual citizenship in countries not listed on the latest update of the DAC list of ODA recipients. *. *Exceptions: 1. The scholarship supports full-time, one- or two-year master\u2019s studies at Swedish universities within the following study fields: Governance. Find the list of eligible ma ster\u2019s programmes for the Scholarship for Global professionals academic year 2027/2028 here. In order to apply you must: Be a citizen of one of the 34 eligible countries for the SI Scholarship for Global Professionals; Apply for a master\u2019s programme that is eligible for the SI scholarship; Be liable to pay tuition fees at University Admissions (SI will cover the fees if you are awarded the scholarship). ; Have demonstrated work experience; Have demonstrated leadership experience from a current or previous employer, entrepreneurship or from civil society engagement. The programmes that are eligible for the SI scholarship for Global Professionals are.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -219,9 +219,9 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Erasmus Mundus Joint Masters are prestigious international masters, jointly designed and delivered by a group of higher education institutions. You\u2019ll be able to define these in detail when you sign a study agreement with the relevant Erasmus Mundus Joint Master at the beginning of your studies. Apply for an Erasmus Mundus Joint Master. Erasmus Mundus Joint Masters (students). You must have a bachelor\u2019s degree (first degree), or be in your last year of bachelor studies graduate before the master\u2019s programme starts.",
+      "answer": "Masters duration 1 to 2 academic years (60, 90 or 120 ECTS credits ). You must have a bachelor\u2019s degree (first degree), or be in your last year of bachelor studies graduate before the master\u2019s programme starts. Erasmus Mundus Joint Masters are prestigious international masters, jointly designed and delivered by a group of higher education institutions. A new batch of selected Erasmus Mundus Masters is added to the list each year. of selected Erasmus Mundus Masters is added to the list each year.",
       "answer_relevant": true,
-      "answer_only_relevant": false,
+      "answer_only_relevant": true,
       "eligibility_verdict": null
     },
     {
@@ -238,7 +238,7 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Developed by the Ministry of Foreign Affairs, the France Excellence Eiffel Scholarship Program provides annual training for future foreign decision-makers in the public and private sectors in degree programs at the Master's and Doctoral levels. The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. The two main disciplinary fields for the France Excellence Eiffel scholarships cover the following seven areas of study for the Master's and Doctorate elements: For Science and Technology. French higher education institutions who submit candidates to the France Excellence Eiffel program agree to enroll them: in courses leading to a master's degree in an engineering program in a joint doctoral program (joint supervision of dissertation and/or dual degree), in partnership with a partner institution abroad. Presentation of the France Excellence Eiffel Scholarship.",
+      "answer": "Developed by the Ministry of Foreign Affairs, the France Excellence Eiffel Scholarship Program provides annual training for future foreign decision-makers in the public and private sectors in degree programs at the Master's and Doctoral levels. The France Excellence Eiffel scholarship program is a tool developed by the French Ministry of Foreign Affairs to assist French institutions of higher education in attracting the best foreign students to Master's and Doctoral/Phd degree programs. French higher education institutions who submit candidates to the France Excellence Eiffel program agree to enroll them: in courses leading to a master's degree in an engineering program in a joint doctoral program (joint supervision of dissertation and/or dual degree), in partnership with a partner institution abroad. The two main disciplinary fields for the France Excellence Eiffel scholarships cover the following seven areas of study for the Master's and Doctorate elements: For Science and Technology. Presentation of the France Excellence Eiffel Scholarship.",
       "answer_relevant": true,
       "answer_only_relevant": true,
       "eligibility_verdict": null
@@ -352,9 +352,9 @@
       "recall@3": true,
       "recall@5": true,
       "found": true,
-      "answer": "Hear from our scholars about why they love studying in New Zealand on scholarship. Everything international students need to know about Manaaki New Zealand Scholarships for academic undergraduate or postgraduate... The New Zealand Government offers Manaaki New Zealand Scholarships including full academic scholarships and short term training... Welcome to the home of Manaaki New Zealand scholarships. Manaaki New Zealand Scholarships help build prosperity, security, and sustainable growth in partner countries and fosters a lifetime connection to Aotearoa New Zealand and the leaders of tomorrow.",
+      "answer": "Everything international students need to know about Manaaki New Zealand Scholarships for academic undergraduate or postgraduate... Scholarships for undergraduate and postgraduate study. Hear from our scholars about why they love studying in New Zealand on scholarship. The New Zealand Government offers Manaaki New Zealand Scholarships including full academic scholarships and short term training... Welcome to the home of Manaaki New Zealand scholarships.",
       "answer_relevant": true,
-      "answer_only_relevant": false,
+      "answer_only_relevant": true,
       "eligibility_verdict": null
     },
     {

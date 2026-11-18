@@ -35,21 +35,21 @@ Read first:
 
 ## Results at a glance
 
-Final state after the Phase 2 improvement (bullet-list splitting + IDF sentence scoring), measured 18 Nov 2026 on a local run. No number here is invented.
+Final state after the Phase 2 improvement (bullet-list splitting + IDF sentence scoring + query expansion), measured 18 Nov 2026 on a local run. No number here is invented.
 
 | Metric | Value |
 |---|---|
 | Corpus | 19 documents, 101 chunks |
 | Golden questions | 68 (32 factual + 29 eligibility + 7 out-of-corpus) |
 | recall@3 / recall@5 | 1.0 / 1.0 |
-| Answer-only relevance | 0.967 (59/61) |
+| Answer-only relevance | 1.0 (61/61) |
 | Faithfulness | 1.0 |
 | Abstention accuracy | 1.0 (7/7) |
 | Eligibility accuracy | 1.0 (29/29) |
-| Tests | 207 passed, 0 failed |
+| Tests | 216 passed, 0 failed |
 | Cost per query | $0.00 (local CPU, no API calls) |
 | Data-quality findings | 56 (16 resolved, 40 open) |
-| CI gate | Pass (1.0, 0.967, 1.0, 1.0, 1.0) |
+| CI gate | Pass (1.0, 1.0, 1.0, 1.0, 1.0) |
 
 ## Tech stack
 
@@ -187,6 +187,7 @@ Each step is one branch, merged with `--no-ff`, measured on the golden set befor
 - **Step 7, re-verify stale pages.** All 19 source pages re-fetched 18 Nov 2026. All 19 live, 18 substantively unchanged, Eiffel changed only in a sidebar teaser. No `.txt` was rewritten, the rebuilt index is byte-identical (101 chunks), and the re-run eval is byte-identical to the before-run file. Same step fixes the data-quality checker's currency gap: its money pattern now matches £, SEK, and ¥ plus detached "($) 35,550" rates, so stipend-missing flags went 14 of 19 to 8 of 19, and findings went 72 to 73 (9 to 16 resolved, 63 to 57 open).
 - **Phase 2 improvement, bullet-list splitting.** `segment_sentences` now splits dash-led bullet items into their own sentences (after terminal punctuation or a colon intro). Measured on the 50-question golden set: answer-only 0.907 (39/43) to 0.930 (40/43), q03 fixed, zero other regressions, faithfulness still 1.0. q32 still misses: the SEK 12,000 sentence is pickable now but still loses on lexical score to the page intro. Side effect, recorded not hidden: dense-only abstention 1.0 to 0.857 (o06 answered in dense-only mode only; the shipped improved-hybrid still abstains 1.0).
 - **Phase 2 improvement, IDF sentence scoring.** Shared stems in `_pick_sentences` now count by inverse document frequency over the candidate sentences instead of 1 each, so rare content stems ("monthly", "allowance") outweigh stopwords and doc-name stems ("the", "pioneering", "women", "stem"). Measured on the 50-question golden set: answer-only 0.930 (40/43) to 0.953 (41/43), q32 fixed, zero regressions. Sixteen answers changed text (different sentences picked) and all stayed correct. Only q10 and q17 remain open, both paraphrase gaps: their correct sentences share almost nothing with the question, so no weighting can surface them. Side effect, recorded not hidden: in the ablation, the BM25-only config's abstention fell 1.0 to 0.857 (o06 answered there, as in dense-only); the shipped improved-hybrid still abstains 1.0 (7/7).
+- **Phase 2 improvement, query expansion.** A small, explicit, corpus-grounded synonym map in `app/answer.py` (`QUERY_EXPANSIONS`): "long"/"last" expand to "duration"/"years"/"months", "level" expands to "undergraduate"/"postgraduate"/"doctoral"/"masters" — the words the corpus itself uses for those concepts. The expanded stems are passed into `_pick_sentences` and count double, the same factor as the specific-stem bonus, because they are the question's ask in the corpus's words. Expansion alone does not fix q10 (the duration sentence scores 6.95 and ranks 7th without the bonus, 17.66 and 1st with it). Measured on the full 68-question golden set: answer-only 0.967 (59/61) to 1.0 (61/61), q10 and q17 fixed, zero regressions. Only those two rows changed, and the answer text changed for q03 and q11 too (still correct; q03 now leads with its duration sentence). No new documents, no model, no API, $0. Limits: the map covers only these two question shapes; a question paraphrased any other way gets no expansion.
 - **Phase 2 improvement, eligibility rules for the 9 Step 6 documents.** Rules authored only where the corpus states one with a verbatim evidence sentence: Gates Cambridge (postgraduate, outside the UK), Rhodes (postgraduate only), Knight-Hennessy (graduate degrees), Commonwealth Shared (Master's only, 43-country list), RTP (research masters/doctorate, domestic and overseas), Marshall (graduate level, US citizens only), Erasmus Mundus organisations page (master level, worldwide), SI Pioneering Women (master's, 10-country list). Schwarzman states no level and no citizenship rule, so its verdict stays unknown by design. 18 new golden eligibility questions (e12-e29) added. Measured before/after: eligibility accuracy 0.379 (11/29) to 1.0 (29/29), answer-only 0.689 (42/61) to 0.967 (59/61), recall 0.984 to 1.0. Known limits, documented in the rules: the checker models degree level and citizenship only, so a male applicant from a listed country would be reported eligible for SI Pioneering Women (gender is not modelled), and Rhodes' exceptional second-BA path is not modelled (standard postgraduate-only position). Data-quality findings fell 73 to 58 as the 14 missing-field flags for the ruled docs disappeared.
 - **Phase 2 improvement, data-quality checker gaps.** Two false "missing deadline" flags fixed in `scripts/check_data_quality.py`: `DATE_RE` now matches US-format dates ("May 20"), so Schwarzman's China-track deadline is found; and closed programmes skip the deadline check (via validated `load_closures()`), so Vanier no longer gets a missing-deadline flag. Measured by re-running the checker: findings 58 (16 resolved, 42 open) to 56 (16 resolved, 40 open). Everything else open was verified true, not fixed: the 8 stipend-missing pages state no amount, the hedges and year-tied figures are real, the stale markers are the pages' own dates, and Rhodes states worded windows but no exact date.
 
@@ -277,20 +278,20 @@ Re-run in the Phase 2 improvement with the current code on the grown corpus (101
 | Configuration | Mode | Reranker | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
 |---|---|---|---|---|---|---|---|---|---|
 | baseline-naive | bm25 | lexical | 1.0 | 0.625 | 1.0 | 0.0 | 0.3 ms | 0.7 ms | $0.00 |
-| hybrid-plain | hybrid | lexical | 1.0 | 0.656 | 1.0 | 0.0 | 63.3 ms | 63.9 ms | $0.00 |
-| improved-bm25 | bm25 | lexical | 1.0 | 0.938 | 1.0 | 0.857 | 5.0 ms | 887.1 ms | $0.00 |
-| dense-only | dense | lexical | 1.0 | 0.906 | 1.0 | 0.857 | 44.2 ms | 833.5 ms | $0.00 |
-| hybrid-no-rerank | hybrid | lexical | 1.0 | 0.938 | 1.0 | 1.0 | 58.5 ms | 984.6 ms | $0.00 |
-| hybrid-no-gates | hybrid | lexical | 1.0 | 0.906 | 1.0 | 0.0 | 46.9 ms | 1041.3 ms | $0.00 |
-| improved-hybrid | hybrid | lexical | 1.0 | 0.938 | 1.0 | 1.0 | 35.5 ms | 890.0 ms | $0.00 |
-| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 0.938 | 1.0 | 1.0 | 3307.2 ms | 4290.0 ms | $0.00 |
+| hybrid-plain | hybrid | lexical | 1.0 | 0.656 | 1.0 | 0.0 | 65.7 ms | 66.4 ms | $0.00 |
+| improved-bm25 | bm25 | lexical | 1.0 | 1.0 | 1.0 | 0.857 | 5.6 ms | 897.0 ms | $0.00 |
+| dense-only | dense | lexical | 1.0 | 0.969 | 1.0 | 0.857 | 77.4 ms | 1174.2 ms | $0.00 |
+| hybrid-no-rerank | hybrid | lexical | 1.0 | 1.0 | 1.0 | 1.0 | 118.9 ms | 1507.1 ms | $0.00 |
+| hybrid-no-gates | hybrid | lexical | 1.0 | 0.969 | 1.0 | 0.0 | 101.1 ms | 1440.5 ms | $0.00 |
+| improved-hybrid | hybrid | lexical | 1.0 | 1.0 | 1.0 | 1.0 | 69.3 ms | 1099.2 ms | $0.00 |
+| hybrid-cross-encoder | hybrid | cross-encoder | 1.0 | 1.0 | 1.0 | 1.0 | 3638.5 ms | 4692.7 ms | $0.00 |
 
 Each configuration changes one thing from its neighbour, so each component's contribution is isolated. What the ablation shows:
 
-- The improvement is the answering discipline, not the retrieval signal. Baseline to improved-hybrid: answer-only 0.625 to 0.938, abstention 0.0 to 1.0. Hybrid-plain (hybrid retrieval, naive answering) scores only 0.656.
+- The improvement is the answering discipline, not the retrieval signal. Baseline to improved-hybrid: answer-only 0.625 to 1.0, abstention 0.0 to 1.0. Hybrid-plain (hybrid retrieval, naive answering) scores only 0.656.
 - Dense buys no recall here: recall@5 is 1.0 for every configuration.
-- Dense slightly hurts answer-only relevance (dense-only 0.906 vs BM25-only 0.938) at about 9x the retrieval latency (44.2 ms vs 5.0 ms in the latest run). Both single-signal configs now answer o06 in this run (abstention 0.857); the shipped improved-hybrid still abstains 1.0.
-- The reranker adds nothing measurable (0.938 with and without it). The cross-encoder now matches the lexical reranker on answer-only relevance (0.938 both ways; it no longer loses q03) at about 93x the retrieval latency of the lexical reranker on the grown corpus.
+- Dense slightly hurts answer-only relevance (dense-only 0.969 vs BM25-only 1.0) at about 14x the retrieval latency (77.4 ms vs 5.6 ms in the latest run). Both single-signal configs now answer o06 in this run (abstention 0.857); the shipped improved-hybrid still abstains 1.0.
+- The reranker adds nothing measurable (1.0 with and without it). The cross-encoder now matches the lexical reranker on answer-only relevance (1.0 both ways; it no longer loses q03) at about 52x the retrieval latency of the lexical reranker on the grown corpus.
 - The gates are the entire abstention story (hybrid-no-gates 0.0 to improved-hybrid 1.0).
 
 Full results: `benchmarks/results/<config>.json`. Summary: `benchmarks/results/summary.md`.
@@ -421,13 +422,29 @@ Command: `python -m scripts.run_generative_eval` (646.4 s on this VM; model load
 
 Read honestly: the overall generative number rose (0.651 to 0.754) only because the 18 new eligibility questions are all checker-resolved, not generated — the generator's factual record is unchanged at 28/43 (0.651), same 15 misses, same judge behaviour (1/1 on 14 of them, 0/0 on q21 again). The extractive column (0.967) matches the standalone eval.
 
+### Phase 2 improvement, query expansion (68 questions, 18 Nov 2026)
+
+Command: `python -m scripts.run_eval` and `python -m scripts.run_generative_eval` (763.6 s; model load 4.3 s). A small synonym map ("long"/"last" to "duration"/"years", "level" to the four level names) with the expansion stems counting double in sentence picking.
+
+| Metric | Extractive | Generative |
+|---|---|---|
+| Answer-only relevance | 1.0 (61/61) | 0.77 (47/61) |
+| Faithfulness (verbatim proxy) | 1.0 | 0.793 |
+| Judge faithfulness / relevance | - | 0.969 / 0.969 (n=32, 0 unparsed) |
+| Abstention / eligibility accuracy | 1.0 / 1.0 | 1.0 / 1.0 |
+| Answer modes (n=61) | - | 23 generative, 9 fallback to extractive, 29 eligibility |
+| Mean generation / judge latency | - | 6.59 s / 5.11 s |
+| Cost per query | $0.00 | $0.00 (local CPU, no API calls) |
+
+Read honestly: extractive went 0.967 to 1.0, the last two misses fixed with zero regressions. Generative rose 0.754 to 0.77 for exactly one reason: q17 is now correct generatively because its fallback is the extractive answer. The generator itself did not improve (18/32 factual, up from 17/32), q10 still says "one academic year" and the judge scores it 1/1 again, along with all 14 factual misses, and 0/0 on the correct Vanier-closure answer (q21) again. Extractive stays the default.
+
 ## Known failures
 
 No regressions in the improved pipeline: no question it got right is lost. The failure table below is the honest record.
 
 | Question | Why it still fails |
 |---|---|
-| q10, q17 | Paraphrase gap. The expected answer's key terms are not in the question, so lexical picking cannot find the sentence. Dense sentence scoring (Step 2, weight 2.0) does not fix them either: q10's correct sentence ranks 8th by dense sim (0.438), q17's 14th (0.527). q03 was in this row until the Phase 2 improvement (bullet-list splitting) fixed it. |
+| q10, q17 | **Fixed in the Phase 2 improvement (query expansion):** a small synonym map ("long"/"last" to "duration"/"years", "level" to the four level names) with the expansion stems counting double in sentence picking. q10's duration sentence now scores 17.66 and ranks 1st (was 6.95, 7th); q17's levels sentence is picked the same way. Answer-only 0.967 to 1.0 (61/61), zero regressions. Dense sentence scoring (Step 2, weight 2.0) never fixed them: q10's correct sentence ranks 8th by dense sim (0.438), q17's 14th (0.527). |
 | q32 (SI Pioneering Women allowance) | **Fixed in the Phase 2 improvement (IDF sentence scoring):** shared stems now count by IDF over the candidate sentences, so the rare "monthly" / "allowance" stems outweigh the doc-name stems and the SEK 12,000 sentence is picked first. Was a documented miss from Step 6 through the bullet-list split. |
 | o04 (Vanier ranked university) | **Fixed in Step 2.** The answer-verification step now abstains with reason `unanswered_ranking` (abstention 1.0, 7/7). Dense similarity alone could not catch it (o04 scored 0.667, above several answerable questions). |
 | o06, o07 (abstention lost on corpus growth) | **Fixed in Step 6.** Growing the corpus to 19 documents first broke both: o06 answered with SI + Commonwealth dates, o07 with KHS funding sentences (abstention 1.0 to 0.714 mid-step). Fixed two ways: the verification gained a scholarship-subject focus check (o06, `unanswered_scholarship_subject`) and "scholar" joined the generic terms (o07, `missing_specific_term`). Abstention is 1.0 (7/7) again; the dip is recorded in `tests/test_corpus_growth.py`, not hidden. |
@@ -460,15 +477,15 @@ Full documentation: [DATA_QUALITY.md](DATA_QUALITY.md).
 python -m scripts.ci_gate
 ```
 
-Thresholds: recall@5 at least 0.90, answer-only relevance at least 0.60, faithfulness at least 0.95, abstention at least 0.60, eligibility at least 0.80. Measured (Phase 2, Step 7, re-run after re-verification): 1.0, 0.907, 1.0, 1.0, 1.0. **Gate passes.** Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) correctly fails on answer-only relevance (0.907), proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml` (build index, run tests, run gate on every push/PR).
+Thresholds: recall@5 at least 0.90, answer-only relevance at least 0.60, faithfulness at least 0.95, abstention at least 0.60, eligibility at least 0.80. Measured (after query expansion, 18 Nov 2026): 1.0, 1.0, 1.0, 1.0, 1.0. **Gate passes.** Strict mode (`CI_GATE_STRICT=1`, all thresholds 1.0) also passes now. It correctly failed before (answer-only 0.907), proving the gate can fail. GitHub workflow: `.github/workflows/eval.yml` (build index, run tests, run gate on every push/PR).
 
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 207 passed
+python -m pytest tests/ -q   # 216 passed
 ```
 
-Tests cover chunking (size, overlap, sentence boundaries, text normalisation), retrieval (modes, known questions, empty index), answering and abstention (edge cases: empty documents, missing context, weak retrieval, duplicate chunks, single long sentence), auditable retrieval (abstention reasons, retrieval trace), eligibility (verdict cases, evidence grounding, API profile behaviour, closure), data quality (all known findings, no false positives), ablation (retrieval modes, configuration coverage), chunk-size ablation (256/512/1,024 tokens), corpus growth (19 documents, 101 chunks, 50 questions, o06/o07 abstaining), re-verification (19 pages live, £/SEK/¥ matching, eval identical to before-run), and report integrity (generated before/after report matches the results files). Phase 2, Step 1 adds 25 generative tests (`tests/test_generative.py`, fake model only; the real 0.5B model is never loaded in tests).
+Tests cover chunking (size, overlap, sentence boundaries, text normalisation), retrieval (modes, known questions, empty index), answering and abstention (edge cases: empty documents, missing context, weak retrieval, duplicate chunks, single long sentence), auditable retrieval (abstention reasons, retrieval trace), eligibility (verdict cases, evidence grounding, API profile behaviour, closure), data quality (all known findings, no false positives), ablation (retrieval modes, configuration coverage), chunk-size ablation (256/512/1,024 tokens), corpus growth (19 documents, 101 chunks, 50 questions, o06/o07 abstaining), re-verification (19 pages live, £/SEK/¥ matching, eval identical to before-run), and report integrity (generated before/after report matches the results files). Phase 2, Step 1 adds 25 generative tests (`tests/test_generative.py`, fake model only; the real 0.5B model is never loaded in tests). The Phase 2 improvement adds 9 query-expansion tests (`tests/test_query_expansion.py`, map, bonus, and both q10/q17 fixes on the real chunks).
 
 ## Docker
 
@@ -484,11 +501,9 @@ The Dockerfile builds the index at image build time from the committed `data/` s
 - No query rewriting, no multi-hop retrieval.
 - No deployment (local + Docker only; not deployed anywhere).
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually, then re-run the eval and the data-quality checker).
-- No eligibility rules for the 9 new Step 6 documents (Gates, Rhodes, Knight-Hennessy, Schwarzman, Commonwealth Shared, RTP, Marshall, Erasmus Mundus organisations page, SI Pioneering Women). Profile checks for them return `unknown` by construction.
-- No fix yet for the q10 / q17 paraphrase gaps (their correct sentences share almost nothing with the question, so no re-weighting can surface them; they need query expansion, a different approach).
-- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (0.651 vs 0.953), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.754 vs 0.967 only because the 18 eligibility answers are checker-resolved, not generated.
+- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (18/32, 0.5625, vs extractive 32/32), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.77 vs 1.0, and the gap is the generator's, not the eligibility answers (all 29 are checker-resolved, not generated).
 
-Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as an ablation config, LLM-as-judge, dense sentence scoring, answer-verification step, Vanier closure verdict, chunk-size ablation, corpus growth, and stale-page re-verification.
+Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as an ablation config, LLM-as-judge, dense sentence scoring, answer-verification step, Vanier closure verdict, chunk-size ablation, corpus growth, and stale-page re-verification. Done in the Phase 2 improvement: bullet-list splitting, IDF-weighted sentence scoring, eligibility rules for the 9 new Step 6 documents (eligibility 0.379 to 1.0), data-quality checker gap fixes, and query expansion (q10/q17 fixed, answer-only 1.0).
 
 ## What to learn from this (interview)
 

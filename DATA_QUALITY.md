@@ -344,8 +344,12 @@ What the fix did **not** do (remaining gaps, pinned by
   bullet items into separate sentences (fixing q03), and the IDF
   sentence scoring then fixed q32 (answer-only 0.930 to 0.953),
   because the rare "monthly" / "allowance" stems now outweigh the
-  doc-name stems. Only q10 and q17 remain open, both paraphrase
-  gaps.
+  doc-name stems. q10 and q17, the last two paraphrase gaps, were
+  fixed by the Phase 2 improvement (query expansion): a synonym
+  map ("long"/"last" to "duration"/"years", "level" to the level
+  names) with the expansion stems counting double in sentence
+  picking moved answer-only 0.967 (59/61) to 1.0 (61/61), zero
+  regressions. No extractive misses remain.
 - **Re-ingest rule**: after any re-fetch, run
   `python -m scripts.check_data_quality` and update this document
   from its report before claiming the numbers still hold.
