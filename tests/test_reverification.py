@@ -130,12 +130,13 @@ def test_eval_unchanged_after_reverification():
     """No .txt changed in Step 7, so the re-run eval matched the saved
     before-run file question by question — no golden question was
     silently changed, dropped or lost. The Phase 2 improvement then
-    changed exactly two rows on purpose (q03, fixed by the
-    bullet-list split; q32, fixed by IDF sentence scoring), and Step
-    4 added 18 golden eligibility questions (e12-e29), so this test
-    now pins that: every before-run row is present and identical in
-    the current file except q03/q32, the only added rows are
-    e12-e29, and answer-only relevance is 0.967 (59/61), not 0.907
+    changed exactly four rows on purpose (q03, fixed by the
+    bullet-list split; q32, fixed by IDF sentence scoring; q10 and
+    q17, fixed by query expansion), and Step 4 added 18 golden
+    eligibility questions (e12-e29), so this test now pins that:
+    every before-run row is present and identical in the current
+    file except q03/q32/q10/q17, the only added rows are
+    e12-e29, and answer-only relevance is 1.0 (61/61), not 0.907
     (39/43)."""
     before = json.loads(
         (RESULTS_DIR / "extractive_eval_before_reverification.json").read_text())
@@ -150,16 +151,17 @@ def test_eval_unchanged_after_reverification():
                    "abstention_accuracy", "eligibility_accuracy"):
         assert after[metric] == before[metric], metric
     assert before["answer_only_relevance"] == 0.907
-    assert after["answer_only_relevance"] == 0.967
+    assert after["answer_only_relevance"] == 1.0
     before_rows = {r["id"]: r for r in before["per_question"]}
     after_rows = {r["id"]: r for r in after["per_question"]}
     assert set(after_rows) - set(before_rows) == {
         f"e{i}" for i in range(12, 30)}, "only e12-e29 may be added"
     assert set(before_rows) <= set(after_rows)
     for qid, row in before_rows.items():
-        if qid in ("q03", "q32"):
+        if qid in ("q03", "q32", "q10", "q17"):
             # Fixed by the Phase 2 improvement (bullet-list split
-            # for q03, IDF sentence scoring for q32).
+            # for q03, IDF sentence scoring for q32, query expansion
+            # for q10 and q17).
             assert row["answer_only_relevant"] is False
             assert after_rows[qid]["answer_only_relevant"] is True
             assert row["found"] is True

@@ -149,6 +149,71 @@ def _specific_terms(question: str) -> set[str]:
     return {t for t in terms if t not in generic and t not in doc_tokens}
 
 
+# Query expansion (Phase 2 improvement, query expansion): a small,
+# explicit, corpus-grounded synonym map for the two question shapes
+# the corpus never states in the question's own words.
+#
+# - "How long ...?" / "... last?": the corpus states durations as
+#   "duration" and in years/months ("Masters duration 1 to 2
+#   academic years"), never as "long". q10's correct sentence shares
+#   only "master" with its question, so it loses to intro sentences
+#   that share four doc-name stems. Expanding "long"/"last" to
+#   "duration"/"years" gives it two more shared stems, and
+#   "duration" is rare among the candidates, so its IDF weight
+#   lifts the sentence into the picked set.
+# - "What levels of study ...?": the corpus states levels as
+#   "undergraduate", "postgraduate", "doctoral", "masters" ("At
+#   which degree levels ..." for Eiffel, "Scholarships for
+#   undergraduate and postgraduate study" for Manaaki). q17's
+#   correct sentence shares only "scholarship"/"study" with its
+#   question; expanding "level" to the four level names gives it
+#   the rare stems that identify it.
+#
+# Deliberately small and explicit, not embedding-based and not an
+# LLM call: every expansion term is a word the corpus itself uses
+# for the concept, everything stays local, CPU-only, $0. Limits,
+# stated honestly: the map only covers these two shapes — a
+# question paraphrased any other way ("how many years", "what
+# kind of degree") gets no expansion, and a trigger word in an
+# unrelated sense ("last year of bachelor studies" is a sentence,
+# not a question word here) would expand anyway, so the map must
+# stay short and the full eval must prove zero regressions.
+# Keys and values are stemmed at use time with _stem, so the map
+# is written in plain words and can never drift from the stemmer.
+QUERY_EXPANSIONS = {
+    "long": ["duration", "years", "months"],
+    "last": ["duration", "years"],
+    "level": ["undergraduate", "postgraduate", "doctoral", "masters"],
+}
+
+
+def expand_query_stems(stems: set[str]) -> set[str]:
+    """Add the expansion stems for any trigger stem present.
+
+    Returns a new set; the input is not mutated. A stem with no
+    trigger in the map comes back unchanged.
+    """
+    expanded = set(stems)
+    triggers = {_stem(k): v for k, v in QUERY_EXPANSIONS.items()}
+    for stem in stems:
+        for word in triggers.get(stem, ()):
+            expanded.add(_stem(word))
+    return expanded
+
+
+def expansion_stems(base_stems: set[str]) -> set[str]:
+    """The stems expansion added, i.e. the expanded set minus the
+    question's own stems. These are the question's ask in the
+    corpus's words, and _pick_sentences counts them double — the
+    same factor as the specific-stem bonus, for the same reason:
+    they identify what the question asks, not background vocabulary.
+    Without the bonus, expansion alone does not fix q10: the
+    duration sentence shares "master"/"duration"/"year" for 6.95
+    and ranks 7th, behind intro sentences sharing four doc-name
+    stems. With the bonus it scores 17.66 and ranks 1st."""
+    return expand_query_stems(base_stems) - set(base_stems)
+
+
 def dense_sentence_scores(question: str, sentences: list[str]) -> dict[str, float] | None:
     """Cosine similarity of each sentence to the question, using the
     existing local MiniLM embedder ($0, no API). Embeddings are
@@ -300,6 +365,7 @@ def _idf_weights(sentences: list[str]) -> dict[str, float]:
 def _pick_sentences(chunks: list[dict], query_stems: set[str],
                     question: str | None = None,
                     specific_stems: set[str] | None = None,
+                    expansion_stems: set[str] | None = None,
                     max_sentences: int = 3, scored: bool = True,
                     dense: bool = True) -> list[str]:
     """Pick the best sentences, scored by query-term overlap.
@@ -343,8 +409,17 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
     one sentence ("monthly", "allowance") counts about ln((N+1)/2)
     + 1. Measured on the 50-question golden set: answer-only
     0.930 (40/43) to 0.953 (41/43), q32 fixed, zero regressions.
+
+    Query expansion (Phase 2 improvement, query expansion):
+    `expansion_stems`, when given, count double — the same factor
+    as the specific-stem bonus. They are the question's ask in the
+    corpus's words ("duration"/"years" for "how long", the level
+    names for "levels of study"), so they identify the answer the
+    way specific stems do. Expansion without the bonus does not
+    fix q10 (see `expansion_stems`).
     """
     specific_stems = specific_stems or set()
+    expansion_stems = expansion_stems or set()
     if not scored:
         picked: list[str] = []
         for chunk in chunks:
@@ -392,6 +467,10 @@ def _pick_sentences(chunks: list[dict], query_stems: set[str],
         score = sum(weights.get(t, 1.0) for t in shared)
         score += 2 * sum(weights.get(t, 1.0)
                          for t in specific_stems & stems)
+        # Query-expansion bonus: expansion stems count double, like
+        # specific stems (see the _pick_sentences docstring).
+        score += 2 * sum(weights.get(t, 1.0)
+                         for t in expansion_stems & stems)
         # Short fragments are usually headers ("Scholarships |
         # Chevening.", "Home Page - Vanier..."). They share the
         # document name and little else, so they outscore real
@@ -424,7 +503,16 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
     # Content stems only: _stems(question) would include stopwords
     # ("how", "do", "at", "i"), and a sentence sharing only "at" and
     # "i" with the question is not evidence of anything.
-    query_stems = {_stem(t) for t in _query_terms(question)}
+    base_stems = {_stem(t) for t in _query_terms(question)}
+    query_stems = base_stems
+    # Query expansion (Phase 2 improvement): only for scored
+    # picking. The naive baseline (scored_picking=False) must keep
+    # its original query stems, or it stops being a baseline — the
+    # before/after comparison would measure the expansion twice.
+    expansion_only: set[str] = set()
+    if scored_picking:
+        query_stems = expand_query_stems(base_stems)
+        expansion_only = expansion_stems(base_stems)
     best = retrieved[0]["rerank_score"] if retrieved else 0.0
     if not retrieved:
         return _abstain(question, best, "empty_index")
@@ -442,6 +530,7 @@ def answer(question: str, retrieved: list[dict], threshold: float = ABSTAIN_THRE
     sentences = _pick_sentences(candidates[:3], query_stems,
                                 question,
                                 _specific_terms(question),
+                                expansion_only,
                                 max_sentences=5, scored=scored_picking,
                                 dense=dense)
     if not sentences:

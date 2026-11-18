@@ -38,19 +38,29 @@ def test_failure_table_counts():
     # Phase 2, Step 6: 32 factual in-corpus (q01-q32) + 7 out (o01-o07).
     assert len(in_corpus_rows) == 32
     assert len(out_rows) == 7
-    # Improved column: 30 of 32 in-corpus correct (misses q10,
-    # q17 only), 7 of 7 abstained.
-    assert sum(1 for l in in_corpus_rows if l.split("|")[4].strip() == "✓") == 30
+    # Improved column: 32 of 32 in-corpus correct (q10 and q17
+    # fixed by the Phase 2 improvement, query expansion), 7 of 7
+    # abstained.
+    assert sum(1 for l in in_corpus_rows if l.split("|")[4].strip() == "✓") == 32
     assert sum(1 for l in out_rows if "✓ abstained" in l) == 7
 
 
-def test_still_failing_questions_are_paraphrase_gaps():
+def test_expansion_fixed_last_paraphrase_gaps():
     text = _report()
-    # q10 and q17: both pipelines miss them, paraphrase gap.
+    # q10 and q17: fixed by the Phase 2 improvement (query
+    # expansion) — they now pass in the improved column ("✗ | ✓":
+    # the naive baseline still misses them, as it should, since
+    # first-sentence picking cannot find a paraphrased sentence).
+    # They are not REGRESSION rows (those are baseline ✓,
+    # improved ✗), and no in-corpus question fails in the improved
+    # column any more.
     for qid in ("q10", "q17"):
         row = next(l for l in text.splitlines() if l.startswith(f"| {qid} |"))
-        assert "✗ | ✗" in row, qid
-        assert "paraphrase gap" in row, qid
+        assert "✗ | ✓" in row, qid
+        assert "REGRESSION" not in row, qid
+    for line in text.splitlines():
+        if re.match(r"\| q\d+ \|", line):
+            assert line.split("|")[4].strip() == "✓", line
     # q03: fixed by the Phase 2 improvement (bullet-list
     # splitting) — it now passes in both columns, so it is no
     # longer a REGRESSION row at all.

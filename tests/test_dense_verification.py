@@ -68,6 +68,12 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # 0.967 (59/61) and eligibility accuracy stays 1.0 (29/29).
 # Schwarzman (e29) is answer-only correct with verdict unknown:
 # its expected phrase is the "does not state" reason.
+# Phase 2 improvement (query expansion): a small explicit synonym
+# map ("long"/"last" -> "duration"/"years", "level" -> the four
+# level names) with the expansion stems counting double in sentence
+# picking fixes the last two misses, q10 and q17, so answer-only
+# relevance moves 0.967 -> 1.0 (61/61), zero regressions (see
+# tests/test_query_expansion.py). No extractive misses remain.
 STEP4_CORRECT = ["e12", "e13", "e14", "e15", "e16", "e17", "e18",
                  "e19", "e20", "e21", "e22", "e23", "e24", "e25",
                  "e26", "e27", "e28", "e29"]
@@ -82,6 +88,8 @@ STEP6_CORRECT = ["q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31"]
 IMPROVEMENT_CORRECT = ["q03"]
 # Phase 2 improvement (IDF sentence scoring) fixes q32.
 IDF_CORRECT = ["q32"]
+# Phase 2 improvement (query expansion) fixes q10 and q17.
+EXPANSION_CORRECT = ["q10", "q17"]
 
 
 @pytest.fixture(scope="module")
@@ -410,9 +418,16 @@ def test_no_baseline_correct_answer_lost(retriever):
     Abstention is 1.0 (7/7): o06 and o07 abstain again after the
     Step 6 fix (see test_corpus_growth.py) — the 0.714 dip measured
     mid-step, when corpus growth first broke both, is recorded in
-    that file's history, not hidden."""
+    that file's history, not hidden.
+    Phase 2 improvement (query expansion): a small explicit synonym
+    map ("long"/"last" -> "duration"/"years", "level" -> the four
+    level names) with the expansion stems counting double in
+    sentence picking fixes the last two misses, q10 and q17, so
+    answer-only relevance moves 0.967 -> 1.0 (61/61), zero
+    regressions — no previously correct question is lost, and every
+    other metric stays 1.0."""
     result = run_eval(retriever, load_golden())
-    assert result["answer_only_relevance"] == 0.967
+    assert result["answer_only_relevance"] == 1.0
     assert result["answer_relevance_proxy"] == 1.0
     assert result["faithfulness"] == 1.0
     assert result["abstention_accuracy"] == 1.0
@@ -421,7 +436,7 @@ def test_no_baseline_correct_answer_lost(retriever):
                if r["answer_only_relevant"]}
     expected = (set(BASELINE_CORRECT) | set(STEP6_CORRECT)
                 | set(IMPROVEMENT_CORRECT) | set(IDF_CORRECT)
-                | set(STEP4_CORRECT))
+                | set(STEP4_CORRECT) | set(EXPANSION_CORRECT))
     assert expected <= correct, (
         "lost baseline-correct questions: "
         f"{sorted(expected - correct)}")
@@ -430,5 +445,5 @@ def test_no_baseline_correct_answer_lost(retriever):
         f"lost={sorted(expected - correct)}")
     for qid in ("q10", "q17"):
         row = next(r for r in result["per_question"] if r["id"] == qid)
-        assert row["answer_only_relevant"] is False, qid
+        assert row["answer_only_relevant"] is True, qid
         assert row["found"] is True, qid

@@ -20,16 +20,16 @@
   "latency": {
     "n_queries": 39,
     "retrieval": {
-      "mean_ms": 63.3,
-      "p50_ms": 69.2,
-      "p95_ms": 121.6,
-      "max_ms": 470.3
+      "mean_ms": 65.7,
+      "p50_ms": 78.6,
+      "p95_ms": 128.8,
+      "max_ms": 216.5
     },
     "search_plus_answer": {
-      "mean_ms": 63.9,
-      "p50_ms": 69.6,
-      "p95_ms": 122.3,
-      "max_ms": 471.0
+      "mean_ms": 66.4,
+      "p50_ms": 79.1,
+      "p95_ms": 129.4,
+      "max_ms": 221.1
     }
   },
   "cost_per_query_usd": 0.0,
