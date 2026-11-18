@@ -9,8 +9,8 @@ invented. Reproduce them with the commands in "How to reproduce".
 The generative path scores 0.651 factual-only against extractive
 0.953, and the 0.5B model cannot learn from its own answers. The
 fix is distillation: a stronger teacher writes answers, the small
-student trains on them. The dataset is finalized; the training run
-has not happened yet. Full detail in
+student trains on them. The dataset is finalized, and the
+training run has happened, with a negative result recorded below. Full detail in
 `docs/DISTILLATION_PLAN.md` and `data/distillation/README.md`.
 
 Teacher: Gemini `gemini-3.5-flash-lite`, 18 Nov 2026. Groq was not
@@ -83,16 +83,66 @@ erasmus-mundus-0), q15 ("HK$344,400", char 1021 of hkpfs-0), q17
 ("undergraduate and postgraduate study", char 994 of manaaki-0),
 q29 ("34,315", char 1706 of rtp-2). The teacher correctly
 answered "Not found in the corpus" for their variants, and the
-gate dropped them. This is fixed separately in production, not
-by changing the training prompt.
+gate dropped them. Raising the limit to 3000 chars was tried in
+the distillation closeout and reverted: it fixed 4 of the 5
+target questions generatively but regressed 3 previously correct
+ones (q08, q09, q17), so the 900 limit stays. See "900-char
+truncation fix tried and reverted" below for the full numbers.
 
-Next step, not yet run: the Colab LoRA training in
-`notebooks/train_lora_colab.ipynb` (18 cells, validated, not
-run), Qwen2.5-0.5B-Instruct, LoRA rank 16, alpha 32, dropout
-0.05, lr 2e-4, 3 epochs max, effective batch 16, max seq 1024.
-The keep rule from the plan decides after training: ship only
-if generative improves with zero regressions on the 68-question
-golden set and the held-out set.
+## Distillation - Colab LoRA training (Step 2, negative result)
+
+Training ran 18 Nov 2026 on a free Google Colab T4, notebook
+`notebooks/train_lora_colab.ipynb`: Qwen2.5-0.5B-Instruct, LoRA
+rank 16, alpha 32, dropout 0.05, lr 2e-4, 3 epochs max,
+effective batch 16, max seq 1024, train 273 records, held-out
+41 records. Teacher: Gemini `gemini-3.5-flash-lite`, 435 calls,
+133,315 tokens, $0.00.
+
+| Held-out generation (41 records) | Correct | Accuracy |
+|---|---|---|
+| Baseline (base model, before training) | 13/41 | 0.3171 |
+| Epoch 1 adapter | 11/41 | 0.2683 |
+
+Epoch 1 was worse than baseline, so the run stopped early after
+epoch 1, exactly as the plan designed (stop if epoch 1 is worse
+than baseline). Epochs 2 and 3 never ran. Training loss was still
+falling when it stopped (step 5: 0.92, step 10: 0.81, step 15:
+0.68), so the adapter was still learning, but the held-out
+generation score is the decision metric and it went down, not up.
+
+The judge metric was 0/0 both times, which is not a score: the
+held-out set has no judge records (all 41 are generation
+records), so there was nothing for the judge metric to measure.
+
+Keep rule outcome: the plan ships the adapter only if generative
+improves with zero regressions on the 68-question golden set and
+the held-out set. Epoch 1 failed the held-out half of that rule
+(11/41 vs baseline 13/41), so the adapter was NOT shipped. The
+adapter files were saved to Drive at
+`MyDrive/rag-distillation/adapters/qwen2.5-0.5b-distilled-v1/`
+and were never copied into this repo. The base model stays the
+default, and the generative path stays opt-in.
+
+The 68-question golden eval with the adapter was NOT run. With
+the adapter already worse than baseline on the held-out set,
+there was no case for spending the eval run, and no adapter
+result on the golden set exists to report here.
+
+Setup fixes applied to the repo notebook after the Colab run:
+the Colab copy needed four fixes to run at all, and they are now
+in `notebooks/train_lora_colab.ipynb` (still 18 cells,
+validated JSON). (a) `rank_bm25` added to the pip install list
+in the setup cell, because `app/retrieval.py` imports it.
+(b) `torchao` uninstalled in the setup cell: peft 0.21.2 needs
+torchao above 0.16, Colab shipped 0.10, and torchao is unused by
+this training. (c) `warmup_ratio=0.05` changed to
+`warmup_steps=3` in the training cell: transformers 5.22 and
+trl 1.18 removed `warmup_ratio`, and 3 steps is 5 percent of the
+54 total optimizer steps. (d) `torch.bfloat16` changed to
+`torch.float16` and `SFTConfig bf16=True` changed to `fp16=True`:
+the T4 is compute capability 7.5, bf16 gemm needs 8.0 or higher,
+and the baseline re-measured in fp16 was identical at 13/41.
+Every other cell is unchanged.
 
 ## Phase 2 improvement — query expansion
 
@@ -1065,6 +1115,80 @@ academic year" in the generative answer, and the judge scores it
 1/1 again. It scored 1/1 on all 14 factual misses, and 0/0 on
 the correct Vanier-closure fallback answer (q21) again. Extractive
 stays the default; the generative path stays opt-in.
+
+### 900-char truncation fix tried and reverted (distillation closeout)
+
+The five questions the gate found unanswerable by the generative
+path (q07, q10, q15, q17, q29) were tried with the fix the gate
+suggested: raise `MAX_CONTEXT_CHARS_PER_CHUNK` in
+`app/generative.py` from 900 to 3000, so the full chunk text
+reaches the prompt. 3000 covers the longest chunk in the corpus
+(2,248 chars, measured 19 Nov 2026). The deployed prompt format
+is otherwise unchanged, and the training prompt and training data
+were not touched. Three tests were added for the fix, the
+generative eval was re-run on the full 68-question set, and the
+fix was then reverted, because it failed the keep rule.
+
+Command: `python -m scripts.run_generative_eval` (862.8 s on this
+VM; model load 6.3 s; extractive baseline 53.7 s; generative phase
+762.2 s). The first attempt at this run was killed at question
+11/61 by a VM restart and was re-run from scratch.
+
+| Metric | Before (900 chars) | After (3000 chars) |
+|---|---|---|
+| Generative answer_only_relevance | 0.77 (47/61) | 0.852 (52/61) |
+| Generative factual-only | 18/32 (0.5625) | 23/32 (0.7188) |
+| Extractive answer_only_relevance | 1.0 (61/61) | 1.0 (61/61) |
+| Generative faithfulness (verbatim proxy) | 0.793 | 0.758 |
+| Generative judge faithfulness / relevance | 0.969 / 0.969 (n=32, 0 unparsed) | 0.969 / 0.969 (n=32, 0 unparsed) |
+| recall@3 / recall@5 | 1.0 / 1.0 | 1.0 / 1.0 |
+| answer_relevance_proxy | 1.0 | 1.0 |
+| abstention_accuracy | 1.0 (7/7) | 1.0 (7/7) |
+| eligibility_accuracy | 1.0 (29/29) | 1.0 (29/29) |
+| Answer modes (n=61) | 23 generative, 9 fallback, 29 eligibility | 26 generative, 6 fallback, 29 eligibility |
+| Mean generation latency | 6.59 s | 8.32 s |
+| Mean judge latency | 5.11 s | 7.33 s |
+
+Per-question, the fix changed 11 generative answers: 8 fixed
+(q01, q03, q07, q10, q12, q18, q29, q31) and 3 regressed
+(q08, q09, q17). Of the five target questions, q07 now answers
+"147 scholarship options" generatively, q10 now answers "1 to 2
+academic years" instead of "one academic year", q29 now answers
+"$34,315" instead of "$52,352", q15 moved from extractive
+fallback to a true generative answer with the right figure, and
+q17 is the one target that went the wrong way. The three
+regressions are real, not measurement noise (greedy decoding, so
+the change in prompt is the cause): q08 went from a full correct
+answer to the degenerate "DAAD funding programmes only."; q09
+went from "at least 3 institutions from at least 3 different
+countries" to "3 institutions from 3 different countries",
+dropping "at least" and stating a wrong claim; q17 now answers
+"cover both undergraduate and postgraduate studies", which is
+substantively right but misses the expected phrase
+"undergraduate and postgraduate study" by one word. The
+verbatim faithfulness proxy also regressed, 0.793 to 0.758, as
+more answers came from the generator (26 generative modes, up
+from 23) and paraphrase fails that proxy by design; the judge
+scores are unchanged at 0.969, still 1/1 on all 9 factual misses
+and 0/0 on the correct Vanier-closure fallback answer (q21)
+again. Latency rose too, 6.59 s to 8.32 s per generated answer.
+
+Decision: reverted. The keep rule for this change is generative
+improves with zero regressions on every other metric, and this
+run fails it: 3 previously correct questions regressed and the
+faithfulness proxy regressed. The headline rose, 0.77 to 0.852,
+but a headline that buys 8 fixes with 3 regressions is not a
+clean win, and the repo standard is that a single regression on
+a previously correct question blocks shipping even if the
+headline rose. Longer context is not monotonically better for
+the 0.5B model: it fixes the questions whose answers sat past
+char 900 and destabilises others. `MAX_CONTEXT_CHARS_PER_CHUNK`
+stays 900, the three tests added for the fix were removed with
+it, and `benchmarks/results/generative_eval.json` and `.md`
+still hold the shipped 900-char run. The 3000-char run is kept
+for the record outside the repo at
+`~/workspace/resume-projects/distillation-closeout-generative-eval-3000char.json`
+(full JSON) and the matching `.md` and log files beside it.
 
 ## Benchmarks — 8-configuration ablation
 
