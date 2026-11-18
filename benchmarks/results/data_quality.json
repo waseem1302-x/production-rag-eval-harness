@@ -644,18 +644,6 @@
       "sentence": "",
       "chunk_id": "schwarzman-0",
       "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
-      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "schwarzman",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "schwarzman-0",
-      "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
       "note": "No stipend stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
@@ -681,18 +669,6 @@
       "chunk_id": "schwarzman-0",
       "source_url": "https://www.schwarzmanscholars.org/frequently-asked-questions/",
       "note": "No citizenship_rule stated anywhere on the fetched page; questions about it must abstain, not guess.",
-      "resolution": null,
-      "resolution_evidence": null
-    },
-    {
-      "doc": "vanier",
-      "kind": "missing_field",
-      "severity": "info",
-      "status": "open",
-      "sentence": "",
-      "chunk_id": "vanier-0",
-      "source_url": "https://vanier.gc.ca/en/home-accueil.html",
-      "note": "No deadline stated anywhere on the fetched page; questions about it must abstain, not guess.",
       "resolution": null,
       "resolution_evidence": null
     }
@@ -754,13 +730,9 @@
       "deadline"
     ],
     "schwarzman": [
-      "deadline",
       "stipend",
       "degree_levels",
       "citizenship_rule"
-    ],
-    "vanier": [
-      "deadline"
     ]
   }
 }

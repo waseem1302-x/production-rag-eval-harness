@@ -94,7 +94,11 @@ def test_missing_fields_matrix():
     # £/SEK fix finds its SEK 12,000/month allowance, so it states
     # a stipend, and it already stated a deadline.
     assert "sweden-si" not in missing
-    assert missing["vanier"] == ["deadline"]
+    # Phase 2 improvement, Step 5: Vanier no longer appears at all
+    # — it is closed, so a missing-deadline flag is noise (the
+    # closure finding already records that nobody can apply), and
+    # it states a stipend, so no field is missing.
+    assert "vanier" not in missing
     assert "deadline" in missing["erasmus-mundus"]
     # Phase 2, Step 7: MEXT states yen amounts (¥117,000–¥242,000
     # per month, per category), so "stipend" is no longer missing —
@@ -126,7 +130,10 @@ def test_missing_fields_matrix():
     assert missing["gates-cambridge"] == ["deadline"]
     assert missing["rhodes"] == ["deadline", "citizenship_rule"]
     assert missing["knight-hennessy"] == ["deadline", "stipend", "citizenship_rule"]
-    assert missing["schwarzman"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    # Phase 2 improvement, Step 5: DATE_RE now matches US-format
+    # dates ("May 20"), so Schwarzman's China-track application
+    # deadline is found and "deadline" is no longer flagged.
+    assert missing["schwarzman"] == ["stipend", "degree_levels", "citizenship_rule"]
     # Commonwealth Shared and SI Pioneering flag nothing, so the
     # checker omits them from the missing-fields map entirely.
     assert missing.get("commonwealth-shared", []) == []
@@ -165,7 +172,12 @@ def test_report_files_are_written_and_valid():
     # "approximately" to "25 minutes"); the 2 multiple-amounts
     # findings for Commonwealth Shared and SI Pioneering are
     # re-cited with split sentences, same status and note.
-    assert len(data["findings"]) == 58
+    # Phase 2 improvement, Step 5: 58 -> 56 findings (16 resolved,
+    # 40 open). DATE_RE now matches US-format dates, so
+    # Schwarzman's "May 20" deadline is found; and closed
+    # programmes skip the deadline check, so Vanier no longer gets
+    # a missing-deadline flag.
+    assert len(data["findings"]) == 56
     assert sum(1 for f in data["findings"] if f["status"] == "resolved") == 16
     assert data["missing_fields"]["chevening"] == ["deadline", "stipend", "citizenship_rule"]
     assert (results / "data_quality.md").read_text().startswith("# Data quality report")

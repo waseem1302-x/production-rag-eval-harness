@@ -70,6 +70,31 @@ Pioneering are re-cited with split sentences, same status and
 note. The generative eval was re-run on the 68-question set for
 consistency (see below).
 
+## Phase 2 improvement — data-quality checker gaps (Step 5)
+
+Two false "missing deadline" flags in `scripts/check_data_quality.py`,
+both verified against the extracted text before fixing:
+
+1. **US-format dates.** `DATE_RE` matched only day-first dates
+   ("8 December 2026"), so Schwarzman's China-track deadline
+   ("apply online from January to May 20") was missed. The pattern
+   now also matches month-first dates ("May 20", "August 1");
+   a month followed by a 4-digit year ("September 2027") still
+   does not match, and "may apply" does not match either.
+2. **Closed programmes.** Vanier was flagged "deadline missing"
+   although it is closed. The checker now skips the deadline check
+   for docs in `data/closures.json` via `load_closures()`, which
+   validates each entry's evidence verbatim.
+
+Measured by re-running the checker: findings 58 (16 resolved, 42
+open) to 56 (16 resolved, 40 open); docs with any missing field 16
+to 15. Everything else open was verified true in this step, not
+fixed: the 8 stipend-missing pages state no amount in any currency
+or wording; the 4 approximate-figure and 3 year-specific-figure
+findings are true hedges and true year-tied figures; the 3 stale
+markers are the pages' own dates; Rhodes states worded deadline
+windows but no exact date, so its flag stands.
+
 ## Phase 2 improvement — IDF-weighted sentence scoring
 
 `app/answer.py:_pick_sentences` scored a sentence by counting
@@ -949,8 +974,8 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**207 passed, 0 failed** (18 Nov 2026, 697.51 s, full run after the Step 4
-eligibility rules; the re-verification eval-unchanged test now pins
+**207 passed, 0 failed** (18 Nov 2026, 675.72 s, full run after the Step 5
+checker-gap fixes; the re-verification eval-unchanged test now pins
 exactly two deliberate changes, q03 and q32 fixed, 0.907 to 0.967,
 and the only added rows e12-e29). Step 7's 179 plus
 4 new bullet-sentence tests in `tests/test_bullet_sentences.py`:

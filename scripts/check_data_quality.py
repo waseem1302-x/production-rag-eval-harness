@@ -42,7 +42,7 @@ import re
 from pathlib import Path
 
 from app.config import CHUNKS_FILE
-from app.eligibility import RULES
+from app.eligibility import RULES, load_closures
 from app.ingest import load_sources
 from app.textnorm import segment_sentences
 
@@ -82,7 +82,17 @@ MONEY_RE = re.compile(
     r"|\(\$\)\s?([\d,]*\d(?:\.\d+)?)")
 DATE_RE = re.compile(
     r"\b\d{1,2}\s+(January|February|March|April|May|June|July|August|"
-    r"September|October|November|December)(\s+20\d\d)?\b")
+    r"September|October|November|December)(\s+20\d\d)?\b"
+    r"|\b(January|February|March|April|May|June|July|August|September|"
+    r"October|November|December)\s+\d{1,2}(\s+20\d\d)?\b")
+# Phase 2 improvement, Step 5: the second alternative matches
+# US-format dates ("May 20", "August 1"), which the day-first
+# alternative missed — Schwarzman states its China-track deadline
+# as "apply online from January to May 20", and the checker
+# flagged "deadline missing" for it. The day after the month must
+# be 1-2 digits, so "September 2027" (a month and a year, no day)
+# still does not match, and "may apply" does not match either
+# ("may" needs digits after it).
 DEADLINE_WORDS = ["deadline", "apply", "application", "admission", "portal closes",
                   "key dates"]
 STALE_RE = re.compile(
@@ -324,6 +334,14 @@ def check(chunks: list[dict], sources: list[dict]) -> dict:
                 first["chunk_id"], f"Distinct amounts on one page: {detail}.")
 
     # Missing fields per document: deadline and stipend.
+    # Phase 2 improvement, Step 5: a closed programme has no
+    # deadline to state — flagging "deadline missing" for Vanier
+    # is noise (the closure finding already records that nobody
+    # can apply), so closed docs skip the deadline check. The
+    # closure list is load_closures(), which validates each entry's
+    # evidence verbatim against the chunks, so a stale or
+    # unvalidated closure cannot hide a real missing deadline.
+    closed = set(load_closures(chunks))
     missing: dict[str, list[str]] = {}
     for doc, doc_chunks in sorted(by_doc.items()):
         doc_missing = []
@@ -333,7 +351,7 @@ def check(chunks: list[dict], sources: list[dict]) -> dict:
             for sent in segment_sentences(chunk["text"]):
                 if DATE_RE.search(sent) and any(w in sent.lower() for w in DEADLINE_WORDS):
                     has_date = True
-        if not has_date:
+        if not has_date and doc not in closed:
             doc_missing.append("deadline")
         if not MONEY_RE.search(text):
             doc_missing.append("stipend")
