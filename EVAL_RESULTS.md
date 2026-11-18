@@ -4,6 +4,96 @@ All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
 
+## Distillation — teacher data (Step 1 + finalize)
+
+The generative path scores 0.651 factual-only against extractive
+0.953, and the 0.5B model cannot learn from its own answers. The
+fix is distillation: a stronger teacher writes answers, the small
+student trains on them. The dataset is finalized; the training run
+has not happened yet. Full detail in
+`docs/DISTILLATION_PLAN.md` and `data/distillation/README.md`.
+
+Teacher: Gemini `gemini-3.5-flash-lite`, 18 Nov 2026. Groq was not
+used: its stored key returns 403. Teacher calls: 435. Teacher
+tokens: 109,687 prompt + 23,628 completion = 133,315. Teacher
+cost: $0.00 (Gemini free tier). No LLM API call was made during
+finalize; the finalize run replays the recorded teacher outputs
+from `data/distillation/teacher_raw.jsonl` and rebuilds the judge
+labels from the deterministic proxy.
+
+| Source | Generated | Kept | Dropped | Keep rate |
+|---|---|---|---|---|
+| golden-variant (train) | 60 | 44 | 16 | 0.73 |
+| golden-variant-heldout | 10 | 4 | 6 | 0.40 |
+| synthetic-qa | 250 | 188 | 62 | 0.75 |
+| abstention | 40 | 38 | 2 | 0.95 |
+| judge (proxy labels) | 40 | 40 | 0 | 1.00 |
+| **Total** | **400** | **314** | **86** | |
+
+Train records: 273 (golden-variant 44, synthetic-qa 151,
+abstention 38, judge 40). Held-out records: 41
+(golden-variant-heldout 4, synthetic-qa 37). Held-out records are
+never trained on; they are the generalisation check. Counts are
+last row per item id in `data/distillation/gate_log.jsonl`
+(525 rows, 400 distinct item ids: the 399 from Step 1 plus the
+one judge item the teacher never ran).
+
+Contamination rule, verified in the finalize tests: no golden
+question appears verbatim in train (golden-derived training uses
+paraphrases only), synthetic questions are dropped when their
+content-token Jaccard similarity to any golden question is 0.85
+or higher, and the train and held-out question id sets are
+disjoint.
+
+Judge fix, the reason finalize was needed at all: the teacher
+judge kept 19/39 = 0.49, below the 0.70 gate, so the run stopped
+before finalising, as the plan designed. The failure was measured,
+not assumed: Gemini flash-lite is an unreliable judge in both
+directions, lenient on wrong answers (scored the q01 wrong answer
+relevance 1 while the proxy says 0) and hallucinating
+unfaithfulness on right verbatim answers (scored the extractive
+answers for q04, q06, q07 faithfulness 0). Its 19 kept records
+were skewed 18 right + 1 wrong, which would teach the student to
+almost always answer 1,1. Those records were not used. The 40
+judge labels were built by `scripts/build_distillation_data.py
+--finalize-only` from the deterministic proxy, verbatim
+faithfulness plus expected-phrase relevance, with no teacher call:
+14 wrong-answer items labelled (0, 0), 26 right-answer items
+labelled (1, 1), every record carrying
+`label_source: deterministic_proxy`.
+
+One label correction inside that fix, also measured: two right
+items first measured (0, 1) because the proxy re-split the joined
+answer text. A picked sentence followed by a lowercase fragment
+line ("...each year. of selected ...", q10; "...Cambridge.
+months at the 2026-27 rate ...", q24) re-splits into one unit
+that is not verbatim, while the stored answer sentences, the
+eval's own method, are each verbatim. The proxy now uses the
+stored sentences for extractive answers, and both items label
+(1, 1). The re-split path is kept for generative answers, which
+are model-written sentences and do not carry that pattern.
+
+900-char truncation, a production limitation found by the gate:
+`app/generative.py` truncates each chunk to 900 characters
+(`MAX_CONTEXT_CHARS_PER_CHUNK = 900`), so five golden questions
+are unanswerable by the generative path because the answer sits
+past char 900: q07 ("147 Scholarship options", char 1260 of
+daad-0), q10 ("1 to 2 academic years", char 1136 of
+erasmus-mundus-0), q15 ("HK$344,400", char 1021 of hkpfs-0), q17
+("undergraduate and postgraduate study", char 994 of manaaki-0),
+q29 ("34,315", char 1706 of rtp-2). The teacher correctly
+answered "Not found in the corpus" for their variants, and the
+gate dropped them. This is fixed separately in production, not
+by changing the training prompt.
+
+Next step, not yet run: the Colab LoRA training in
+`notebooks/train_lora_colab.ipynb` (18 cells, validated, not
+run), Qwen2.5-0.5B-Instruct, LoRA rank 16, alpha 32, dropout
+0.05, lr 2e-4, 3 epochs max, effective batch 16, max seq 1024.
+The keep rule from the plan decides after training: ship only
+if generative improves with zero regressions on the 68-question
+golden set and the held-out set.
+
 ## Phase 2 improvement — query expansion
 
 The last two extractive misses, q10 and q17, are paraphrase gaps:

@@ -20,7 +20,7 @@ A RAG system over 19 official scholarship pages. It answers only from the fetche
 - Reranker (ablation only): cross-encoder/ms-marco-MiniLM-L-6-v2
 - Generative model (opt-in): Hugging Face transformers 5.23.0, Qwen/Qwen2.5-0.5B-Instruct, 0.5B params, CPU-only
 - ML stack: PyTorch 2.15.0 CPU, NumPy 2.5.5
-- Testing: pytest 9.2.0, 179 tests
+- Testing: pytest 9.2.0, 242 tests
 - CI: GitHub Actions, Eval gate workflow (`.github/workflows/eval.yml`)
 - Containers: Docker
 - Data: plain `.txt` and `.json` files, no database server
@@ -46,9 +46,10 @@ Final state after the Phase 2 improvement (bullet-list splitting + IDF sentence 
 | Faithfulness | 1.0 |
 | Abstention accuracy | 1.0 (7/7) |
 | Eligibility accuracy | 1.0 (29/29) |
-| Tests | 216 passed, 0 failed |
+| Tests | 242 passed, 0 failed |
 | Cost per query | $0.00 (local CPU, no API calls) |
 | Data-quality findings | 56 (16 resolved, 40 open) |
+| Distillation dataset | 273 train + 41 held-out, teacher Gemini flash-lite, $0 |
 | CI gate | Pass (1.0, 1.0, 1.0, 1.0, 1.0) |
 
 ## Tech stack
@@ -482,10 +483,10 @@ Thresholds: recall@5 at least 0.90, answer-only relevance at least 0.60, faithfu
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 216 passed
+python -m pytest tests/ -q   # 242 passed
 ```
 
-Tests cover chunking (size, overlap, sentence boundaries, text normalisation), retrieval (modes, known questions, empty index), answering and abstention (edge cases: empty documents, missing context, weak retrieval, duplicate chunks, single long sentence), auditable retrieval (abstention reasons, retrieval trace), eligibility (verdict cases, evidence grounding, API profile behaviour, closure), data quality (all known findings, no false positives), ablation (retrieval modes, configuration coverage), chunk-size ablation (256/512/1,024 tokens), corpus growth (19 documents, 101 chunks, 50 questions, o06/o07 abstaining), re-verification (19 pages live, £/SEK/¥ matching, eval identical to before-run), and report integrity (generated before/after report matches the results files). Phase 2, Step 1 adds 25 generative tests (`tests/test_generative.py`, fake model only; the real 0.5B model is never loaded in tests). The Phase 2 improvement adds 9 query-expansion tests (`tests/test_query_expansion.py`, map, bonus, and both q10/q17 fixes on the real chunks).
+Tests cover chunking (size, overlap, sentence boundaries, text normalisation), retrieval (modes, known questions, empty index), answering and abstention (edge cases: empty documents, missing context, weak retrieval, duplicate chunks, single long sentence), auditable retrieval (abstention reasons, retrieval trace), eligibility (verdict cases, evidence grounding, API profile behaviour, closure), data quality (all known findings, no false positives), ablation (retrieval modes, configuration coverage), chunk-size ablation (256/512/1,024 tokens), corpus growth (19 documents, 101 chunks, 50 questions, o06/o07 abstaining), re-verification (19 pages live, £/SEK/¥ matching, eval identical to before-run), and report integrity (generated before/after report matches the results files). Phase 2, Step 1 adds 25 generative tests (`tests/test_generative.py`, fake model only; the real 0.5B model is never loaded in tests). The Phase 2 improvement adds 9 query-expansion tests (`tests/test_query_expansion.py`, map, bonus, and both q10/q17 fixes on the real chunks). Distillation adds 11 gate tests (`tests/test_distillation_gate.py`, verification and contamination rules) and 15 finalize tests (`tests/test_distillation_finalize.py`, proxy judge labels, replay mode, and the finalized files).
 
 ## Docker
 
@@ -496,12 +497,57 @@ docker run -p 8000:8000 production-rag-eval-harness
 
 The Dockerfile builds the index at image build time from the committed `data/` so the container starts without re-fetching the corpus. **Note (verified 18 Nov 2026):** Docker 29.1.3 is installed in this development VM and the daemon runs (vfs storage driver, `--iptables=false --bridge=none`, data-root under the home directory; `python:3.12-slim` pulls fine), but **no container can start here**: the VM's seccomp policy blocks `setns` into any mount or network namespace, so `docker run hello-world` and the `RUN` steps of `docker build` both fail (`operation not permitted`). The image has therefore **not been built or run in Docker here**. Build it on a machine whose Docker can start containers before trusting it. (The Dockerfile itself parses and its base image resolves; only container execution is blocked.)
 
+## Distillation: teacher data finalized, training next
+
+The generative path is the weak side of this system: 0.651
+factual-only against extractive 0.953, and the 0.5B model cannot
+learn from its own answers. The fix is distillation: a stronger
+teacher writes answers, the small student trains on them. The
+dataset is finalized (18 Nov 2026); the training run has not
+happened yet. Plan: [docs/DISTILLATION_PLAN.md](docs/DISTILLATION_PLAN.md).
+Dataset: [data/distillation/README.md](data/distillation/README.md).
+
+Teacher: Gemini `gemini-3.5-flash-lite` (Groq was not used, its
+stored key returns 403). 435 calls, 133,315 tokens (109,687
+prompt + 23,628 completion), $0.00 on the Gemini free tier.
+Finalize made no teacher call; it replays the recorded outputs
+in `data/distillation/teacher_raw.jsonl`.
+
+| Source | Generated | Kept | Train | Held-out |
+|---|---|---|---|---|
+| golden-variant | 60 | 44 | 44 | 0 |
+| golden-variant-heldout | 10 | 4 | 0 | 4 |
+| synthetic-qa | 250 | 188 | 151 | 37 |
+| abstention | 40 | 38 | 38 | 0 |
+| judge (proxy labels) | 40 | 40 | 40 | 0 |
+| **Total** | **400** | **314** | **273** | **41** |
+
+No golden question appears verbatim in train (paraphrases only),
+and the held-out set is never trained on. Judge labels come from
+the deterministic proxy, not the teacher: the teacher judge kept
+19/39 = 0.49, below the 0.70 gate, and was wrong in both
+directions, so its records were not used. The 40 proxy labels are
+14 wrong-answer items (0, 0) and 26 right-answer items (1, 1).
+
+One production limitation the gate found: `app/generative.py`
+truncates each chunk to 900 characters, so five golden questions
+are unanswerable by the generative path because the answer sits
+past char 900 (q07, q10, q15, q17, q29). Fixed separately in
+production, not by changing the training prompt.
+
+Next: LoRA training on Colab (T4, free), notebook
+`notebooks/train_lora_colab.ipynb`, Qwen2.5-0.5B-Instruct, rank
+16, alpha 32, dropout 0.05, lr 2e-4, 3 epochs max. The plan's
+keep rule decides after training: ship only if generative
+improves with zero regressions on the 68-question golden set and
+the held-out set.
+
 ## What is not done yet
 
 - No query rewriting, no multi-hop retrieval.
 - No deployment (local + Docker only; not deployed anywhere).
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually, then re-run the eval and the data-quality checker).
-- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (18/32, 0.5625, vs extractive 32/32), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.77 vs 1.0, and the gap is the generator's, not the eligibility answers (all 29 are checker-resolved, not generated).
+- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (18/32, 0.5625, vs extractive 32/32), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.77 vs 1.0, and the gap is the generator's, not the eligibility answers (all 29 are checker-resolved, not generated). The distillation dataset for the 0.5B student is finalized (273 train + 41 held-out, teacher Gemini flash-lite, $0); the Colab LoRA training run has not happened yet.
 
 Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as an ablation config, LLM-as-judge, dense sentence scoring, answer-verification step, Vanier closure verdict, chunk-size ablation, corpus growth, and stale-page re-verification. Done in the Phase 2 improvement: bullet-list splitting, IDF-weighted sentence scoring, eligibility rules for the 9 new Step 6 documents (eligibility 0.379 to 1.0), data-quality checker gap fixes, and query expansion (q10/q17 fixed, answer-only 1.0).
 

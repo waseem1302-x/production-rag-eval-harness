@@ -1,0 +1,8 @@
+# Training-only dependencies (Colab T4). NOT in requirements.txt:
+# the app must keep running without them. Unpinned on purpose:
+# Colab resolves them against its own torch. The notebook prints
+# the resolved versions at the start of every run.
+peft
+trl
+datasets
+accelerate
