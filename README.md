@@ -40,16 +40,16 @@ Final state after the Phase 2 improvement (bullet-list splitting + IDF sentence 
 | Metric | Value |
 |---|---|
 | Corpus | 19 documents, 101 chunks |
-| Golden questions | 50 (32 factual + 11 eligibility + 7 out-of-corpus) |
+| Golden questions | 68 (32 factual + 29 eligibility + 7 out-of-corpus) |
 | recall@3 / recall@5 | 1.0 / 1.0 |
-| Answer-only relevance | 0.953 (41/43) |
+| Answer-only relevance | 0.967 (59/61) |
 | Faithfulness | 1.0 |
 | Abstention accuracy | 1.0 (7/7) |
-| Eligibility accuracy | 1.0 (11/11) |
-| Tests | 185 passed, 0 failed |
+| Eligibility accuracy | 1.0 (29/29) |
+| Tests | 207 passed, 0 failed |
 | Cost per query | $0.00 (local CPU, no API calls) |
-| Data-quality findings | 73 (16 resolved, 57 open) |
-| CI gate | Pass (1.0, 0.953, 1.0, 1.0, 1.0) |
+| Data-quality findings | 58 (16 resolved, 42 open) |
+| CI gate | Pass (1.0, 0.967, 1.0, 1.0, 1.0) |
 
 ## Tech stack
 
@@ -178,7 +178,7 @@ official pages -> ingest.py (fetch + extract text, save raw + metadata)
 
 Each step is one branch, merged with `--no-ff`, measured on the golden set before merging.
 
-- **Step 1, generative answer + verification + LLM-as-judge.** Opt-in generative answer from local Qwen2.5-0.5B-Instruct (0.5B params, 988.1 MB, CPU-only, $0), with a deterministic verification step: every generated sentence is checked against the cited chunks, unsupported sentences are dropped, otherwise the answer falls back to extractive. Measured on 38 questions: generative answer-only 0.697 (23/33) vs extractive 0.909 (30/33). Re-run on the full 50-question golden set (Phase 2 improvement, Step 3): generative 0.651 (28/43) vs extractive 0.953 (41/43). The generator is worse than quoting the source, so extractive stays the default. The judge scored 0.957 / 0.957 (n=23) on the 38-question run and 0.969 / 0.969 (n=32) on the 50-question run, but overstates quality both times: it scored q10's wrong "one academic year" 1/1 and the correct Vanier-closure answer (q21) 0/0. It fixed one paraphrase-gap failure (q03) on the 38-question run; on the 50-question run q03 is a generative miss again.
+- **Step 1, generative answer + verification + LLM-as-judge.** Opt-in generative answer from local Qwen2.5-0.5B-Instruct (0.5B params, 988.1 MB, CPU-only, $0), with a deterministic verification step: every generated sentence is checked against the cited chunks, unsupported sentences are dropped, otherwise the answer falls back to extractive. Measured on 38 questions: generative answer-only 0.697 (23/33) vs extractive 0.909 (30/33). Re-run on the full 50-question golden set (Phase 2 improvement, Step 3): generative 0.651 (28/43) vs extractive 0.953 (41/43). Re-run again on the 68-question set after Step 4 added 18 eligibility questions: generative 0.754 (46/61) overall, but factual-only it is still 0.651 (28/43) — the 18 eligibility answers are checker-resolved, not generated — vs extractive 0.967 (59/61). The generator is worse than quoting the source, so extractive stays the default. The judge scored 0.957 / 0.957 (n=23) on the 38-question run and 0.969 / 0.969 (n=32) on the 50-question run, but overstates quality both times: it scored q10's wrong "one academic year" 1/1 and the correct Vanier-closure answer (q21) 0/0. It fixed one paraphrase-gap failure (q03) on the 38-question run; on the 50-question run q03 is a generative miss again.
 - **Step 2, dense sentence scoring + answer verification.** Sentence picking now adds 2.0 x cosine similarity (same local MiniLM embedder, $0) to the lexical score. Weight 2.0 shipped as the largest with zero regressions: weights 3-4 fix q03 but lose q16. The verification step fixed o04, which now abstains with reason `unanswered_ranking`. Abstention went 0.8 (4/5) to 1.0 (5/5). Dense scoring itself buys nothing measurable on this corpus.
 - **Step 3, cross-encoder reranker ablation.** Model `cross-encoder/ms-marco-MiniLM-L-6-v2` (22.7M params, ~91 MB, CPU-only, $0) as the `hybrid-cross-encoder` configuration. Measured on the 31-chunk corpus: answer-only 0.87 with and without it, abstention 1.0 both ways, at 4,238.0 ms vs 123.7 ms retrieval mean (about 34x). Re-measured on the grown 101-chunk corpus: still 0.875 both ways, at 3,987.1 ms vs 185.9 ms (about 21x). It reorders 17 of 23 top-5 lists but no picked answer changes. Lexical stays the default. Re-measured again in the Phase 2 improvement run (after IDF scoring): cross-encoder 0.938 vs improved-hybrid 0.938, it no longer loses q03, at 3,307.2 ms vs 35.5 ms retrieval mean (about 93x).
 - **Step 4, eligibility reads the closure flag.** Vanier is closed, so a profile check returns verdict `closed`, not `not_eligible`, with the closure evidence and the replacement programme, whatever the profile. New file `data/closures.json` (version 1), evidence validated verbatim at load time. Golden set 38 to 39 questions (new e11, Pakistani doctoral applicant, Vanier). Eligibility 1.0 (11/11). Answer-only 0.909 to 0.912 (31/34).
@@ -187,6 +187,7 @@ Each step is one branch, merged with `--no-ff`, measured on the golden set befor
 - **Step 7, re-verify stale pages.** All 19 source pages re-fetched 18 Nov 2026. All 19 live, 18 substantively unchanged, Eiffel changed only in a sidebar teaser. No `.txt` was rewritten, the rebuilt index is byte-identical (101 chunks), and the re-run eval is byte-identical to the before-run file. Same step fixes the data-quality checker's currency gap: its money pattern now matches £, SEK, and ¥ plus detached "($) 35,550" rates, so stipend-missing flags went 14 of 19 to 8 of 19, and findings went 72 to 73 (9 to 16 resolved, 63 to 57 open).
 - **Phase 2 improvement, bullet-list splitting.** `segment_sentences` now splits dash-led bullet items into their own sentences (after terminal punctuation or a colon intro). Measured on the 50-question golden set: answer-only 0.907 (39/43) to 0.930 (40/43), q03 fixed, zero other regressions, faithfulness still 1.0. q32 still misses: the SEK 12,000 sentence is pickable now but still loses on lexical score to the page intro. Side effect, recorded not hidden: dense-only abstention 1.0 to 0.857 (o06 answered in dense-only mode only; the shipped improved-hybrid still abstains 1.0).
 - **Phase 2 improvement, IDF sentence scoring.** Shared stems in `_pick_sentences` now count by inverse document frequency over the candidate sentences instead of 1 each, so rare content stems ("monthly", "allowance") outweigh stopwords and doc-name stems ("the", "pioneering", "women", "stem"). Measured on the 50-question golden set: answer-only 0.930 (40/43) to 0.953 (41/43), q32 fixed, zero regressions. Sixteen answers changed text (different sentences picked) and all stayed correct. Only q10 and q17 remain open, both paraphrase gaps: their correct sentences share almost nothing with the question, so no weighting can surface them. Side effect, recorded not hidden: in the ablation, the BM25-only config's abstention fell 1.0 to 0.857 (o06 answered there, as in dense-only); the shipped improved-hybrid still abstains 1.0 (7/7).
+- **Phase 2 improvement, eligibility rules for the 9 Step 6 documents.** Rules authored only where the corpus states one with a verbatim evidence sentence: Gates Cambridge (postgraduate, outside the UK), Rhodes (postgraduate only), Knight-Hennessy (graduate degrees), Commonwealth Shared (Master's only, 43-country list), RTP (research masters/doctorate, domestic and overseas), Marshall (graduate level, US citizens only), Erasmus Mundus organisations page (master level, worldwide), SI Pioneering Women (master's, 10-country list). Schwarzman states no level and no citizenship rule, so its verdict stays unknown by design. 18 new golden eligibility questions (e12-e29) added. Measured before/after: eligibility accuracy 0.379 (11/29) to 1.0 (29/29), answer-only 0.689 (42/61) to 0.967 (59/61), recall 0.984 to 1.0. Known limits, documented in the rules: the checker models degree level and citizenship only, so a male applicant from a listed country would be reported eligible for SI Pioneering Women (gender is not modelled), and Rhodes' exceptional second-BA path is not modelled (standard postgraduate-only position). Data-quality findings fell 73 to 58 as the 14 missing-field flags for the ruled docs disappeared.
 
 ## Quickstart (local)
 
@@ -270,7 +271,7 @@ All numbers in this README come from a real local run. See [EVAL_RESULTS.md](EVA
 python -m benchmarks.run_benchmark   # 8 configurations, same golden set
 ```
 
-Re-run in the Phase 2 improvement with the current code on the grown corpus (101 chunks, 50 questions). Latency is measured after warm-up with the embedding model already loaded. Cost is $0.00 everywhere (local CPU, no API calls). Latency varies run to run by hundreds of milliseconds on this VM (shared CPU, 1.5 cores, and the dense configs embed every candidate sentence per question). The order of magnitude is stable; the exact figures are one measured run.
+Re-run in the Phase 2 improvement with the current code on the grown corpus (101 chunks, 68-question golden set; the ablation scores the 32 factual + 7 out-of-corpus questions). Latency is measured after warm-up with the embedding model already loaded. Cost is $0.00 everywhere (local CPU, no API calls). Latency varies run to run by hundreds of milliseconds on this VM (shared CPU, 1.5 cores, and the dense configs embed every candidate sentence per question). The order of magnitude is stable; the exact figures are one measured run.
 
 | Configuration | Mode | Reranker | recall@5 | Answer-only relevance | Faithfulness | Abstention | Retrieval mean | Total mean | Cost / query |
 |---|---|---|---|---|---|---|---|---|---|
@@ -403,6 +404,22 @@ Command: `python -m scripts.run_generative_eval` (427.3 s on this VM; model load
 
 Read honestly: the gap widened, not narrowed — generative 0.651 vs extractive 0.953. The generator misses 15 questions (q01, q03, q05, q07, q10, q11, q12, q13, q14, q17, q18, q24, q29, q30, q31), mostly by paraphrasing past the expected phrase; q03, which the generator fixed on the 38-question run, is a miss again. Of the 9 new Step 6 questions it misses 4 (q24, q29, q30, q31) and passes 5 (q25, q26, q27, q28, q32). The judge still overstates quality at 0.969: it scored 1/1 on 14 of the 15 answer-only misses, and scored the correct Vanier-closure fallback answer (q21) 0/0 again — the same failure as the 38-question run. Extractive stays the default; the generative path stays opt-in.
 
+### Phase 2 improvement, Step 4, generative eval re-run (68 questions, 18 Nov 2026)
+
+Command: `python -m scripts.run_generative_eval` (646.4 s on this VM; model load 4.5 s; full results in `benchmarks/results/generative_eval.json`). Re-run only because Step 4 grew the golden set to 68 questions (18 new eligibility questions); no code changed in the generator.
+
+| Metric | Extractive | Generative |
+|---|---|---|
+| Answer-only relevance | 0.967 (59/61) | 0.754 (46/61) |
+| Faithfulness (verbatim proxy) | 1.0 | 0.793 |
+| Judge faithfulness / relevance | - | 0.969 / 0.969 (n=32, 0 unparsed) |
+| Abstention / eligibility accuracy | 1.0 / 1.0 | 1.0 / 1.0 |
+| Answer modes (n=61) | - | 23 generative, 9 fallback to extractive, 29 eligibility |
+| Mean generation / judge latency | - | 5.83 s / 4.72 s |
+| Cost per query | $0.00 | $0.00 (local CPU, no API calls) |
+
+Read honestly: the overall generative number rose (0.651 to 0.754) only because the 18 new eligibility questions are all checker-resolved, not generated — the generator's factual record is unchanged at 28/43 (0.651), same 15 misses, same judge behaviour (1/1 on 14 of them, 0/0 on q21 again). The extractive column (0.967) matches the standalone eval.
+
 ## Known failures
 
 No regressions in the improved pipeline: no question it got right is lost. The failure table below is the honest record.
@@ -421,7 +438,7 @@ No regressions in the improved pipeline: no question it got right is lost. The f
 python -m scripts.check_data_quality
 ```
 
-73 findings (16 resolved, 57 open), each citing sentence + chunk + source URL. Headline findings:
+58 findings (16 resolved, 42 open), each citing sentence + chunk + source URL. Headline findings:
 
 - Vanier is **closed** and replaced by a harmonized doctoral programme, and eligibility now returns verdict `closed` for it (Step 4).
 - Eiffel EUR 1,200 is the Master's allowance and EUR 2,000 the Doctorate stipend (not a contradiction).
@@ -447,7 +464,7 @@ Thresholds: recall@5 at least 0.90, answer-only relevance at least 0.60, faithfu
 ## Tests
 
 ```bash
-python -m pytest tests/ -q   # 183 passed
+python -m pytest tests/ -q   # 207 passed
 ```
 
 Tests cover chunking (size, overlap, sentence boundaries, text normalisation), retrieval (modes, known questions, empty index), answering and abstention (edge cases: empty documents, missing context, weak retrieval, duplicate chunks, single long sentence), auditable retrieval (abstention reasons, retrieval trace), eligibility (verdict cases, evidence grounding, API profile behaviour, closure), data quality (all known findings, no false positives), ablation (retrieval modes, configuration coverage), chunk-size ablation (256/512/1,024 tokens), corpus growth (19 documents, 101 chunks, 50 questions, o06/o07 abstaining), re-verification (19 pages live, £/SEK/¥ matching, eval identical to before-run), and report integrity (generated before/after report matches the results files). Phase 2, Step 1 adds 25 generative tests (`tests/test_generative.py`, fake model only; the real 0.5B model is never loaded in tests).
@@ -468,7 +485,7 @@ The Dockerfile builds the index at image build time from the committed `data/` s
 - No auto-refresh of the corpus (re-run `scripts.ingest` manually, then re-run the eval and the data-quality checker).
 - No eligibility rules for the 9 new Step 6 documents (Gates, Rhodes, Knight-Hennessy, Schwarzman, Commonwealth Shared, RTP, Marshall, Erasmus Mundus organisations page, SI Pioneering Women). Profile checks for them return `unknown` by construction.
 - No fix yet for the q10 / q17 paraphrase gaps (their correct sentences share almost nothing with the question, so no re-weighting can surface them; they need query expansion, a different approach).
-- No stronger generator or judge: the 0.5B model is measured worse than extractive (0.651 vs 0.953 on the full 50-question set), and the 0.5B judge overstates quality.
+- No stronger generator or judge: the 0.5B model is measured worse than extractive on factual questions (0.651 vs 0.953), and the 0.5B judge overstates quality. Overall on the 68-question set the generative column reads 0.754 vs 0.967 only because the 18 eligibility answers are checker-resolved, not generated.
 
 Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as an ablation config, LLM-as-judge, dense sentence scoring, answer-verification step, Vanier closure verdict, chunk-size ablation, corpus growth, and stale-page re-verification.
 

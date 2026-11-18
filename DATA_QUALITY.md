@@ -9,8 +9,8 @@ messy. This document records every mess found, the exact evidence
 for it, what it means for the system, and how it is handled. Nothing
 here is hidden: the checker that produced these findings is
 `scripts/check_data_quality.py`, and its machine-readable
-report is `benchmarks/results/data_quality.json` (73 findings:
-16 resolved, 57 open). Re-run the checker after any re-ingest;
+report is `benchmarks/results/data_quality.json` (58 findings:
+16 resolved, 42 open). Re-run the checker after any re-ingest;
 `DATA_QUALITY.md` must be updated from its output, not from memory.
 
 ## Summary of findings
@@ -24,7 +24,7 @@ report is `benchmarks/results/data_quality.json` (73 findings:
 | 5 | Year-specific figures | HKPFS, Commonwealth Shared | Open — quote with year |
 | 6 | Deadline not stated on fetched page | 15 of 19 docs | Open — must abstain |
 | 7 | Stipend not stated on fetched page | **8 of 19 docs** (was 14 before the Step 7 checker fix) | Open — must abstain |
-| 8 | Degree levels / citizenship not stated | 11 docs missing degree levels, 12 missing a citizenship rule (all 9 new docs, by construction — no rules authored yet); Sweden SI now has no missing field at all | Open — verdict `unknown` |
+| 8 | Degree levels / citizenship not stated | 3 docs missing degree levels (DAAD, Fulbright, Schwarzman), 6 missing a citizenship rule (Chevening, Fulbright, Knight-Hennessy, MEXT, Rhodes, Schwarzman); the 9 new docs now have rules except Schwarzman (no rule stated) — see §8 and §12 | Open — verdict `unknown` |
 | 9 | Stale page markers | Erasmus (26 June 2025), Eiffel (Oct 2022); EMJM organisations page footer "Last updated: 15 April 2026" newly observed in Step 7 | Open — re-fetch before launch (done 18 Nov 2026, §11) |
 | 10 | Checker currency gap (£/SEK not matched) | **Fixed in Step 7** — Rhodes, Commonwealth Shared, SI Pioneering, Sweden SI, MEXT and RTP no longer falsely flagged; Gates now matches on its real stipend too. Remaining: the "US$210m" donation still matches, and MEXT's ¥ amounts cannot be tied to a category | Fixed (with named remainders) — see §10 |
 
@@ -234,15 +234,20 @@ knowledge:
   citizenship list is in the fetched text — the page says only
   "from all over the world".
 - **The 9 new documents (Phase 2, Step 6)**: no eligibility rules
-  are authored for any of them yet, so the checker flags
+  were authored for any of them at first, so the checker flagged
   degree-levels and/or citizenship as missing for all nine by
   construction — 11 docs missing degree levels and 12 missing a
   citizenship rule in total. Several pages DO state them (e.g.
   SI Pioneering Women lists its 10 eligible countries; Rhodes and
   Schwarzman state degree levels), so these flags mean "no rule
-  authored", not "page says nothing". Authoring rules is a separate
-  step; until then a profile check for any of the nine returns
-  `unknown`.
+  authored", not "page says nothing". **Phase 2 improvement,
+  Step 4 authored the rules (see §12):** 8 of the 9 docs now have
+  a rule, and only Schwarzman still flags both fields — it states
+  neither the funded degree level nor a citizenship rule, so its
+  verdict stays `unknown` by design. Degree levels are now missing
+  for 3 docs (DAAD, Fulbright, Schwarzman) and a citizenship rule
+  for 6 (Chevening, Fulbright, Knight-Hennessy, MEXT, Rhodes,
+  Schwarzman).
 
 Correction to an earlier assumption: the SI page **does** list its
 34 eligible countries in the corpus (chunk `sweden-si-2`), and
@@ -400,3 +405,33 @@ recall@5 1.0, faithfulness 1.0, abstention 1.0, eligibility 1.0).
 The next re-verification should re-run the same comparison; the
 stale markers to watch are Erasmus (26 June 2025) and Eiffel
 (October 2022), and the EMJM organisations footer (15 April 2026).
+
+## 12. Eligibility rules for the 9 new documents (Phase 2 improvement, Step 4)
+
+Rules were authored in `app/eligibility.py` only where the corpus
+states one with a verbatim evidence sentence, and 18 new golden
+eligibility questions (e12-e29) were added to measure them.
+Measured before/after on the eval: eligibility accuracy 0.379
+(11/29) to 1.0 (29/29), answer-only 0.689 (42/61) to 0.967
+(59/61), recall 0.984 to 1.0. Re-running the checker after
+authoring: findings 73 (16 resolved, 57 open) to 58 (16 resolved,
+42 open) — the 14 missing-field flags for the ruled docs are gone.
+One more open finding is gone for an unrelated reason: the
+Schwarzman "approximate_figure" finding disappeared because the
+Step 1 bullet split broke the merged sentence that had attached
+"approximately" to "25 minutes" (the checker was not re-run in
+Step 1, so this surfaces now). The 2 "multiple_amounts" findings
+for Commonwealth Shared and SI Pioneering are re-cited with split
+sentences, same status and note.
+
+| Document | Rule authored | Why / why not |
+|---|---|---|
+| Gates Cambridge | levels masters/phd, citizenship foreign (UK) | "postgraduate degree", "from countries outside the UK" |
+| Rhodes | levels masters/phd only | Postgraduate stated; eligibility by country runs through per-constituency rules with no country list in the corpus. Known limit: the exceptional second-BA path via Senior Status is not modelled. |
+| Knight-Hennessy | levels masters/phd only | "any graduate degree(s) at Stanford"; the funding page states no citizenship rule. |
+| Schwarzman | none | The FAQ states neither the funded degree level nor a citizenship rule; 40/20/40 are class targets, explicitly not eligibility targets. Verdict stays `unknown` by design. |
+| Commonwealth Shared | levels masters, citizenship list (43 countries) | "Master's courses only and not for undergraduate or PhD study" + the 43-country list sentence. |
+| RTP | levels masters/phd, citizenship any | "domestic and overseas students undertaking research doctorate and research masters degrees". |
+| Marshall | levels masters/phd, citizenship list (United States) | "study at graduate level" + "Open only to United States citizens". |
+| Erasmus Mundus (orgs page) | levels masters, citizenship any | "at master level" + "scholarships to the best students worldwide". |
+| SI Pioneering Women | levels masters, citizenship list (10 countries) | "awarded for master's studies in Sweden" + the 10-country list sentence. Known limit: the checker models degree level and citizenship only, not gender. |

@@ -74,6 +74,31 @@ CASES = [
     ({"degree_level": "masters"}, "daad", "unknown"),
     ({"nationality": "Pakistan"}, "daad", "eligible"),
     ({"nationality": "Germany"}, "daad", "not_eligible"),
+    # Phase 2 improvement, Step 4: rules for the 9 Step 6 documents.
+    ({"degree_level": "phd"}, "gates-cambridge", "eligible"),
+    ({"degree_level": "undergraduate"}, "gates-cambridge", "not_eligible"),
+    ({"nationality": "UK", "degree_level": "masters"}, "gates-cambridge", "not_eligible"),
+    ({"nationality": "Pakistan", "degree_level": "phd"}, "gates-cambridge", "eligible"),
+    ({"degree_level": "masters"}, "rhodes", "eligible"),
+    ({"degree_level": "undergraduate"}, "rhodes", "not_eligible"),
+    ({"degree_level": "phd"}, "knight-hennessy", "eligible"),
+    ({"degree_level": "undergraduate"}, "knight-hennessy", "not_eligible"),
+    ({"nationality": "Pakistan", "degree_level": "masters"}, "commonwealth-shared", "eligible"),
+    ({"nationality": "United States", "degree_level": "masters"}, "commonwealth-shared", "not_eligible"),
+    ({"degree_level": "phd"}, "commonwealth-shared", "not_eligible"),
+    ({"degree_level": "phd"}, "rtp", "eligible"),
+    ({"degree_level": "undergraduate"}, "rtp", "not_eligible"),
+    ({"nationality": "Pakistan"}, "rtp", "eligible"),
+    ({"nationality": "United States", "degree_level": "masters"}, "marshall", "eligible"),
+    ({"nationality": "Pakistan", "degree_level": "masters"}, "marshall", "not_eligible"),
+    ({"degree_level": "masters"}, "erasmus-mundus-org", "eligible"),
+    ({"nationality": "Pakistan", "degree_level": "masters"}, "erasmus-mundus-org", "eligible"),
+    ({"nationality": "Bangladesh", "degree_level": "masters"}, "si-pioneering-women", "eligible"),
+    ({"nationality": "Pakistan", "degree_level": "masters"}, "si-pioneering-women", "not_eligible"),
+    # Schwarzman: the corpus states no degree-level or citizenship
+    # rule, so the verdict stays unknown by design.
+    ({"degree_level": "masters"}, "schwarzman", "unknown"),
+    ({"nationality": "Pakistan"}, "schwarzman", "unknown"),
 ]
 
 

@@ -115,15 +115,25 @@ def test_missing_fields_matrix():
     # tests/test_reverification.py::test_checker_matches_pound_sek_yen_and_detached_dollar).
     # Gates was never flagged — before Step 7 because its "US$210m"
     # donation matched, now also because its £23,152 stipend does.
-    assert missing["gates-cambridge"] == ["deadline", "degree_levels", "citizenship_rule"]
-    assert missing["rhodes"] == ["deadline", "degree_levels", "citizenship_rule"]
-    assert missing["knight-hennessy"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
+    # Phase 2 improvement, Step 4 fixed (a) for 8 of the 9 docs by
+    # authoring rules from the corpus (Schwarzman states no rule, so
+    # it still flags both): Gates, RTP and Erasmus Mundus org now
+    # flag only "deadline"; Rhodes only "deadline" and
+    # "citizenship_rule" (constituency-based, no country list in the
+    # corpus); Knight-Hennessy "deadline", "stipend" and
+    # "citizenship_rule" (no citizenship rule stated); Marshall only
+    # "stipend"; Commonwealth Shared and SI Pioneering flag nothing.
+    assert missing["gates-cambridge"] == ["deadline"]
+    assert missing["rhodes"] == ["deadline", "citizenship_rule"]
+    assert missing["knight-hennessy"] == ["deadline", "stipend", "citizenship_rule"]
     assert missing["schwarzman"] == ["deadline", "stipend", "degree_levels", "citizenship_rule"]
-    assert missing["commonwealth-shared"] == ["degree_levels", "citizenship_rule"]
-    assert missing["rtp"] == ["deadline", "degree_levels", "citizenship_rule"]
-    assert missing["marshall"] == ["stipend", "degree_levels", "citizenship_rule"]
-    assert missing["erasmus-mundus-org"] == ["deadline", "degree_levels", "citizenship_rule"]
-    assert missing["si-pioneering-women"] == ["degree_levels", "citizenship_rule"]
+    # Commonwealth Shared and SI Pioneering flag nothing, so the
+    # checker omits them from the missing-fields map entirely.
+    assert missing.get("commonwealth-shared", []) == []
+    assert missing["rtp"] == ["deadline"]
+    assert missing["marshall"] == ["stipend"]
+    assert missing["erasmus-mundus-org"] == ["deadline"]
+    assert missing.get("si-pioneering-women", []) == []
 
 
 def test_erasmus_org_two_amounts_are_different_fields():
@@ -146,7 +156,16 @@ def test_report_files_are_written_and_valid():
     # Shared, RTP, SI Pioneering, Sweden SI, MEXT now match £/SEK/¥
     # or detached "($)"), and seven new multiple-amounts findings
     # appear, all resolved with their field named.
-    assert len(data["findings"]) == 73
+    # Phase 2 improvement, Step 4: 73 -> 58 findings (16 resolved,
+    # 42 open). Authoring eligibility rules for 8 of the 9 Step 6
+    # docs resolves 14 "missing_field" findings (the degree-level
+    # and citizenship-rule flags for those docs), and the Step 1
+    # bullet-list split removes 1 false "approximate_figure" finding
+    # for Schwarzman (the merged sentence had attached
+    # "approximately" to "25 minutes"); the 2 multiple-amounts
+    # findings for Commonwealth Shared and SI Pioneering are
+    # re-cited with split sentences, same status and note.
+    assert len(data["findings"]) == 58
     assert sum(1 for f in data["findings"] if f["status"] == "resolved") == 16
     assert data["missing_fields"]["chevening"] == ["deadline", "stipend", "citizenship_rule"]
     assert (results / "data_quality.md").read_text().startswith("# Data quality report")

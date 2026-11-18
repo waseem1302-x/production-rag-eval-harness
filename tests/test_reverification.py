@@ -131,25 +131,31 @@ def test_eval_unchanged_after_reverification():
     before-run file question by question — no golden question was
     silently changed, dropped or lost. The Phase 2 improvement then
     changed exactly two rows on purpose (q03, fixed by the
-    bullet-list split; q32, fixed by IDF sentence scoring), so this
-    test now pins that: every other row is identical to the Step 7
-    before-run file, and answer-only relevance is 0.953 (41/43),
-    not 0.907 (39/43)."""
+    bullet-list split; q32, fixed by IDF sentence scoring), and Step
+    4 added 18 golden eligibility questions (e12-e29), so this test
+    now pins that: every before-run row is present and identical in
+    the current file except q03/q32, the only added rows are
+    e12-e29, and answer-only relevance is 0.967 (59/61), not 0.907
+    (39/43)."""
     before = json.loads(
         (RESULTS_DIR / "extractive_eval_before_reverification.json").read_text())
     after = json.loads((RESULTS_DIR / "extractive_eval.json").read_text())
-    assert after["n_in_corpus"] == before["n_in_corpus"] == 43
+    assert before["n_in_corpus"] == 43
+    assert after["n_in_corpus"] == 61
     assert after["n_out_of_corpus"] == before["n_out_of_corpus"] == 7
-    assert after["n_eligibility"] == before["n_eligibility"] == 11
+    assert before["n_eligibility"] == 11
+    assert after["n_eligibility"] == 29
     for metric in ("recall@3", "recall@5", "answer_relevance_proxy",
                    "faithfulness",
                    "abstention_accuracy", "eligibility_accuracy"):
         assert after[metric] == before[metric], metric
     assert before["answer_only_relevance"] == 0.907
-    assert after["answer_only_relevance"] == 0.953
+    assert after["answer_only_relevance"] == 0.967
     before_rows = {r["id"]: r for r in before["per_question"]}
     after_rows = {r["id"]: r for r in after["per_question"]}
-    assert set(after_rows) == set(before_rows)
+    assert set(after_rows) - set(before_rows) == {
+        f"e{i}" for i in range(12, 30)}, "only e12-e29 may be added"
+    assert set(before_rows) <= set(after_rows)
     for qid, row in before_rows.items():
         if qid in ("q03", "q32"):
             # Fixed by the Phase 2 improvement (bullet-list split

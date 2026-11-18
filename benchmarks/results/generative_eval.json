@@ -4,20 +4,20 @@
   "model_file_bytes": 988097824,
   "model_file_mb": 988.1,
   "cost_per_query_usd": 0.0,
-  "load_s": 4.9,
-  "extractive_eval_s": 33.8,
-  "generative_eval_s": 354.6,
-  "total_s": 427.3,
-  "mean_generation_latency_s": 4.77,
-  "mean_judge_latency_s": 3.62,
+  "load_s": 4.5,
+  "extractive_eval_s": 43.2,
+  "generative_eval_s": 563.4,
+  "total_s": 646.4,
+  "mean_generation_latency_s": 5.83,
+  "mean_judge_latency_s": 4.72,
   "extractive": {
-    "n_in_corpus": 43,
+    "n_in_corpus": 61,
     "n_out_of_corpus": 7,
-    "n_eligibility": 11,
+    "n_eligibility": 29,
     "recall@3": 1.0,
     "recall@5": 1.0,
     "answer_relevance_proxy": 1.0,
-    "answer_only_relevance": 0.953,
+    "answer_only_relevance": 0.967,
     "faithfulness": 1.0,
     "abstention_accuracy": 1.0,
     "eligibility_accuracy": 1.0,
@@ -612,6 +612,348 @@
         "eligibility_verdict": "closed"
       },
       {
+        "id": "e12",
+        "question": "I want to do a PhD at Cambridge. Can I apply for the Gates Cambridge Scholarship?",
+        "expected_doc": "gates-cambridge",
+        "found_doc_top5": [
+          "gates-cambridge",
+          "rhodes",
+          "rhodes",
+          "commonwealth-shared",
+          "chevening"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Gates Cambridge Scholarship. The Gates Cambridge Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. The Gates Cambridge Scholarship is for international students, so a Pakistan citizen meets the citizenship requirement. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e13",
+        "question": "Can I apply for the Gates Cambridge Scholarship for undergraduate study?",
+        "expected_doc": "gates-cambridge",
+        "found_doc_top5": [
+          "gates-cambridge",
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Gates Cambridge Scholarship. The Gates Cambridge Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e14",
+        "question": "I am from the UK. Can I apply for the Gates Cambridge Scholarship?",
+        "expected_doc": "gates-cambridge",
+        "found_doc_top5": [
+          "gates-cambridge",
+          "rhodes",
+          "chevening",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Gates Cambridge Scholarship. The Gates Cambridge Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. The Gates Cambridge Scholarship is for international (non-UK) students, so a UK citizen is not eligible on citizenship. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e15",
+        "question": "Can I apply for the Rhodes Scholarship for a master's degree at Oxford?",
+        "expected_doc": "rhodes",
+        "found_doc_top5": [
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Rhodes Scholarship. The Rhodes Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. Evidence: The Rhodes Scholarship is a fully funded, full-time postgraduate scholarship which enables talented people from around the world to study at the University of Oxford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e16",
+        "question": "Can I apply for the Rhodes Scholarship for undergraduate study?",
+        "expected_doc": "rhodes",
+        "found_doc_top5": [
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Rhodes Scholarship. The Rhodes Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: The Rhodes Scholarship is a fully funded, full-time postgraduate scholarship which enables talented people from around the world to study at the University of Oxford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e17",
+        "question": "Can I apply for the Knight-Hennessy Scholarship for a PhD at Stanford?",
+        "expected_doc": "knight-hennessy",
+        "found_doc_top5": [
+          "knight-hennessy",
+          "rhodes",
+          "rhodes",
+          "sweden-si",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Knight-Hennessy Scholarship. The Knight-Hennessy Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. Evidence: Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e18",
+        "question": "Can I apply for the Knight-Hennessy Scholarship for undergraduate study?",
+        "expected_doc": "knight-hennessy",
+        "found_doc_top5": [
+          "knight-hennessy",
+          "commonwealth-shared",
+          "si-pioneering-women",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Knight-Hennessy Scholarship. The Knight-Hennessy Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e19",
+        "question": "I am from Pakistan. Can I apply for a Commonwealth Shared Scholarship for a master's degree?",
+        "expected_doc": "commonwealth-shared",
+        "found_doc_top5": [
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for a Commonwealth Shared Scholarship. A Commonwealth Shared Scholarship covers masters level study, so a masters applicant meets the degree requirement. Pakistan is among the 43 eligible countries for a Commonwealth Shared Scholarship, so the citizenship requirement is met. Evidence: Please note, these scholarships are for Master's courses only and not for undergraduate or PhD study. Evidence: Bangladesh, Belize, Botswana, Dominica, Eswatini, Fiji, Gabon, Ghana, Grenada, Guyana, India, Jamaica, Kenya, Kiribati, Lesotho, Malawi, Malaysia, Maldives, Mauritius, Montserrat, Mozambique, Namibia, Nauru, Nigeria, Pakistan, Papua New Guinea, Rwanda, Saint Helena, Saint Lucia. Saint Vincent and The Grenadines. Samoa, Sierra Leone, Solomon Islands, South Africa, Sri Lanka, Tanzania, The Gambia, Togo, Tonga, Tuvalu, Uganda, Vanuatu, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e20",
+        "question": "I am from the United States. Can I apply for a Commonwealth Shared Scholarship for a master's degree?",
+        "expected_doc": "commonwealth-shared",
+        "found_doc_top5": [
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for a Commonwealth Shared Scholarship. A Commonwealth Shared Scholarship covers masters level study, so a masters applicant meets the degree requirement. United States is not among the 43 eligible countries for a Commonwealth Shared Scholarship, so the citizenship requirement is not met. Evidence: Please note, these scholarships are for Master's courses only and not for undergraduate or PhD study. Evidence: Bangladesh, Belize, Botswana, Dominica, Eswatini, Fiji, Gabon, Ghana, Grenada, Guyana, India, Jamaica, Kenya, Kiribati, Lesotho, Malawi, Malaysia, Maldives, Mauritius, Montserrat, Mozambique, Namibia, Nauru, Nigeria, Pakistan, Papua New Guinea, Rwanda, Saint Helena, Saint Lucia. Saint Vincent and The Grenadines. Samoa, Sierra Leone, Solomon Islands, South Africa, Sri Lanka, Tanzania, The Gambia, Togo, Tonga, Tuvalu, Uganda, Vanuatu, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e21",
+        "question": "Can I apply for a Commonwealth Shared Scholarship for a PhD?",
+        "expected_doc": "commonwealth-shared",
+        "found_doc_top5": [
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for a Commonwealth Shared Scholarship. A Commonwealth Shared Scholarship covers masters level study only, so a phd applicant is not eligible on degree level. Evidence: Please note, these scholarships are for Master's courses only and not for undergraduate or PhD study.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e22",
+        "question": "Can I apply for an RTP scholarship for a research PhD in Australia?",
+        "expected_doc": "rtp",
+        "found_doc_top5": [
+          "rtp",
+          "rtp",
+          "rtp",
+          "rtp",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for an RTP Scholarship. An RTP Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. Evidence: The Australian Government provides funding to eligible HEPs through the RTP to support their training of domestic and overseas students undertaking research doctorate and research masters degrees.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e23",
+        "question": "Can I apply for an RTP scholarship for undergraduate study?",
+        "expected_doc": "rtp",
+        "found_doc_top5": [
+          "rtp",
+          "rtp",
+          "rtp",
+          "rtp",
+          "si-pioneering-women"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for an RTP Scholarship. An RTP Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: The Australian Government provides funding to eligible HEPs through the RTP to support their training of domestic and overseas students undertaking research doctorate and research masters degrees.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e24",
+        "question": "I am from the United States. Can I apply for the Marshall Scholarship for a master's degree?",
+        "expected_doc": "marshall",
+        "found_doc_top5": [
+          "marshall",
+          "marshall",
+          "si-pioneering-women",
+          "erasmus-mundus",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Marshall Scholarship. The Marshall Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. United States is among the 1 eligible countries for the Marshall Scholarship, so the citizenship requirement is met. Evidence: Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. Evidence: Open only to United States citizens who (at the time they take up their Scholarship) hold a first degree from an accredited four-year college or university in the United States with a minimum GPA of 3.7.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e25",
+        "question": "I am from Pakistan. Can I apply for the Marshall Scholarship for a master's degree?",
+        "expected_doc": "marshall",
+        "found_doc_top5": [
+          "marshall",
+          "si-pioneering-women",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Marshall Scholarship. The Marshall Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. Pakistan is not among the 1 eligible countries for the Marshall Scholarship, so the citizenship requirement is not met. Evidence: Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. Evidence: Open only to United States citizens who (at the time they take up their Scholarship) hold a first degree from an accredited four-year college or university in the United States with a minimum GPA of 3.7.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e26",
+        "question": "Can I apply for an EMJM programme as a Pakistani student?",
+        "expected_doc": "erasmus-mundus-org",
+        "found_doc_top5": [
+          "erasmus-mundus",
+          "erasmus-mundus-org",
+          "commonwealth-shared",
+          "si-pioneering-women",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for an Erasmus Mundus Joint Master. An Erasmus Mundus Joint Master covers masters level study, so a masters applicant meets the degree requirement. An Erasmus Mundus Joint Master is open irrespective of country of origin, so a Pakistan citizen meets the citizenship requirement. Evidence: Erasmus Mundus Joint Masters are high-level and integrated study programmes, at master level. Evidence: The EU provides funding for both running these programmes and offering competitive scholarships to the best students worldwide.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e27",
+        "question": "I am from Bangladesh. Can I apply for the SI Scholarship Pioneering Women in STEM for a master's degree?",
+        "expected_doc": "si-pioneering-women",
+        "found_doc_top5": [
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the SI Scholarship Pioneering Women in STEM. The SI Scholarship Pioneering Women in STEM covers masters level study, so a masters applicant meets the degree requirement. Bangladesh is among the 10 eligible countries for the SI Scholarship Pioneering Women in STEM, so the citizenship requirement is met. Evidence: The scholarship is awarded for master's studies in Sweden to women in Africa and Asia who are committed to advancing their careers and driving change through STEM. Evidence: Female citizens of the following countries are eligible to apply for Pioneering Women in STEM: Bangladesh, Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, South Africa, Thailand, Vietnam.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible"
+      },
+      {
+        "id": "e28",
+        "question": "I am from Pakistan. Can I apply for the SI Scholarship Pioneering Women in STEM for a master's degree?",
+        "expected_doc": "si-pioneering-women",
+        "found_doc_top5": [
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the SI Scholarship Pioneering Women in STEM. The SI Scholarship Pioneering Women in STEM covers masters level study, so a masters applicant meets the degree requirement. Pakistan is not among the 10 eligible countries for the SI Scholarship Pioneering Women in STEM, so the citizenship requirement is not met. Evidence: The scholarship is awarded for master's studies in Sweden to women in Africa and Asia who are committed to advancing their careers and driving change through STEM. Evidence: Female citizens of the following countries are eligible to apply for Pioneering Women in STEM: Bangladesh, Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, South Africa, Thailand, Vietnam.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible"
+      },
+      {
+        "id": "e29",
+        "question": "Can I apply for the Schwarzman Scholars programme at Tsinghua for a master's degree?",
+        "expected_doc": "schwarzman",
+        "found_doc_top5": [
+          "schwarzman",
+          "schwarzman",
+          "schwarzman",
+          "schwarzman",
+          "schwarzman"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligibility for the Schwarzman Scholarship cannot be decided from the corpus. The corpus does not state which degree levels the Schwarzman Scholarship covers, so the degree check cannot be decided from the corpus.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "unknown"
+      },
+      {
         "id": "q21",
         "question": "Is the Vanier Canada Graduate Scholarship still accepting applications?",
         "expected_doc": "vanier",
@@ -842,14 +1184,14 @@
     ]
   },
   "generative": {
-    "n_in_corpus": 43,
+    "n_in_corpus": 61,
     "n_out_of_corpus": 7,
-    "n_eligibility": 11,
+    "n_eligibility": 29,
     "recall@3": 1.0,
     "recall@5": 1.0,
     "answer_relevance_proxy": 1.0,
-    "answer_only_relevance": 0.651,
-    "faithfulness": 0.729,
+    "answer_only_relevance": 0.754,
+    "faithfulness": 0.793,
     "abstention_accuracy": 1.0,
     "eligibility_accuracy": 1.0,
     "per_question": [
@@ -872,13 +1214,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 7.52,
+        "generation_latency_s": 8.97,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.583
+          "latency_s": 4.224
         }
       },
       {
@@ -900,13 +1242,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 3.36,
+        "generation_latency_s": 2.29,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.657
+          "latency_s": 2.606
         }
       },
       {
@@ -928,13 +1270,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 8.81,
+        "generation_latency_s": 7.92,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.809
+          "latency_s": 4.303
         }
       },
       {
@@ -956,13 +1298,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 4.24,
+        "generation_latency_s": 4.29,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.856
+          "latency_s": 4.889
         }
       },
       {
@@ -984,13 +1326,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 2.41,
+        "generation_latency_s": 3.1,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.6
+          "latency_s": 2.29
         }
       },
       {
@@ -1012,13 +1354,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 3.22,
+        "generation_latency_s": 2.77,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.284
+          "latency_s": 2.069
         }
       },
       {
@@ -1040,13 +1382,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 6.07,
+        "generation_latency_s": 5.51,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.487
+          "latency_s": 2.789
         }
       },
       {
@@ -1068,13 +1410,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 3.76,
+        "generation_latency_s": 4.01,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.569
+          "latency_s": 2.575
         }
       },
       {
@@ -1096,13 +1438,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 5.37,
+        "generation_latency_s": 4.07,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 3.498
+          "latency_s": 2.973
         }
       },
       {
@@ -1124,13 +1466,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 3.53,
+        "generation_latency_s": 5.05,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 3.089
+          "latency_s": 4.124
         }
       },
       {
@@ -1152,13 +1494,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 6.16,
+        "generation_latency_s": 7.78,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.48
+          "latency_s": 4.47
         }
       },
       {
@@ -1180,13 +1522,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 4.58,
+        "generation_latency_s": 5.2,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.877
+          "latency_s": 5.014
         }
       },
       {
@@ -1208,13 +1550,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 3.7,
+        "generation_latency_s": 3.81,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 3.3
+          "latency_s": 2.318
         }
       },
       {
@@ -1236,13 +1578,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 4.13,
+        "generation_latency_s": 2.53,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.451
+          "latency_s": 2.575
         }
       },
       {
@@ -1264,13 +1606,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 5.5,
+        "generation_latency_s": 5.57,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.423
+          "latency_s": 4.622
         }
       },
       {
@@ -1292,13 +1634,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 2.94,
+        "generation_latency_s": 2.49,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.434
+          "latency_s": 3.526
         }
       },
       {
@@ -1320,13 +1662,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 2.59,
+        "generation_latency_s": 2.66,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1\n\nThe answer provides information",
           "parsed": true,
-          "latency_s": 3.602
+          "latency_s": 3.117
         }
       },
       {
@@ -1348,13 +1690,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 5.75,
+        "generation_latency_s": 4.76,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1\n\nThe Manaaki New",
           "parsed": true,
-          "latency_s": 3.126
+          "latency_s": 2.891
         }
       },
       {
@@ -1376,13 +1718,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 3.21,
+        "generation_latency_s": 2.88,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 3.466
+          "latency_s": 3.508
         }
       },
       {
@@ -1404,13 +1746,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 4.52,
+        "generation_latency_s": 4.25,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.325
+          "latency_s": 3.425
         }
       },
       {
@@ -1634,6 +1976,366 @@
         "answer_mode": "eligibility"
       },
       {
+        "id": "e12",
+        "question": "I want to do a PhD at Cambridge. Can I apply for the Gates Cambridge Scholarship?",
+        "expected_doc": "gates-cambridge",
+        "found_doc_top5": [
+          "gates-cambridge",
+          "rhodes",
+          "rhodes",
+          "commonwealth-shared",
+          "chevening"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Gates Cambridge Scholarship. The Gates Cambridge Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. The Gates Cambridge Scholarship is for international students, so a Pakistan citizen meets the citizenship requirement. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e13",
+        "question": "Can I apply for the Gates Cambridge Scholarship for undergraduate study?",
+        "expected_doc": "gates-cambridge",
+        "found_doc_top5": [
+          "gates-cambridge",
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Gates Cambridge Scholarship. The Gates Cambridge Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e14",
+        "question": "I am from the UK. Can I apply for the Gates Cambridge Scholarship?",
+        "expected_doc": "gates-cambridge",
+        "found_doc_top5": [
+          "gates-cambridge",
+          "rhodes",
+          "chevening",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Gates Cambridge Scholarship. The Gates Cambridge Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. The Gates Cambridge Scholarship is for international (non-UK) students, so a UK citizen is not eligible on citizenship. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge. Evidence: Each year Gates Cambridge offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree in any subject available at the University of Cambridge.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e15",
+        "question": "Can I apply for the Rhodes Scholarship for a master's degree at Oxford?",
+        "expected_doc": "rhodes",
+        "found_doc_top5": [
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Rhodes Scholarship. The Rhodes Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. Evidence: The Rhodes Scholarship is a fully funded, full-time postgraduate scholarship which enables talented people from around the world to study at the University of Oxford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e16",
+        "question": "Can I apply for the Rhodes Scholarship for undergraduate study?",
+        "expected_doc": "rhodes",
+        "found_doc_top5": [
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Rhodes Scholarship. The Rhodes Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: The Rhodes Scholarship is a fully funded, full-time postgraduate scholarship which enables talented people from around the world to study at the University of Oxford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e17",
+        "question": "Can I apply for the Knight-Hennessy Scholarship for a PhD at Stanford?",
+        "expected_doc": "knight-hennessy",
+        "found_doc_top5": [
+          "knight-hennessy",
+          "rhodes",
+          "rhodes",
+          "sweden-si",
+          "rhodes"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Knight-Hennessy Scholarship. The Knight-Hennessy Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. Evidence: Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e18",
+        "question": "Can I apply for the Knight-Hennessy Scholarship for undergraduate study?",
+        "expected_doc": "knight-hennessy",
+        "found_doc_top5": [
+          "knight-hennessy",
+          "commonwealth-shared",
+          "si-pioneering-women",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Knight-Hennessy Scholarship. The Knight-Hennessy Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: Knight-Hennessy scholars receive funding for up to three years for any graduate degree(s) at Stanford.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e19",
+        "question": "I am from Pakistan. Can I apply for a Commonwealth Shared Scholarship for a master's degree?",
+        "expected_doc": "commonwealth-shared",
+        "found_doc_top5": [
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for a Commonwealth Shared Scholarship. A Commonwealth Shared Scholarship covers masters level study, so a masters applicant meets the degree requirement. Pakistan is among the 43 eligible countries for a Commonwealth Shared Scholarship, so the citizenship requirement is met. Evidence: Please note, these scholarships are for Master's courses only and not for undergraduate or PhD study. Evidence: Bangladesh, Belize, Botswana, Dominica, Eswatini, Fiji, Gabon, Ghana, Grenada, Guyana, India, Jamaica, Kenya, Kiribati, Lesotho, Malawi, Malaysia, Maldives, Mauritius, Montserrat, Mozambique, Namibia, Nauru, Nigeria, Pakistan, Papua New Guinea, Rwanda, Saint Helena, Saint Lucia. Saint Vincent and The Grenadines. Samoa, Sierra Leone, Solomon Islands, South Africa, Sri Lanka, Tanzania, The Gambia, Togo, Tonga, Tuvalu, Uganda, Vanuatu, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e20",
+        "question": "I am from the United States. Can I apply for a Commonwealth Shared Scholarship for a master's degree?",
+        "expected_doc": "commonwealth-shared",
+        "found_doc_top5": [
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for a Commonwealth Shared Scholarship. A Commonwealth Shared Scholarship covers masters level study, so a masters applicant meets the degree requirement. United States is not among the 43 eligible countries for a Commonwealth Shared Scholarship, so the citizenship requirement is not met. Evidence: Please note, these scholarships are for Master's courses only and not for undergraduate or PhD study. Evidence: Bangladesh, Belize, Botswana, Dominica, Eswatini, Fiji, Gabon, Ghana, Grenada, Guyana, India, Jamaica, Kenya, Kiribati, Lesotho, Malawi, Malaysia, Maldives, Mauritius, Montserrat, Mozambique, Namibia, Nauru, Nigeria, Pakistan, Papua New Guinea, Rwanda, Saint Helena, Saint Lucia. Saint Vincent and The Grenadines. Samoa, Sierra Leone, Solomon Islands, South Africa, Sri Lanka, Tanzania, The Gambia, Togo, Tonga, Tuvalu, Uganda, Vanuatu, Zambia.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e21",
+        "question": "Can I apply for a Commonwealth Shared Scholarship for a PhD?",
+        "expected_doc": "commonwealth-shared",
+        "found_doc_top5": [
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for a Commonwealth Shared Scholarship. A Commonwealth Shared Scholarship covers masters level study only, so a phd applicant is not eligible on degree level. Evidence: Please note, these scholarships are for Master's courses only and not for undergraduate or PhD study.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e22",
+        "question": "Can I apply for an RTP scholarship for a research PhD in Australia?",
+        "expected_doc": "rtp",
+        "found_doc_top5": [
+          "rtp",
+          "rtp",
+          "rtp",
+          "rtp",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for an RTP Scholarship. An RTP Scholarship covers masters, phd level study, so a phd applicant meets the degree requirement. Evidence: The Australian Government provides funding to eligible HEPs through the RTP to support their training of domestic and overseas students undertaking research doctorate and research masters degrees.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e23",
+        "question": "Can I apply for an RTP scholarship for undergraduate study?",
+        "expected_doc": "rtp",
+        "found_doc_top5": [
+          "rtp",
+          "rtp",
+          "rtp",
+          "rtp",
+          "si-pioneering-women"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for an RTP Scholarship. An RTP Scholarship covers masters, phd level study only, so an undergraduate applicant is not eligible on degree level. Evidence: The Australian Government provides funding to eligible HEPs through the RTP to support their training of domestic and overseas students undertaking research doctorate and research masters degrees.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e24",
+        "question": "I am from the United States. Can I apply for the Marshall Scholarship for a master's degree?",
+        "expected_doc": "marshall",
+        "found_doc_top5": [
+          "marshall",
+          "marshall",
+          "si-pioneering-women",
+          "erasmus-mundus",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the Marshall Scholarship. The Marshall Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. United States is among the 1 eligible countries for the Marshall Scholarship, so the citizenship requirement is met. Evidence: Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. Evidence: Open only to United States citizens who (at the time they take up their Scholarship) hold a first degree from an accredited four-year college or university in the United States with a minimum GPA of 3.7.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e25",
+        "question": "I am from Pakistan. Can I apply for the Marshall Scholarship for a master's degree?",
+        "expected_doc": "marshall",
+        "found_doc_top5": [
+          "marshall",
+          "si-pioneering-women",
+          "erasmus-mundus",
+          "sweden-si",
+          "sweden-si"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the Marshall Scholarship. The Marshall Scholarship covers masters, phd level study, so a masters applicant meets the degree requirement. Pakistan is not among the 1 eligible countries for the Marshall Scholarship, so the citizenship requirement is not met. Evidence: Up to fifty Scholars are selected each year to study at graduate level at an UK institution in any field of study. Evidence: Open only to United States citizens who (at the time they take up their Scholarship) hold a first degree from an accredited four-year college or university in the United States with a minimum GPA of 3.7.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e26",
+        "question": "Can I apply for an EMJM programme as a Pakistani student?",
+        "expected_doc": "erasmus-mundus-org",
+        "found_doc_top5": [
+          "erasmus-mundus",
+          "erasmus-mundus-org",
+          "commonwealth-shared",
+          "si-pioneering-women",
+          "commonwealth-shared"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for an Erasmus Mundus Joint Master. An Erasmus Mundus Joint Master covers masters level study, so a masters applicant meets the degree requirement. An Erasmus Mundus Joint Master is open irrespective of country of origin, so a Pakistan citizen meets the citizenship requirement. Evidence: Erasmus Mundus Joint Masters are high-level and integrated study programmes, at master level. Evidence: The EU provides funding for both running these programmes and offering competitive scholarships to the best students worldwide.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e27",
+        "question": "I am from Bangladesh. Can I apply for the SI Scholarship Pioneering Women in STEM for a master's degree?",
+        "expected_doc": "si-pioneering-women",
+        "found_doc_top5": [
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligible for the SI Scholarship Pioneering Women in STEM. The SI Scholarship Pioneering Women in STEM covers masters level study, so a masters applicant meets the degree requirement. Bangladesh is among the 10 eligible countries for the SI Scholarship Pioneering Women in STEM, so the citizenship requirement is met. Evidence: The scholarship is awarded for master's studies in Sweden to women in Africa and Asia who are committed to advancing their careers and driving change through STEM. Evidence: Female citizens of the following countries are eligible to apply for Pioneering Women in STEM: Bangladesh, Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, South Africa, Thailand, Vietnam.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e28",
+        "question": "I am from Pakistan. Can I apply for the SI Scholarship Pioneering Women in STEM for a master's degree?",
+        "expected_doc": "si-pioneering-women",
+        "found_doc_top5": [
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women",
+          "si-pioneering-women"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Not eligible for the SI Scholarship Pioneering Women in STEM. The SI Scholarship Pioneering Women in STEM covers masters level study, so a masters applicant meets the degree requirement. Pakistan is not among the 10 eligible countries for the SI Scholarship Pioneering Women in STEM, so the citizenship requirement is not met. Evidence: The scholarship is awarded for master's studies in Sweden to women in Africa and Asia who are committed to advancing their careers and driving change through STEM. Evidence: Female citizens of the following countries are eligible to apply for Pioneering Women in STEM: Bangladesh, Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, South Africa, Thailand, Vietnam.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "not_eligible",
+        "answer_mode": "eligibility"
+      },
+      {
+        "id": "e29",
+        "question": "Can I apply for the Schwarzman Scholars programme at Tsinghua for a master's degree?",
+        "expected_doc": "schwarzman",
+        "found_doc_top5": [
+          "schwarzman",
+          "schwarzman",
+          "schwarzman",
+          "schwarzman",
+          "schwarzman"
+        ],
+        "recall@3": true,
+        "recall@5": true,
+        "found": true,
+        "answer": "Eligibility for the Schwarzman Scholarship cannot be decided from the corpus. The corpus does not state which degree levels the Schwarzman Scholarship covers, so the degree check cannot be decided from the corpus.",
+        "answer_relevant": true,
+        "answer_only_relevant": true,
+        "eligibility_verdict": "unknown",
+        "answer_mode": "eligibility"
+      },
+      {
         "id": "q21",
         "question": "Is the Vanier Canada Graduate Scholarship still accepting applications?",
         "expected_doc": "vanier",
@@ -1652,13 +2354,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 2.35,
+        "generation_latency_s": 3.99,
         "judge": {
           "faithfulness": 0,
           "relevance": 0,
           "raw": "faithfulness: 0\nrelevance: 0",
           "parsed": true,
-          "latency_s": 2.497
+          "latency_s": 4.799
         }
       },
       {
@@ -1680,13 +2382,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 4.15,
+        "generation_latency_s": 7.24,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 3.246
+          "latency_s": 4.878
         }
       },
       {
@@ -1708,13 +2410,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 6.18,
+        "generation_latency_s": 6.02,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.118
+          "latency_s": 6.306
         }
       },
       {
@@ -1736,13 +2438,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 4.12,
+        "generation_latency_s": 6.25,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.972
+          "latency_s": 4.987
         }
       },
       {
@@ -1764,13 +2466,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 8.96,
+        "generation_latency_s": 15.21,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.333
+          "latency_s": 7.874
         }
       },
       {
@@ -1792,13 +2494,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 5.47,
+        "generation_latency_s": 8.22,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.21
+          "latency_s": 7.613
         }
       },
       {
@@ -1820,13 +2522,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 5.28,
+        "generation_latency_s": 9.98,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.605
+          "latency_s": 12.676
         }
       },
       {
@@ -1848,13 +2550,13 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 7.28,
+        "generation_latency_s": 12.82,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.058
+          "latency_s": 8.094
         }
       },
       {
@@ -1876,13 +2578,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 6.25,
+        "generation_latency_s": 9.6,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 4.163
+          "latency_s": 10.114
         }
       },
       {
@@ -1904,13 +2606,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 3.38,
+        "generation_latency_s": 7.71,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 3.864
+          "latency_s": 6.486
         }
       },
       {
@@ -1932,13 +2634,13 @@
         "answer_only_relevant": false,
         "eligibility_verdict": null,
         "answer_mode": "generative",
-        "generation_latency_s": 2.71,
+        "generation_latency_s": 3.76,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 2.432
+          "latency_s": 2.418
         }
       },
       {
@@ -1960,20 +2662,20 @@
         "answer_only_relevant": true,
         "eligibility_verdict": null,
         "answer_mode": "generative_fallback_extractive",
-        "generation_latency_s": 5.03,
+        "generation_latency_s": 5.72,
         "judge": {
           "faithfulness": 1,
           "relevance": 1,
           "raw": "faithfulness: 1\nrelevance: 1",
           "parsed": true,
-          "latency_s": 5.424
+          "latency_s": 6.488
         }
       }
     ],
     "generative_modes": {
       "generative": 23,
       "generative_fallback_extractive": 9,
-      "eligibility": 11
+      "eligibility": 29
     },
     "judge_faithfulness": 0.969,
     "judge_relevance": 0.969,

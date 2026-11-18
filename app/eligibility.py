@@ -202,6 +202,163 @@ RULES = {
                        "mext-1"),
         },
     },
+    # Phase 2 improvement, Step 4: rules for the 9 Step 6 documents,
+    # authored only where the corpus states a rule with a verbatim
+    # evidence sentence (same standard as the rules above).
+    "gates-cambridge": {
+        "levels": {"masters", "phd"},
+        "citizenship": {"mode": "foreign", "host": "UK"},
+        "evidence": {
+            "levels": ("Each year Gates Cambridge offers around 70 full-cost "
+                       "scholarships to outstanding applicants from countries "
+                       "outside the UK to pursue a postgraduate degree in any "
+                       "subject available at the University of Cambridge.",
+                       "gates-cambridge-0"),
+            "citizenship": ("Each year Gates Cambridge offers around 70 full-cost "
+                            "scholarships to outstanding applicants from countries "
+                            "outside the UK to pursue a postgraduate degree in any "
+                            "subject available at the University of Cambridge.",
+                            "gates-cambridge-0"),
+        },
+    },
+    # Levels only: the corpus states the Rhodes is postgraduate and
+    # points undergraduate seekers elsewhere, but eligibility by
+    # country runs through per-constituency rules with no country
+    # list in the corpus, so no citizenship rule is authored.
+    # Known limit: a second undergraduate degree via Senior Status
+    # is possible in limited cases; this rule reports the standard
+    # postgraduate-only position.
+    "rhodes": {
+        "levels": {"masters", "phd"},
+        "citizenship": None,
+        "evidence": {
+            "levels": ("The Rhodes Scholarship is a fully funded, full-time "
+                       "postgraduate scholarship which enables talented people "
+                       "from around the world to study at the University of Oxford.",
+                       "rhodes-2"),
+        },
+    },
+    # Levels only: "any graduate degree(s) at Stanford". The funding
+    # page in the corpus states no citizenship rule.
+    "knight-hennessy": {
+        "levels": {"masters", "phd"},
+        "citizenship": None,
+        "evidence": {
+            "levels": ("Knight-Hennessy scholars receive funding for up to three "
+                       "years for any graduate degree(s) at Stanford.",
+                       "knight-hennessy-0"),
+        },
+    },
+    # No rule: the FAQ in the corpus never states the funded degree
+    # level (it only requires applicants to have completed an
+    # undergraduate degree) and the 40/20/40 figures are class
+    # composition targets, explicitly "not specific national or
+    # regional targets", so no citizenship rule is authored either.
+    # Verdict stays unknown, by design.
+    "schwarzman": {
+        "levels": None,
+        "citizenship": None,
+        "evidence": {},
+    },
+    "commonwealth-shared": {
+        "levels": {"masters"},
+        "citizenship": {
+            "mode": "list",
+            "countries": ["Bangladesh", "Belize", "Botswana", "Dominica",
+                          "Eswatini", "Fiji", "Gabon", "Ghana", "Grenada",
+                          "Guyana", "India", "Jamaica", "Kenya", "Kiribati",
+                          "Lesotho", "Malawi", "Malaysia", "Maldives",
+                          "Mauritius", "Montserrat", "Mozambique", "Namibia",
+                          "Nauru", "Nigeria", "Pakistan", "Papua New Guinea",
+                          "Rwanda", "Saint Helena", "Saint Lucia",
+                          "Saint Vincent and The Grenadines", "Samoa",
+                          "Sierra Leone", "Solomon Islands", "South Africa",
+                          "Sri Lanka", "Tanzania", "The Gambia", "Togo",
+                          "Tonga", "Tuvalu", "Uganda", "Vanuatu", "Zambia"],
+        },
+        "evidence": {
+            "levels": ("Please note, these scholarships are for Master's courses "
+                       "only and not for undergraduate or PhD study.",
+                       "commonwealth-shared-1"),
+            "citizenship": ("Bangladesh, Belize, Botswana, Dominica, Eswatini, Fiji, "
+                            "Gabon, Ghana, Grenada, Guyana, India, Jamaica, Kenya, "
+                            "Kiribati, Lesotho, Malawi, Malaysia, Maldives, Mauritius, "
+                            "Montserrat, Mozambique, Namibia, Nauru, Nigeria, Pakistan, "
+                            "Papua New Guinea, Rwanda, Saint Helena, Saint Lucia. Saint "
+                            "Vincent and The Grenadines. Samoa, Sierra Leone, Solomon "
+                            "Islands, South Africa, Sri Lanka, Tanzania, The Gambia, "
+                            "Togo, Tonga, Tuvalu, Uganda, Vanuatu, Zambia.",
+                            "commonwealth-shared-5"),
+        },
+    },
+    "rtp": {
+        "levels": {"masters", "phd"},
+        "citizenship": {"mode": "any"},
+        "evidence": {
+            "levels": ("The Australian Government provides funding to eligible HEPs "
+                       "through the RTP to support their training of domestic and "
+                       "overseas students undertaking research doctorate and "
+                       "research masters degrees.",
+                       "rtp-0"),
+            "citizenship": ("The Australian Government provides funding to eligible HEPs "
+                            "through the RTP to support their training of domestic and "
+                            "overseas students undertaking research doctorate and "
+                            "research masters degrees.",
+                            "rtp-0"),
+        },
+    },
+    "marshall": {
+        "levels": {"masters", "phd"},
+        "citizenship": {"mode": "list", "countries": ["United States"]},
+        "evidence": {
+            "levels": ("Up to fifty Scholars are selected each year to study at "
+                       "graduate level at an UK institution in any field of study.",
+                       "marshall-0"),
+            "citizenship": ("Open only to United States citizens who (at the time they "
+                            "take up their Scholarship) hold a first degree from an "
+                            "accredited four-year college or university in the United "
+                            "States with a minimum GPA of 3.7.",
+                            "marshall-0"),
+        },
+    },
+    "erasmus-mundus-org": {
+        "levels": {"masters"},
+        "citizenship": {"mode": "any"},
+        "evidence": {
+            "levels": ("Erasmus Mundus Joint Masters are high-level and integrated "
+                       "study programmes, at master level.",
+                       "erasmus-mundus-org-0"),
+            "citizenship": ("The EU provides funding for both running these programmes "
+                            "and offering competitive scholarships to the best students "
+                            "worldwide.",
+                            "erasmus-mundus-org-0"),
+        },
+    },
+    # Known limit: the checker models degree level and citizenship
+    # only, not gender. The corpus also requires applicants to be
+    # female citizens of the listed countries; a male applicant from
+    # a listed country would be reported eligible here. The rule
+    # covers what the checker can decide.
+    "si-pioneering-women": {
+        "levels": {"masters"},
+        "citizenship": {
+            "mode": "list",
+            "countries": ["Bangladesh", "Indonesia", "Kenya", "Malaysia",
+                          "Nigeria", "Philippines", "Rwanda", "South Africa",
+                          "Thailand", "Vietnam"],
+        },
+        "evidence": {
+            "levels": ("The scholarship is awarded for master's studies in Sweden "
+                       "to women in Africa and Asia who are committed to advancing "
+                       "their careers and driving change through STEM.",
+                       "si-pioneering-women-0"),
+            "citizenship": ("Female citizens of the following countries are eligible "
+                            "to apply for Pioneering Women in STEM: Bangladesh, "
+                            "Indonesia, Kenya, Malaysia, Nigeria, Philippines, Rwanda, "
+                            "South Africa, Thailand, Vietnam.",
+                            "si-pioneering-women-2"),
+        },
+    },
 }
 
 # A question is an eligibility question when it asks about applying
@@ -222,6 +379,15 @@ _DOC_DISPLAY = {
     "manaaki": "a Manaaki New Zealand Scholarship",
     "hkpfs": "the Hong Kong PhD Fellowship Scheme",
     "mext": "a MEXT Scholarship",
+    "gates-cambridge": "the Gates Cambridge Scholarship",
+    "rhodes": "the Rhodes Scholarship",
+    "knight-hennessy": "the Knight-Hennessy Scholarship",
+    "schwarzman": "the Schwarzman Scholarship",
+    "commonwealth-shared": "a Commonwealth Shared Scholarship",
+    "rtp": "an RTP Scholarship",
+    "marshall": "the Marshall Scholarship",
+    "erasmus-mundus-org": "an Erasmus Mundus Joint Master",
+    "si-pioneering-women": "the SI Scholarship Pioneering Women in STEM",
 }
 
 
