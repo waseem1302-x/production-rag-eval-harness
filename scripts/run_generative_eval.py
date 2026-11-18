@@ -10,8 +10,9 @@ metadata) and `benchmarks/results/generative_eval.md` (summary
 generated from the JSON, not hand-typed).
 
 Usage: python -m scripts.run_generative_eval
-Takes ~20 minutes on this VM (1.5 shared CPUs): ~11 s per
-generated answer, ~10 s per judge call, 50 questions x 2 runs.
+Takes ~7 minutes on this VM (1.5 shared CPUs): ~5 s per
+generated answer, ~4 s per judge call, 50 questions x 2 runs
+(427.3 s measured 18 Nov 2026; latency varies with CPU contention).
 Run it detached (nohup ... &) and read the log; it prints one
 progress line per question.
 """
