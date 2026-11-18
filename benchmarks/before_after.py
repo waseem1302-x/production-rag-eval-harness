@@ -144,7 +144,9 @@ def main() -> None:
         "first-sentence picking: the baseline returned whatever sentences "
         "came first in the top chunk — usually headers, navigation or a "
         "marketing intro. Scored picking ranks sentences by shared query "
-        "stems, and the short-fragment penalty demotes header fragments. "
+        "stems weighted by IDF over the candidate sentences (Phase 2 "
+        "improvement, Step 2), and the short-fragment penalty demotes "
+        "header fragments. "
         "The retrieval signal did not drive this: hybrid-plain (hybrid "
         "retrieval, naive answering) scores only "
         f"{_load('hybrid-plain.json')['quality']['answer_only_relevance']} on answer-only, "
@@ -221,26 +223,19 @@ def main() -> None:
         "Step 2 and did not fix these two; what remains is a generative "
         "answer with a verification step. q03 was in this group until the "
         "Phase 2 improvement (bullet-list splitting) fixed it: answer-only "
-        "0.907 -> 0.930.")
+        "0.907 -> 0.930. q32 was in this group until the Phase 2 "
+        "improvement (IDF sentence scoring) fixed it: answer-only "
+        "0.930 -> 0.953.")
     lines.append(
-        "- q32 (bullet-list scoring): the SEK 12,000 allowance sentence is "
-        "now its own pickable sentence (the Phase 2 improvement splits "
-        "dash-led bullet items), but it still shares only 'monthly' and "
-        "'allowance' with the question while the page intro shares "
-        "pioneering, women, stem and scholar, so the intro still outscores "
-        "it. The evidence is in the top retrieved chunk; the picker still "
-        "does not surface it.")
-    lines.append(
-        "- q32 (baseline gained, improved unchanged): on the "
-        "grown corpus the naive baseline's BM25 top chunk changed, "
-        "so its first-sentence picking now lands on the right "
-        "sentence for q32, while the improved pipeline "
-        "still misses it (q32 bullet-list scoring). The failure table labels it "
-        "REGRESSION, but the improved column is unchanged since Step 5 — no "
-        "question the improved pipeline got right was lost; the "
-        "baseline got luckier. The no-regression test pins exactly "
-        "this one row, so a second one fails the build. q03 was the "
-        "other pinned row until the Phase 2 improvement fixed it.")
+        "- q32 (fixed by IDF sentence scoring): the SEK 12,000 allowance "
+        "sentence shares only 'monthly' and 'allowance' with the question "
+        "while the competing eligibility sentence shares 7 stems, so plain "
+        "stem counts ranked the wrong sentence first. IDF weighting over "
+        "the candidate sentences makes the rare stems outweigh the "
+        "ubiquitous doc-name stems, and the SEK sentence is now picked "
+        "first. The failure table used to label it REGRESSION (the "
+        "baseline got luckier on corpus growth while the improved "
+        "pipeline still missed it); both columns pass now.")
     lines.append(
         "- o06, o07 (abstention lost on corpus growth, then fixed "
         "in Step 6): the grown corpus gave the lexical gates other "

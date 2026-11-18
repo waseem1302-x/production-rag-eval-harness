@@ -38,9 +38,9 @@ def test_failure_table_counts():
     # Phase 2, Step 6: 32 factual in-corpus (q01-q32) + 7 out (o01-o07).
     assert len(in_corpus_rows) == 32
     assert len(out_rows) == 7
-    # Improved column: 29 of 32 in-corpus correct (misses q10,
-    # q17, q32), 7 of 7 abstained.
-    assert sum(1 for l in in_corpus_rows if l.split("|")[4].strip() == "✓") == 29
+    # Improved column: 30 of 32 in-corpus correct (misses q10,
+    # q17 only), 7 of 7 abstained.
+    assert sum(1 for l in in_corpus_rows if l.split("|")[4].strip() == "✓") == 30
     assert sum(1 for l in out_rows if "✓ abstained" in l) == 7
 
 
@@ -57,6 +57,12 @@ def test_still_failing_questions_are_paraphrase_gaps():
     q03 = next(l for l in text.splitlines() if l.startswith("| q03 |"))
     assert "✓ | ✓" in q03
     assert "REGRESSION" not in q03
+    # q32: fixed by the Phase 2 improvement (IDF sentence
+    # scoring) — it now passes in the improved column, so it is
+    # no longer a REGRESSION row at all.
+    q32 = next(l for l in text.splitlines() if l.startswith("| q32 |"))
+    assert "✓ | ✓" in q32
+    assert "REGRESSION" not in q32
     # o04: fixed in Step 2, still abstained (the audit was stale at
     # Step 5 and said "answered"; it was regenerated in Step 6).
     o04 = next(l for l in text.splitlines() if l.startswith("| o04 |"))
@@ -67,14 +73,11 @@ def test_still_failing_questions_are_paraphrase_gaps():
 def test_no_regressions_in_failure_table():
     """No question the improved pipeline got right may be lost — a
     regression in the improved column would be a red flag, not a
-    footnote. The only (baseline ✓, improved ✗) row is exactly
-    q32, a pre-existing improved-pipeline miss (q32 bullet-list
-    scoring), unchanged since Step 5 in the improved column: what
-    changed on corpus growth is the BASELINE column — with 101
-    chunks the baseline's BM25 top chunk changed, so its
-    first-sentence picking now lands on the right sentence. A new
-    (✓, ✗) row, or a REGRESSION label anywhere else, fails. q03
-    was the second pinned row until the Phase 2 improvement
+    footnote. There is no (baseline ✓, improved ✗) row left: q32
+    was the only one, a pre-existing improved-pipeline miss
+    (bullet-list scoring), and the Phase 2 improvement (IDF
+    sentence scoring) fixed it, so the regressions list is empty.
+    q03 was the second pinned row until the Phase 2 improvement
     (bullet-list splitting) fixed it."""
     text = _report()
     regressions = []
@@ -83,4 +86,4 @@ def test_no_regressions_in_failure_table():
             cells = [c.strip() for c in line.split("|")]
             if cells[3] == "✓" and cells[4] == "✗":
                 regressions.append(cells[1])
-    assert regressions == ["q32"], regressions
+    assert regressions == [], regressions
