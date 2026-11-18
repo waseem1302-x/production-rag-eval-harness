@@ -121,12 +121,28 @@ def test_new_documents_retrievable(retriever):
         assert q["expected_doc"] in docs, (qid, docs)
 
 
-def test_new_documents_have_no_eligibility_rules_yet():
-    """Step 6 adds corpus, not rules: profile checks for the new
-    docs have no authored rule, so the verdict is 'unknown' by
-    construction. Authoring rules is a separate step."""
-    for slug in NEW_DOCS:
-        assert RULES.get(slug) is None, slug
+def test_new_documents_have_eligibility_rules():
+    """Step 4 authors rules for the 9 Step 6 documents where the
+    corpus states one: 8 docs gain a rule (levels, citizenship, or
+    both); Schwarzman gains none, because its FAQ states neither
+    the funded degree level nor a citizenship rule, so its verdict
+    stays unknown by design."""
+    expected = {
+        "gates-cambridge": ({"masters", "phd"}, "foreign"),
+        "rhodes": ({"masters", "phd"}, None),
+        "knight-hennessy": ({"masters", "phd"}, None),
+        "schwarzman": (None, None),
+        "commonwealth-shared": ({"masters"}, "list"),
+        "rtp": ({"masters", "phd"}, "any"),
+        "marshall": ({"masters", "phd"}, "list"),
+        "erasmus-mundus-org": ({"masters"}, "any"),
+        "si-pioneering-women": ({"masters"}, "list"),
+    }
+    for slug, (levels, mode) in expected.items():
+        rule = RULES.get(slug)
+        assert rule is not None, slug
+        assert rule["levels"] == levels, slug
+        assert (rule["citizenship"] or {}).get("mode") == mode, slug
 
 
 # --- new golden questions ---------------------------------------------------

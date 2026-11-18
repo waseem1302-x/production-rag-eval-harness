@@ -4,6 +4,72 @@ All numbers below come from real local runs on 18 Nov 2026, on this
 VM (Python 3.12.3, 1.5 shared CPUs, 6 GB RAM). Nothing here is
 invented. Reproduce them with the commands in "How to reproduce".
 
+## Phase 2 improvement — eligibility rules for the 9 Step 6 documents
+
+Rules authored in `app/eligibility.py` only where the corpus
+states one with a verbatim evidence sentence (the checker
+validates every evidence sentence against its chunk at load time
+and drops any rule whose evidence is missing — the same
+fail-safe as the original rules). 18 new golden eligibility
+questions (e12-e29) were added first, and the eval was run
+before the rules to record the baseline: with no rules every new
+question returned `unknown` except e29 (Schwarzman, whose
+expected verdict is `unknown`).
+
+| Metric | Before (no rules for the 9 docs) | After (rules authored) | Change |
+|---|---|---|---|
+| eligibility_accuracy | 0.379 (11/29) | 1.0 (29/29) | +18 correct |
+| answer_only_relevance | 0.689 (42/61) | 0.967 (59/61) | +17 correct |
+| recall@3 / recall@5 | 0.984 / 0.984 | 1.0 / 1.0 | +1 (e29 retrieved after rephrasing) |
+| answer_relevance_proxy | 0.721 | 1.0 | +17 |
+| faithfulness / abstention | 1.0 / 1.0 | 1.0 / 1.0 | none |
+
+Two golden questions were rephrased before the rules were
+authored, because they did not name their document: e26 now asks
+about "an EMJM programme" (the `emjm` alias resolves to the
+organisations page; "Erasmus Mundus Joint Master" resolved to the
+student page) and e29 now asks about "the Schwarzman Scholars
+programme at Tsinghua" (the plain question did not retrieve any
+Schwarzman chunk in the top 5).
+
+| Document | Levels | Citizenship | Evidence |
+|---|---|---|---|
+| Gates Cambridge | masters, phd | foreign (UK) | "offers around 70 full-cost scholarships to outstanding applicants from countries outside the UK to pursue a postgraduate degree" |
+| Rhodes | masters, phd | none (constituency-based, no list in corpus) | "a fully funded, full-time postgraduate scholarship" |
+| Knight-Hennessy | masters, phd | none (funding page states none) | "funding for up to three years for any graduate degree(s) at Stanford" |
+| Schwarzman | none | none | — (FAQ states neither the funded level nor a citizenship rule; 40/20/40 are class targets, explicitly not eligibility targets) |
+| Commonwealth Shared | masters | list (43 countries) | "for Master's courses only and not for undergraduate or PhD study" + the 43-country list sentence |
+| RTP | masters, phd | any | "domestic and overseas students undertaking research doctorate and research masters degrees" |
+| Marshall | masters, phd | list (United States) | "to study at graduate level" + "Open only to United States citizens" |
+| Erasmus Mundus (orgs page) | masters | any | "at master level" + "scholarships to the best students worldwide" |
+| SI Pioneering Women | masters | list (10 countries) | "awarded for master's studies in Sweden" + the 10-country list sentence |
+
+Known limits, documented in the rules: the checker models degree
+level and citizenship only, so a male applicant from a listed
+country would be reported eligible for SI Pioneering Women
+(gender is not modelled), and Rhodes' exceptional second-BA path
+via Senior Status is not modelled (standard postgraduate-only
+position). Tests: 22 new verdict cases in
+`tests/test_eligibility.py` (the `test_all_rules_have_verbatim_evidence`
+test already covers the new rules), and
+`tests/test_corpus_growth.py::test_new_documents_have_eligibility_rules`
+replaces the old no-rules pin.
+
+Side effect on the data-quality checker (it reads RULES, so the
+re-run is part of this step): findings 73 (16 resolved, 57 open)
+to 58 (16 resolved, 42 open). The 14 "missing_field" findings
+for the ruled docs are gone (2 each for Gates, Commonwealth
+Shared, RTP, Marshall, Erasmus Mundus org, SI Pioneering; 1 each
+for Rhodes and Knight-Hennessy). One more open finding is gone
+for an unrelated reason: the Schwarzman "approximate_figure"
+finding disappeared because the Step 1 bullet split broke the
+merged sentence that had attached "approximately" to "25 minutes"
+(the checker was not re-run in Step 1, so this surfaces now).
+The 2 "multiple_amounts" findings for Commonwealth Shared and SI
+Pioneering are re-cited with split sentences, same status and
+note. The generative eval was re-run on the 68-question set for
+consistency (see below).
+
 ## Phase 2 improvement — IDF-weighted sentence scoring
 
 `app/answer.py:_pick_sentences` scored a sentence by counting
@@ -626,16 +692,16 @@ Command: `python -m scripts.run_eval`
 
 | Metric | Value | Meaning |
 |---|---|---|
-| n_in_corpus | 43 | 32 factual + 11 eligibility |
+| n_in_corpus | 61 | 32 factual + 29 eligibility |
 | n_out_of_corpus | 7 | |
-| n_eligibility | 11 | |
-| recall@3 | 1.0 | Expected document in top 3 for all 43 |
-| recall@5 | 1.0 | Expected document in top 5 for all 43 |
-| answer_relevance_proxy | 1.0 | Expected phrase in answer or citations for all 43 |
-| answer_only_relevance | 0.953 | Expected phrase in the answer text alone: 41/43 |
+| n_eligibility | 29 | |
+| recall@3 | 1.0 | Expected document in top 3 for all 61 |
+| recall@5 | 1.0 | Expected document in top 5 for all 61 |
+| answer_relevance_proxy | 1.0 | Expected phrase in answer or citations for all 61 |
+| answer_only_relevance | 0.967 | Expected phrase in the answer text alone: 59/61 |
 | faithfulness | 1.0 | Every answer sentence verbatim in a cited chunk |
 | abstention_accuracy | 1.0 | 7/7 out-of-corpus questions correctly refused |
-| eligibility_accuracy | 1.0 | 11/11 verdicts correct |
+| eligibility_accuracy | 1.0 | 29/29 verdicts correct |
 
 The 2 answer-only misses are q10, q17 (paraphrase gap) — see
 "Failures". q03 was fixed by the Phase 2 improvement (bullet-list
@@ -765,6 +831,32 @@ Read honestly, against the 38-question run:
   3.62 s per judge call, on 1.5 shared CPUs. Latency on this VM
   varies with contention; the figures above are the measured run.
 
+### Re-run on the 68-question set (after Step 4 rules)
+
+Command: `python -m scripts.run_generative_eval` (646.4 s on this
+VM; model load 4.5 s; extractive baseline 43.2 s; generative phase
+563.4 s). Re-run only because Step 4 grew the golden set to 68
+questions (18 new eligibility questions); no code changed in the
+generator. The extractive column (0.967) matches the standalone
+extractive eval.
+
+| Metric | Extractive | Generative |
+|---|---|---|
+| answer_only_relevance | 0.967 (59/61) | 0.754 (46/61) |
+| faithfulness (verbatim proxy) | 1.0 | 0.793 |
+| judge faithfulness / relevance | — | 0.969 / 0.969 (n=32, 0 unparsed) |
+| abstention_accuracy | 1.0 (7/7) | 1.0 (7/7) |
+| eligibility_accuracy | 1.0 (29/29) | 1.0 (29/29) |
+| Answer modes (n=61) | — | 23 generative, 9 fallback to extractive, 29 eligibility |
+| Mean generation latency | — | 5.83 s |
+| Mean judge latency | — | 4.72 s |
+
+The overall generative number rose (0.651 to 0.754) only because
+the 18 new eligibility questions are all checker-resolved, not
+generated. Factual-only it is unchanged at 28/43 (0.651): same 15
+misses, same judge behaviour (1/1 on 14 of them, 0/0 on the
+correct Vanier-closure fallback answer q21 again).
+
 ## Benchmarks — 8-configuration ablation
 
 Command: `python -m benchmarks.run_benchmark`
@@ -857,10 +949,10 @@ Before/after report with failure tables:
 
 Command: `python -m pytest tests/ -q`
 
-**185 passed, 0 failed** (18 Nov 2026, 570.21 s, full run after IDF
-sentence scoring; the re-verification eval-unchanged test now pins
-exactly two deliberate changes, q03 and q32 fixed, 0.907 to 0.953).
-Step 7's 179 plus
+**207 passed, 0 failed** (18 Nov 2026, 697.51 s, full run after the Step 4
+eligibility rules; the re-verification eval-unchanged test now pins
+exactly two deliberate changes, q03 and q32 fixed, 0.907 to 0.967,
+and the only added rows e12-e29). Step 7's 179 plus
 4 new bullet-sentence tests in `tests/test_bullet_sentences.py`:
 dash-led items split into their own sentences after terminal
 punctuation or a colon intro, inline dashes untouched, and the q32
@@ -869,7 +961,9 @@ chunk `si-pioneering-women-1`; plus 2 new IDF-scoring tests in
 `tests/test_idf_scoring.py`: the SEK sentence ranks first on the
 real top-3 chunks for q32, and the IDF weights are population
 relative (a stem in every candidate weighs 1.0, a stem in one
-weighs ln((N+1)/2) + 1). Step 6's 174 plus
+weighs ln((N+1)/2) + 1); plus 22 new verdict cases in
+`tests/test_eligibility.py` for the 9 Step 6 documents (including
+Schwarzman staying `unknown` by design). Step 6's 174 plus
 5 new Step 7 re-verification tests in `tests/test_reverification.py`:
 every source records a `reverified_at` date and the per-page record
 covers all 19 pages, all live, with Eiffel the only change (sidebar
@@ -1019,7 +1113,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python -m scripts.build_index        # chunks + embeddings + FAISS index
 python -m scripts.run_eval           # eval harness numbers (writes benchmarks/results/extractive_eval.json)
-python -m scripts.run_generative_eval # generative + judge, same 50 questions (~7 min depending on CPU contention)
+python -m scripts.run_generative_eval # generative + judge, same 68 questions (~7-11 min depending on CPU contention)
 python -m benchmarks.run_benchmark   # 8-configuration ablation
 python -m benchmarks.audit_retrieval # per-question retrieval traces
 python -m benchmarks.before_after   # before/after report + failure tables

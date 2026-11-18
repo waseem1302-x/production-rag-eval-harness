@@ -271,6 +271,195 @@
     "expected_verdict": "closed"
   },
   {
+    "id": "e12",
+    "question": "I want to do a PhD at Cambridge. Can I apply for the Gates Cambridge Scholarship?",
+    "expected_doc": "gates-cambridge",
+    "expected_answer": "covers masters, phd level study",
+    "profile": {
+      "nationality": "Pakistan",
+      "degree_level": "phd"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e13",
+    "question": "Can I apply for the Gates Cambridge Scholarship for undergraduate study?",
+    "expected_doc": "gates-cambridge",
+    "expected_answer": "covers masters, phd level study only",
+    "profile": {
+      "degree_level": "undergraduate"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e14",
+    "question": "I am from the UK. Can I apply for the Gates Cambridge Scholarship?",
+    "expected_doc": "gates-cambridge",
+    "expected_answer": "is for international (non-UK) students",
+    "profile": {
+      "nationality": "UK",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e15",
+    "question": "Can I apply for the Rhodes Scholarship for a master's degree at Oxford?",
+    "expected_doc": "rhodes",
+    "expected_answer": "covers masters, phd level study",
+    "profile": {
+      "degree_level": "masters"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e16",
+    "question": "Can I apply for the Rhodes Scholarship for undergraduate study?",
+    "expected_doc": "rhodes",
+    "expected_answer": "covers masters, phd level study only",
+    "profile": {
+      "degree_level": "undergraduate"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e17",
+    "question": "Can I apply for the Knight-Hennessy Scholarship for a PhD at Stanford?",
+    "expected_doc": "knight-hennessy",
+    "expected_answer": "covers masters, phd level study",
+    "profile": {
+      "degree_level": "phd"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e18",
+    "question": "Can I apply for the Knight-Hennessy Scholarship for undergraduate study?",
+    "expected_doc": "knight-hennessy",
+    "expected_answer": "covers masters, phd level study only",
+    "profile": {
+      "degree_level": "undergraduate"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e19",
+    "question": "I am from Pakistan. Can I apply for a Commonwealth Shared Scholarship for a master's degree?",
+    "expected_doc": "commonwealth-shared",
+    "expected_answer": "is among the 43 eligible countries",
+    "profile": {
+      "nationality": "Pakistan",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e20",
+    "question": "I am from the United States. Can I apply for a Commonwealth Shared Scholarship for a master's degree?",
+    "expected_doc": "commonwealth-shared",
+    "expected_answer": "is not among the 43 eligible countries",
+    "profile": {
+      "nationality": "United States",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e21",
+    "question": "Can I apply for a Commonwealth Shared Scholarship for a PhD?",
+    "expected_doc": "commonwealth-shared",
+    "expected_answer": "covers masters level study only",
+    "profile": {
+      "degree_level": "phd"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e22",
+    "question": "Can I apply for an RTP scholarship for a research PhD in Australia?",
+    "expected_doc": "rtp",
+    "expected_answer": "covers masters, phd level study",
+    "profile": {
+      "degree_level": "phd"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e23",
+    "question": "Can I apply for an RTP scholarship for undergraduate study?",
+    "expected_doc": "rtp",
+    "expected_answer": "covers masters, phd level study only",
+    "profile": {
+      "degree_level": "undergraduate"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e24",
+    "question": "I am from the United States. Can I apply for the Marshall Scholarship for a master's degree?",
+    "expected_doc": "marshall",
+    "expected_answer": "Open only to United States citizens",
+    "profile": {
+      "nationality": "United States",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e25",
+    "question": "I am from Pakistan. Can I apply for the Marshall Scholarship for a master's degree?",
+    "expected_doc": "marshall",
+    "expected_answer": "Open only to United States citizens",
+    "profile": {
+      "nationality": "Pakistan",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e26",
+    "question": "Can I apply for an EMJM programme as a Pakistani student?",
+    "expected_doc": "erasmus-mundus-org",
+    "expected_answer": "is open irrespective of country of origin",
+    "profile": {
+      "nationality": "Pakistan",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e27",
+    "question": "I am from Bangladesh. Can I apply for the SI Scholarship Pioneering Women in STEM for a master's degree?",
+    "expected_doc": "si-pioneering-women",
+    "expected_answer": "is among the 10 eligible countries",
+    "profile": {
+      "nationality": "Bangladesh",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "eligible"
+  },
+  {
+    "id": "e28",
+    "question": "I am from Pakistan. Can I apply for the SI Scholarship Pioneering Women in STEM for a master's degree?",
+    "expected_doc": "si-pioneering-women",
+    "expected_answer": "is not among the 10 eligible countries",
+    "profile": {
+      "nationality": "Pakistan",
+      "degree_level": "masters"
+    },
+    "expected_verdict": "not_eligible"
+  },
+  {
+    "id": "e29",
+    "question": "Can I apply for the Schwarzman Scholars programme at Tsinghua for a master's degree?",
+    "expected_doc": "schwarzman",
+    "expected_answer": "does not state which degree levels",
+    "profile": {
+      "degree_level": "masters"
+    },
+    "expected_verdict": "unknown"
+  },
+  {
     "id": "q21",
     "question": "Is the Vanier Canada Graduate Scholarship still accepting applications?",
     "expected_doc": "vanier",
@@ -298,7 +487,7 @@
     "id": "q25",
     "question": "What is the annual stipend for a Rhodes Scholar in 2026-27?",
     "expected_doc": "rhodes",
-    "expected_answer": "\u00a321,060"
+    "expected_answer": "£21,060"
   },
   {
     "id": "q26",
@@ -334,7 +523,7 @@
     "id": "q31",
     "question": "How much is the monthly EMJM scholarship for individuals?",
     "expected_doc": "erasmus-mundus-org",
-    "expected_answer": "\u20ac1,400 per month"
+    "expected_answer": "€1,400 per month"
   },
   {
     "id": "q32",

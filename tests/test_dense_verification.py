@@ -62,6 +62,15 @@ O04 = "Which university in Canada is ranked number one for Vanier scholars?"
 # answer-only relevance 0.930 -> 0.953 (41/43), zero regressions
 # (see tests/test_idf_scoring.py). Only q10 and q17 remain open,
 # both paraphrase gaps.
+# Phase 2 improvement (eligibility rules for the 9 Step 6 docs):
+# 18 new golden eligibility questions (e12-e29) are all
+# answer-only correct, so answer-only relevance moves 0.953 ->
+# 0.967 (59/61) and eligibility accuracy stays 1.0 (29/29).
+# Schwarzman (e29) is answer-only correct with verdict unknown:
+# its expected phrase is the "does not state" reason.
+STEP4_CORRECT = ["e12", "e13", "e14", "e15", "e16", "e17", "e18",
+                 "e19", "e20", "e21", "e22", "e23", "e24", "e25",
+                 "e26", "e27", "e28", "e29"]
 BASELINE_CORRECT = [
     "e01", "e02", "e03", "e04", "e05", "e06", "e07", "e08", "e09",
     "e10", "e11", "q01", "q02", "q04", "q05", "q06", "q07", "q08", "q09",
@@ -394,12 +403,16 @@ def test_no_baseline_correct_answer_lost(retriever):
     and moves answer-only relevance 0.930 -> 0.953 (41/43), zero
     regressions. Only q10 and q17 remain open, both paraphrase
     gaps.
+    Phase 2 improvement (eligibility rules for the 9 Step 6 docs):
+    18 new golden eligibility questions (e12-e29) are all
+    answer-only correct, so answer-only relevance moves 0.953 ->
+    0.967 (59/61); eligibility accuracy stays 1.0, now 29/29.
     Abstention is 1.0 (7/7): o06 and o07 abstain again after the
     Step 6 fix (see test_corpus_growth.py) — the 0.714 dip measured
     mid-step, when corpus growth first broke both, is recorded in
     that file's history, not hidden."""
     result = run_eval(retriever, load_golden())
-    assert result["answer_only_relevance"] == 0.953
+    assert result["answer_only_relevance"] == 0.967
     assert result["answer_relevance_proxy"] == 1.0
     assert result["faithfulness"] == 1.0
     assert result["abstention_accuracy"] == 1.0
@@ -407,7 +420,8 @@ def test_no_baseline_correct_answer_lost(retriever):
     correct = {r["id"] for r in result["per_question"]
                if r["answer_only_relevant"]}
     expected = (set(BASELINE_CORRECT) | set(STEP6_CORRECT)
-                | set(IMPROVEMENT_CORRECT) | set(IDF_CORRECT))
+                | set(IMPROVEMENT_CORRECT) | set(IDF_CORRECT)
+                | set(STEP4_CORRECT))
     assert expected <= correct, (
         "lost baseline-correct questions: "
         f"{sorted(expected - correct)}")
