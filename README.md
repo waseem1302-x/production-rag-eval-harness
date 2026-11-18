@@ -1,6 +1,30 @@
 # Production RAG with Eval Harness
 
-A small, honest, production-shaped RAG system over public official scholarship pages. It answers questions only from the fetched corpus, cites the exact chunks it used, checks eligibility before answering when a profile is given, and says "Not found in the corpus" when the evidence is weak, instead of hallucinating.
+[![CI](https://github.com/waseem1302-x/production-rag-eval-harness/actions/workflows/eval.yml/badge.svg)](https://github.com/waseem1302-x/production-rag-eval-harness/actions/workflows/eval.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.163.1-009688.svg)](https://fastapi.tiangolo.com/)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-transformers%205.23.0-yellow.svg)](https://huggingface.co/)
+[![FAISS](https://img.shields.io/badge/FAISS-1.16.0-orange.svg)](https://github.com/facebookresearch/faiss)
+[![pytest](https://img.shields.io/badge/pytest-9.2.0-brightgreen.svg)](https://docs.pytest.org/)
+
+A RAG system over 19 official scholarship pages. It answers only from the fetched corpus, cites the exact chunks it used, checks eligibility before answering when a profile is given, and says "Not found in the corpus" when the evidence is weak.
+
+## At a glance
+
+- Language: Python 3.12
+- API framework: FastAPI 0.163.1 with Uvicorn 0.54.0
+- Embeddings: sentence-transformers 6.3.0, all-MiniLM-L6-v2, 384-dim, local CPU-only
+- Keyword search: BM25 (rank-bm25 0.2.2)
+- Vector index: FAISS 1.16.0, IndexFlatIP (cosine)
+- Reranker (ablation only): cross-encoder/ms-marco-MiniLM-L-6-v2
+- Generative model (opt-in): Hugging Face transformers 5.23.0, Qwen/Qwen2.5-0.5B-Instruct, 0.5B params, CPU-only
+- ML stack: PyTorch 2.15.0 CPU, NumPy 2.5.5
+- Testing: pytest 9.2.0, 179 tests
+- CI: GitHub Actions, Eval gate workflow (`.github/workflows/eval.yml`)
+- Containers: Docker
+- Data: plain `.txt` and `.json` files, no database server
+- License: MIT, see [LICENSE](LICENSE)
 
 Read first:
 
@@ -440,3 +464,7 @@ Done in Phase 2, Step 1-7: opt-in generative answer, cross-encoder reranker as a
 - **Eligibility-first:** checking whether the asker can apply, from corpus-grounded rules, before answering the fact question.
 - **Messy data:** real pages close, contradict, and omit. Document the mess with evidence; never let the system paper over it.
 - **Observability:** every answer carries its citations, its score, and its retrieval trace, so any wrong answer can be traced back to the chunk.
+
+## License
+
+MIT License, copyright 2026 Waseem Mushtaq. See [LICENSE](LICENSE).
